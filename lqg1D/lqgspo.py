@@ -1,4 +1,5 @@
 import gym
+import potion.envs
 from lqg1D.policy import StochasticPolicy as sp, DeterministicPolicy as dp
 from lqg1D import estimator as e
 import torch
@@ -27,8 +28,8 @@ for i in range(0, N_SAMPLES):
         action = det_pol(torch.from_numpy(state).float())
         new_state, r, done, info = env.step(action.detach().numpy())
 
-        # print("[{}] - State = {}, Action = {}, Reward = {}, Next state = {}".format(i, state, action.detach().numpy(), r, new_state))
-        # store each step I get
+        # print("[{}] - State = {}, Action = {}, Reward = {}, Next state = {}".format(i, state, action.detach(
+        # ).numpy(), r, new_state)) store each step I get
         episode.append([state[0], action[0], r, new_state[0]])
         state = new_state
 

@@ -57,4 +57,11 @@ def estimate_mcrst_dist(samples_state, n_macrostates, constant_intervals, min_st
     return [a / (len(samples_state) + zeros) for a in accumulator]
 
 
+def update_parameter(param, learning_rate, grad):
+    if param.grad is not None:
+        param.grad.zero_()
+    with torch.no_grad():
+        return param + learning_rate * grad
+
+
 

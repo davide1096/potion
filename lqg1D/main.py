@@ -16,5 +16,13 @@ abstract_mdp = LqgSpo(env)
 det_pol = dp(INIT_DETERMINISTIC_PARAM)
 
 samples = est.sampling_from_det_pol(env, N_SAMPLES, N_STEPS, det_pol)
-abstract_mdp.update_abs_policy(samples)
+# I obtain the samples with regard to macrostates
+mcrst_samples = abstract_mdp.from_states_to_macrostates(samples)
+
+# update and visualize parameters for the abstract policies
+abstract_mdp.update_abs_policy(mcrst_samples)
 abstract_mdp.show_abs_policy_params()
+
+# update and visualize parameters for the abstract transition functions
+abstract_mdp.update_abs_tf(mcrst_samples)
+abstract_mdp.show_abs_tf_params()

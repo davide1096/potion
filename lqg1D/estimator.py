@@ -1,4 +1,24 @@
 import numpy as np
+import random
+import torch
+
+
+def sampling_from_det_pol(env, N_SAMPLES, N_STEPS, det_pol):
+
+    samples_list = []
+    for i in range(0, N_SAMPLES):
+        env.reset()
+
+        for j in range(0, N_STEPS):
+            state = env.get_state()
+            det_pol.train()
+            action = det_pol(torch.from_numpy(state).float())
+            new_state, r, done, info = env.step(action.detach().numpy())
+            # store each step I get
+            samples_list.append([state[0], action[0], r, new_state[0]])
+
+    random.shuffle(samples_list)
+    return samples_list
 
 
 def get_mcrst_const(state, min, max, n_states):
@@ -9,6 +29,7 @@ def get_mcrst_const(state, min, max, n_states):
     while state > min + index * h:
         index = index + 1
     return index - 1
+
 
 def get_mcrst_not_const(state, intervals):
     index = 0
@@ -34,7 +55,6 @@ def estimate_mcrst_dist(samples_state, n_macrostates, constant_intervals, min_st
     zeros = len(accumulator) - np.count_nonzero(accumulator)
     accumulator = map(lambda a: 1 if a == 0 else a, accumulator)
     return [a / (len(samples_state) + zeros) for a in accumulator]
-    # TODO
 
 
 

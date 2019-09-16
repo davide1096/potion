@@ -17,7 +17,7 @@ INIT_W = 1.
 
 # about macrostates
 N_MACROSTATES = 5
-CONSTANT_INTERVALS = True
+CONSTANT_INTERVALS = False
 INTERVALS = [[-2, -0.4], [-0.4, -0.1], [-0.1, 0.1], [0.1, 0.4], [0.4, 2]]
 
 

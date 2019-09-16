@@ -4,6 +4,7 @@ from lqg1D.policy import DeterministicPolicy as dp
 from lqg1D.lqgspo import LqgSpo
 import lqg1D.estimator as est
 from lqg1D.abstract_mdp import AbstractMdp as AbsMdp
+import lqg1D.abstract_mdp as abs_mdp
 
 INIT_DETERMINISTIC_PARAM = -0.2
 N_SAMPLES = 200
@@ -33,5 +34,7 @@ abstract_fun.show_abs_tf_params()
 
 # getting the samples according to the abstract (stochastic) policy
 abstract_mdp = AbsMdp(abstract_fun, -env.max_action, env.max_action)
-abstract_mdp.sampling(N_SAMPLES_ABSTRACT, N_STEPS_ABSTRACT)
+abs_samples = abstract_mdp.sampling(N_SAMPLES_ABSTRACT, N_STEPS_ABSTRACT)
 
+print("Initial states: ", abs_mdp.count_states([s[0] for s in abs_samples]))
+print("Final states:   ", abs_mdp.count_states([s[3] for s in abs_samples]))

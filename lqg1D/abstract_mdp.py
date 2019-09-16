@@ -25,6 +25,11 @@ def calculate_new_state(w_x, ac, rdm_number):
     return index - 1
 
 
+def count_states(states):
+    unique, counts = np.unique(states, return_counts=True)
+    return dict(zip(unique, counts))
+
+
 class AbstractMdp(object):
 
     def __init__(self, functions, min_action, max_action):
@@ -51,20 +56,22 @@ class AbstractMdp(object):
         r = lqgspo.abstract_reward_function(self.mcrst_intervals[self.state], a)
         new_s = calculate_new_state(self.functions.get_tf_parameters(self.state), a, self.np_random.uniform(0, 1))
 
-        print("Sample from the abstract MDP: S:{}, A:{}, R:{}, S':{}".format(self.state, a, r, new_s))
+        # print("Sample from the abstract MDP: S:{}, A:{}, R:{}, S':{}".format(self.state, a, r, new_s))
+        state = self.state
         self.state = new_s
-        return [self.state, a, r, new_s]
+        return [state, a, r, new_s]
 
     def reset(self):
         self.state = int(self.np_random.uniform(low=0, high=len(self.mcrst_intervals)))
 
     def sampling(self, n_samples, n_steps):
         samples_list = []
-        for i in range (0, n_samples):
+        for i in range(0, n_samples):
             self.reset()
 
-            for j in range (0, n_steps):
+            for j in range(0, n_steps):
                 samples_list.append(self.step())
 
         random.shuffle(samples_list)
         return samples_list
+

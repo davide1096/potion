@@ -1,6 +1,7 @@
 import torch
 import math
 import torch.nn as nn
+import numpy as np
 from lqg1D.estimator import update_parameter
 
 
@@ -20,8 +21,8 @@ class StochasticPolicy(nn.Module):
     #     return num / (sigma * (2 * math.pi) ** 0.5)
 
     def update_parameters(self, grad_mu, grad_omega):
-        self.mu = nn.Parameter(torch.tensor([update_parameter(self.mu, self.learning_rate, grad_mu)],
-                                            requires_grad=True))
+        new_mu = np.clip(update_parameter(self.mu, self.learning_rate, grad_mu), -2, 2)
+        self.mu = nn.Parameter(torch.tensor([new_mu], requires_grad=True))
         self.omega = nn.Parameter(torch.tensor([update_parameter(self.omega, self.learning_rate, grad_omega)],
                                                requires_grad=True))
 

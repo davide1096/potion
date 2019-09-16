@@ -25,9 +25,18 @@ def get_states_from_samples(samples):
     return [sam[0] for sam in samples]
 
 
+# just a fast possibility to implement the abstract reward function
+# the offset ensure that the reward function is always positive
+def abstract_reward_function(interval, action):
+    offset = 4.
+    abstract_state = (interval[0] + interval[1]) / 2
+    return offset - 0.5 * ((abstract_state * abstract_state) + (action * action))
+
+
 class LqgSpo(object):
 
     def __init__(self, env):
+        super().__init__()
         self.env = env
 
         # let's calculate a different stochastic policy for every macrostate
@@ -62,12 +71,6 @@ class LqgSpo(object):
             grad_omega = grad_log_pol_omega / self.estimate_mcrst_dist[s[0]]
             self.stoch_policy[s[0]].update_parameters(grad_mu, grad_omega)
 
-    def show_abs_policy_params(self):
-        for i in range(0, N_MACROSTATES):
-            par = self.stoch_policy[i].parameters()
-            print("[MCRST{}]".format(i))
-            print([p for p in par])
-
     def update_abs_tf(self, samples):
         for s in samples:
             # I obtain all the parameters related to the same starting macrostate
@@ -93,6 +96,21 @@ class LqgSpo(object):
             updates = np.insert(grad_w_xxoth, s[3], grad_w_xxdest).numpy()
             self.tf_params[s[0]] += INIT_LR * updates
 
+    def show_abs_policy_params(self):
+        for i in range(0, N_MACROSTATES):
+            par = self.stoch_policy[i].parameters()
+            print("[MCRST{}]".format(i))
+            print([p for p in par])
+
+    def get_policy_parameters(self, mcrst):
+        return self.stoch_policy[mcrst].parameters()
+
     def show_abs_tf_params(self):
         print(self.tf_params)
 
+    def get_tf_parameters(self, mcrst):
+        return self.tf_params[mcrst]
+
+    def get_mcrst_intervals(self):
+        return e.get_constant_intervals(-self.env.max_pos, self.env.max_pos,
+                                        N_MACROSTATES) if CONSTANT_INTERVALS else INTERVALS

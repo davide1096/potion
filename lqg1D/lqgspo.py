@@ -12,7 +12,7 @@ INIT_OMEGA = 1.
 INIT_LR = 0.01
 
 # constants for abstract transition function (0 for the 1st definition, 1 for the 2nd one)
-TRANSITION_FUNCTION_VERSION = 0
+TRANSITION_FUNCTION_VERSION = 1
 INIT_W = 1.
 
 # about macrostates
@@ -85,10 +85,10 @@ class LqgSpo(object):
                 # I calculate the update term for w_xxdest... (negative loss, so I can sum during the update)
                 grad_w_xxdest = (1 - prob) * grad_prob_wx / self.estimate_mcrst_dist[s[0]]
                 # ...and for all the w_xxother
-                grad_w_xxoth = -prob * grad_prob_wxoth / self.estimate_mcrst_dist[s[0]]
+                grad_w_xxoth = (1 - prob) * grad_prob_wxoth / self.estimate_mcrst_dist[s[0]]
             else:
                 grad_w_xxdest = grad_prob_wx / self.estimate_mcrst_dist[s[0]]
-                grad_w_xxoth = grad_prob_wx / self.estimate_mcrst_dist[s[0]]
+                grad_w_xxoth = grad_prob_wxoth / self.estimate_mcrst_dist[s[0]]
 
             # update parameters
             grad_w_xxdest = grad_w_xxdest.detach()

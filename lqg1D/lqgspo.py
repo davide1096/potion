@@ -42,7 +42,7 @@ class LqgSpo(object):
         # let's calculate a different stochastic policy for every macrostate
         self.stoch_policy = []
         for i in range(0, N_MACROSTATES):
-            self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, INIT_LR))
+            self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, INIT_LR, -self.env.max_action, self.env.max_action))
 
         # in order to represent the abstract transition functions we define a parameter for each pair of macrostates
         self.tf_params = np.full((N_MACROSTATES, N_MACROSTATES), INIT_W)

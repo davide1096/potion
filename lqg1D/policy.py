@@ -7,13 +7,15 @@ from lqg1D.estimator import update_parameter
 
 class StochasticPolicy(nn.Module):
 
-    def __init__(self, mu, omega, init_lr):
+    def __init__(self, mu, omega, init_lr, min_action, max_action):
         super().__init__()
         self.mu = nn.Parameter(torch.tensor([mu]))
         self.omega = nn.Parameter(torch.tensor([omega]))
         self.mu.requires_grad_(True)
         self.omega.requires_grad_(True)
         self.learning_rate = init_lr
+        self.min_action = min_action
+        self.max_action = max_action
 
     # def forward(self, action):
     #     sigma = torch.exp(self.omega)
@@ -21,7 +23,7 @@ class StochasticPolicy(nn.Module):
     #     return num / (sigma * (2 * math.pi) ** 0.5)
 
     def update_parameters(self, grad_mu, grad_omega):
-        new_mu = np.clip(update_parameter(self.mu, self.learning_rate, grad_mu), -2, 2)
+        new_mu = np.clip(update_parameter(self.mu, self.learning_rate, grad_mu), self.min_action, self.max_action)
         self.mu = nn.Parameter(torch.tensor([new_mu], requires_grad=True))
         self.omega = nn.Parameter(torch.tensor([update_parameter(self.omega, self.learning_rate, grad_omega)],
                                                requires_grad=True))
@@ -38,6 +40,10 @@ class StochasticPolicy(nn.Module):
 
     # def get_parameters(self):
     #     return self.mu, self.omega
+
+    def set_parameters(self, mu, omega):
+        self.mu = nn.Parameter(torch.tensor([mu]))
+        self.omega = nn.Parameter(torch.tensor([omega]))
 
 
 class DeterministicPolicy(nn.Module):

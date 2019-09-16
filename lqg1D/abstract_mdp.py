@@ -5,7 +5,7 @@ import lqg1D.lqgspo as lqgspo
 import numpy as np
 import scipy.stats as stats
 
-SEED = 42
+SEED = None
 
 
 # since we have the parameters related to the abstract transition functions we proceed in this way:

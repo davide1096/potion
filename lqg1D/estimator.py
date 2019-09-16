@@ -32,6 +32,8 @@ def get_mcrst_const(state, min, max, n_states):
 
 
 def get_mcrst_not_const(state, intervals):
+    if state == intervals[-1][1]:
+        return len(intervals) - 1
     index = 0
     for int in intervals:
         if int[0] <= state < int[1]:

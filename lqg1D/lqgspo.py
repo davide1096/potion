@@ -9,7 +9,7 @@ import torch
 # constants for stochastic policy
 INIT_MU = 0.
 INIT_OMEGA = 1.
-INIT_LR = 0.01
+INIT_LR = 0.001
 
 # constants for abstract transition function (0 for the 1st definition, 1 for the 2nd one)
 TRANSITION_FUNCTION_VERSION = 1

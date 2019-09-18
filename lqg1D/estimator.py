@@ -69,10 +69,11 @@ def get_constant_intervals(min, max, n_mcrst):
 
 
 def update_parameter(param, learning_rate, grad):
+    with torch.no_grad():
+        update = param + learning_rate * grad
     if param.grad is not None:
         param.grad.zero_()
-    with torch.no_grad():
-        return param + learning_rate * grad
+    return update
 
 
 

@@ -31,6 +31,7 @@ abstract_fun.show_abs_policy_params()
 # update and visualize parameters for the abstract transition functions
 abstract_fun.update_abs_tf(mcrst_samples)
 abstract_fun.show_abs_tf_params()
+abstract_fun.show_tf_prob()
 
 # getting the samples according to the abstract (stochastic) policy
 abstract_mdp = AbsMdp(abstract_fun, -env.max_action, env.max_action)

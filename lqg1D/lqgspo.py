@@ -9,16 +9,17 @@ import torch
 # constants for stochastic policy
 INIT_MU = 0.
 INIT_OMEGA = 1.
-INIT_LR = 0.001
+LR_POLICY = 0.001
 
 # constants for abstract transition function (0 for the 1st definition, 1 for the 2nd one)
 TRANSITION_FUNCTION_VERSION = 1
 INIT_W = 1.
+LR_TFUN = 1.
 
 # about macrostates
-N_MACROSTATES = 5
+N_MACROSTATES = 6
 CONSTANT_INTERVALS = False
-INTERVALS = [[-2, -0.4], [-0.4, -0.1], [-0.1, 0.1], [0.1, 0.4], [0.4, 2]]
+INTERVALS = [[-2, -0.4], [-0.4, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.4], [0.4, 2]]
 
 
 def get_states_from_samples(samples):
@@ -42,7 +43,7 @@ class LqgSpo(object):
         # let's calculate a different stochastic policy for every macrostate
         self.stoch_policy = []
         for i in range(0, N_MACROSTATES):
-            self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, INIT_LR, -self.env.max_action, self.env.max_action))
+            self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, LR_POLICY, -self.env.max_action, self.env.max_action))
 
         # in order to represent the abstract transition functions we define a parameter for each pair of macrostates
         self.tf_params = np.full((N_MACROSTATES, N_MACROSTATES), INIT_W)
@@ -94,19 +95,32 @@ class LqgSpo(object):
             grad_w_xxdest = grad_w_xxdest.detach()
             grad_w_xxoth = grad_w_xxoth.detach()
             updates = np.insert(grad_w_xxoth, s[3], grad_w_xxdest).numpy()
-            self.tf_params[s[0]] += INIT_LR * updates
+            self.tf_params[s[0]] += LR_TFUN * updates
 
     def show_abs_policy_params(self):
         for i in range(0, N_MACROSTATES):
             par = self.stoch_policy[i].parameters()
-            print("[MCRST{}]".format(i))
+            print("[Policy parameters in MCRST{}]".format(i))
             print([p for p in par])
 
     def get_policy_parameters(self, mcrst):
         return self.stoch_policy[mcrst].parameters()
 
     def show_abs_tf_params(self):
+        print("Parameters of the transition functions between macrostates: ")
         print(self.tf_params)
+
+    # this function calculates the tf probabilities related to the mean action in every macrostate
+    def show_tf_prob(self):
+        print("Transition function probabilities between macrostates given the mean action: ")
+        with torch.no_grad():
+            for i in range (0, N_MACROSTATES):
+                w_row = self.tf_params[i]
+                pol = self.stoch_policy[i]
+                abs_pol_par = pol.parameters()
+                mu = next(abs_pol_par).detach().numpy()
+                den = np.sum(np.exp(w_row * mu))
+                print([(np.exp(w*mu) / den)[0] for w in w_row])
 
     def get_tf_parameters(self, mcrst):
         return self.tf_params[mcrst]
@@ -114,3 +128,4 @@ class LqgSpo(object):
     def get_mcrst_intervals(self):
         return e.get_constant_intervals(-self.env.max_pos, self.env.max_pos,
                                         N_MACROSTATES) if CONSTANT_INTERVALS else INTERVALS
+

@@ -45,12 +45,14 @@ class AbstractMdp(object):
         self.max_action = max_action
 
     def step(self):
-        # draw an action according to the stochastic policy defined for the current macrostate
-        par = self.functions.get_policy_parameters(self.state)
-        mu = next(par).detach()
-        sigma = np.exp(next(par).detach())
-        a = stats.truncnorm((self.min_action - mu)/sigma, (self.max_action - mu)/sigma, loc=mu, scale=sigma).rvs()
-        # a = self.np_random.normal(loc=next(par).detach(), scale=torch.exp(next(par).detach()))
+        if not self.functions.abstract_policy_version:
+            # draw an action according to the stochastic policy defined for the current macrostate
+            par = self.functions.get_policy_parameters(self.state)
+            mu = next(par).detach()
+            sigma = np.exp(next(par).detach())
+            a = stats.truncnorm((self.min_action - mu)/sigma, (self.max_action - mu)/sigma, loc=mu, scale=sigma).rvs()
+        else:
+            a = self.draw_action_weighted_policy()
 
         # calculate reward and new state according to the sampled action
         r = lqgspo.abstract_reward_function(self.mcrst_intervals[self.state], a)
@@ -76,4 +78,17 @@ class AbstractMdp(object):
 
         random.shuffle(samples_list)
         return samples_list
+
+    # draw an action according to the stochastic policy defined weighting every action performed in the previous samples
+    def draw_action_weighted_policy(self):
+        policy = self.functions.stoch_policy[self.state]
+        # rdm_number between 1 and the #samples started in that macrostate
+        rdm_number = self.np_random.random_integers(sum(policy.values()))
+        accumulator = 0
+        for k in policy.keys():
+            accumulator += policy[k]
+            if accumulator >= rdm_number:
+                # k is a key -> an action
+                return float(k)
+
 

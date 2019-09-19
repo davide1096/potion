@@ -6,7 +6,8 @@ import numpy as np
 import lqg1D.transition_function as tf
 import torch
 
-# constants for stochastic policy
+# constants for stochastic policy (0 for the Gaussian, 1 for the weighted one obtained from the samples)
+ABSTRACT_POLICY_VERSION = 1
 INIT_MU = 0.
 INIT_OMEGA = 1.
 LR_POLICY = 0.001
@@ -44,8 +45,14 @@ class LqgSpo(object):
 
         # let's calculate a different stochastic policy for every macrostate
         self.stoch_policy = []
-        for i in range(0, N_MACROSTATES):
-            self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, LR_POLICY, -self.env.max_action, self.env.max_action))
+
+        self.abstract_policy_version = ABSTRACT_POLICY_VERSION
+        if not ABSTRACT_POLICY_VERSION:
+            for i in range(0, N_MACROSTATES):
+                self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, LR_POLICY, -self.env.max_action, self.env.max_action))
+        else:
+            for i in range(0, N_MACROSTATES):
+                self.stoch_policy.append({})
 
         # in order to represent the abstract transition functions we define a parameter for each pair of macrostates
         tf_wparams = np.full((N_MACROSTATES, N_MACROSTATES), INIT_W)
@@ -70,12 +77,26 @@ class LqgSpo(object):
         return mcrst_samples
 
     def update_abs_policy(self, samples):
+        if not ABSTRACT_POLICY_VERSION:
+            self.update_abs_policy_gaussian(samples)
+        else:
+            self.update_abs_policy_weighted(samples)
+
+    def update_abs_policy_gaussian(self, samples):
         for s in samples:
             grad_log_pol_mu, grad_log_pol_omega = self.stoch_policy[s[0]].gradient_log_policy(s[1])
             # quantities used to perform gradient ascent
             grad_mu = grad_log_pol_mu / self.estimate_mcrst_dist[s[0]]
             grad_omega = grad_log_pol_omega / self.estimate_mcrst_dist[s[0]]
             self.stoch_policy[s[0]].update_parameters(grad_mu, grad_omega)
+
+    # stores in a dictionary the actions (key) and the number of times they are performed (value)
+    def update_abs_policy_weighted(self, samples):
+        for s in samples:
+            if '{}'.format(s[1]) in self.stoch_policy[s[0]]:
+                self.stoch_policy[s[0]]['{:.3}'.format(s[1])] += 1
+            else:
+                self.stoch_policy[s[0]]['{:.3}'.format(s[1])] = 1
 
     def update_abs_tf(self, samples):
         for s in samples:
@@ -101,13 +122,14 @@ class LqgSpo(object):
             self.tf_bparams.grad.zero_()
 
     def show_abs_policy_params(self):
-        for i in range(0, N_MACROSTATES):
-            par = self.stoch_policy[i].parameters()
-            print("[Policy parameters in MCRST{}]".format(i))
-            print([p[0] for p in par])
+        if not ABSTRACT_POLICY_VERSION:
+            for i in range(0, N_MACROSTATES):
+                par = self.stoch_policy[i].parameters()
+                print("[Policy parameters in MCRST{}]".format(i))
+                print([p[0] for p in par])
 
     def get_policy_parameters(self, mcrst):
-        return self.stoch_policy[mcrst].parameters()
+        return self.stoch_policy[mcrst].parameters() if not ABSTRACT_POLICY_VERSION else None
 
     def show_abs_tf_params(self):
         print("Parameters of the transition functions between macrostates: ")
@@ -116,13 +138,14 @@ class LqgSpo(object):
 
     # this function calculates the tf probabilities related to the mean action in every macrostate
     def show_tf_prob(self):
-        print("Transition function probabilities between macrostates given the mean action: ")
-        for i in range(0, N_MACROSTATES):
-            pol = self.stoch_policy[i]
-            abs_pol_par = pol.parameters()
-            mu = next(abs_pol_par).detach().numpy()
-            prob = [tf.get_tf_prob(self.tf_wparams[i], self.tf_bparams, j, mu)[0] for j in range(0, N_MACROSTATES)]
-            print(prob)
+        if not ABSTRACT_POLICY_VERSION:
+            print("Transition function probabilities between macrostates given the mean action: ")
+            for i in range(0, N_MACROSTATES):
+                pol = self.stoch_policy[i]
+                abs_pol_par = pol.parameters()
+                mu = next(abs_pol_par).detach().numpy()
+                prob = [tf.get_tf_prob(self.tf_wparams[i], self.tf_bparams, j, mu)[0] for j in range(0, N_MACROSTATES)]
+                print(prob)
 
     def get_mcrst_intervals(self):
         return e.get_constant_intervals(-self.env.max_pos, self.env.max_pos,

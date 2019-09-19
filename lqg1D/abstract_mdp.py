@@ -12,11 +12,11 @@ SEED = None
 # 1) calculate p(x'|x, a) for all x'
 # 2) divide the space [0,1) according to these probabilities
 # 3) select the macrostate related to the space that contains the rdm_number
-def calculate_new_state(w_x, ac, rdm_number):
+def calculate_new_state(w_x, b, ac, rdm_number):
     if rdm_number == 0:
         return 0
-    den = np.sum(np.exp(w_x * ac))
-    prob = [np.exp(w_xi * ac)/den for w_xi in w_x]
+    den = np.sum(np.exp(w_x * ac + b[0]))
+    prob = np.exp(w_x * ac + b[0])/den
     index = 0
     ref = 0
     while rdm_number > ref:
@@ -54,7 +54,9 @@ class AbstractMdp(object):
 
         # calculate reward and new state according to the sampled action
         r = lqgspo.abstract_reward_function(self.mcrst_intervals[self.state], a)
-        new_s = calculate_new_state(self.functions.get_tf_parameters(self.state), a, self.np_random.uniform(0, 1))
+        w_params, b_params = self.functions.get_tf_parameters(self.state)
+        new_s = calculate_new_state(w_params.detach().numpy(), b_params.detach().numpy(), a,
+                                    self.np_random.uniform(0, 1))
 
         # print("Sample from the abstract MDP: S:{}, A:{}, R:{}, S':{}".format(self.state, a, r, new_s))
         state = self.state

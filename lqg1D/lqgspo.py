@@ -10,6 +10,7 @@ import torch
 ABSTRACT_POLICY_VERSION = 1
 INIT_MU = 0.
 INIT_OMEGA = 1.
+# learning rate used to obtain the Gaussian policy from (deterministic) samples
 LR_POLICY = 0.001
 
 # constants for abstract transition function (0 for the 1st definition, 1 for the 2nd one)
@@ -23,6 +24,7 @@ LR_TFUN_B = 0.01
 N_MACROSTATES = 6
 CONSTANT_INTERVALS = False
 INTERVALS = [[-2, -0.4], [-0.4, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.4], [0.4, 2]]
+GAMMA = 0.9
 
 
 def get_states_from_samples(samples):
@@ -42,6 +44,8 @@ class LqgSpo(object):
     def __init__(self, env):
         super().__init__()
         self.env = env
+        self.n_mcrst = N_MACROSTATES
+        self.gamma = GAMMA
 
         # let's calculate a different stochastic policy for every macrostate
         self.stoch_policy = []
@@ -88,7 +92,7 @@ class LqgSpo(object):
             # quantities used to perform gradient ascent
             grad_mu = grad_log_pol_mu / self.estimate_mcrst_dist[s[0]]
             grad_omega = grad_log_pol_omega / self.estimate_mcrst_dist[s[0]]
-            self.stoch_policy[s[0]].update_parameters(grad_mu, grad_omega)
+            self.stoch_policy[s[0]].update_parameters(grad_mu, grad_omega, LR_POLICY)
 
     # stores in a dictionary the actions (key) and the number of times they are performed (value)
     def update_abs_policy_weighted(self, samples):

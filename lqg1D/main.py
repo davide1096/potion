@@ -5,6 +5,7 @@ from lqg1D.lqgspo import LqgSpo
 import lqg1D.estimator as est
 from lqg1D.abstract_mdp import AbstractMdp as AbsMdp
 import lqg1D.abstract_mdp as abs_mdp
+import numpy as np
 
 INIT_DETERMINISTIC_PARAM = -0.2
 N_SAMPLES = 200
@@ -34,8 +35,19 @@ abstract_fun.show_abs_tf_params()
 abstract_fun.show_tf_prob()
 
 # getting the samples according to the abstract (stochastic) policy
-abstract_mdp = AbsMdp(abstract_fun, -env.max_action, env.max_action)
-abs_samples = abstract_mdp.sampling(N_SAMPLES_ABSTRACT, N_STEPS_ABSTRACT)
+abstract_mdp = AbsMdp(abstract_fun, -env.max_action, env.max_action, N_SAMPLES_ABSTRACT, N_STEPS_ABSTRACT)
+abs_samples = abstract_mdp.sampling()
 
 print("Initial states: ", abs_mdp.count_states([s[0] for s in abs_samples]))
 print("Final states:   ", abs_mdp.count_states([s[3] for s in abs_samples]))
+
+abstract_mdp.policy_gradient_update(abs_samples)
+abstract_fun.show_abs_policy_params()
+abstract_mdp.show_critic_vparams()
+
+rew = np.array([sam[2] for sam in abs_samples])
+print("Test: reward of samples before abs policy update: {}".format(rew.sum()))
+
+new_samples = abstract_mdp.sampling()
+rew = np.array([sam[2] for sam in new_samples])
+print("Test: reward of samples after abs policy update: {}".format(rew.sum()))

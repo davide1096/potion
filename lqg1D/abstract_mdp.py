@@ -6,6 +6,10 @@ import numpy as np
 import scipy.stats as stats
 
 SEED = None
+INIT_V = 2.
+# learning rate used to update with policy gradient the abstract policy
+LR_POLICY = 0.001
+LR_VFUN = 0.01
 
 
 # since we have the parameters related to the abstract transition functions we proceed in this way:
@@ -32,17 +36,19 @@ def count_states(states):
 
 class AbstractMdp(object):
 
-    def __init__(self, functions, min_action, max_action):
+    def __init__(self, functions, min_action, max_action, n_samples, n_steps):
         super().__init__()
         # here abstract policy, abstract transition and reward functions are contained
         self.functions = functions
         self.np_random, seed = seeding.np_random(SEED)
         self.mcrst_intervals = functions.get_mcrst_intervals()
-        # print("The abstract MDP will have the following macrostates: {}".format(self.mcrst_intervals))
         self.state = None
         self.reset()
         self.min_action = min_action
         self.max_action = max_action
+        self.v_params = np.array([INIT_V for i in range(0, self.functions.n_mcrst)])
+        self.n_samples = n_samples
+        self.n_steps = n_steps
 
     def step(self):
         if not self.functions.abstract_policy_version:
@@ -68,12 +74,13 @@ class AbstractMdp(object):
     def reset(self):
         self.state = int(self.np_random.uniform(low=0, high=len(self.mcrst_intervals)))
 
-    def sampling(self, n_samples, n_steps):
+    def sampling(self):
+        print("Sampling from the abstract mdp...")
         samples_list = []
-        for i in range(0, n_samples):
+        for i in range(0, self.n_samples):
             self.reset()
 
-            for j in range(0, n_steps):
+            for j in range(0, self.n_steps):
                 samples_list.append(self.step())
 
         random.shuffle(samples_list)
@@ -90,5 +97,34 @@ class AbstractMdp(object):
             if accumulator >= rdm_number:
                 # k is a key -> an action
                 return float(k)
+
+    def policy_gradient_update(self, samples):
+        # I store the rewards array because I want to normalize them
+        rewards = np.array([sam[2] for sam in samples])
+        d_factor = 1
+        index = 0
+        for s in samples:
+            delta = (s[2] - rewards.mean()) / (rewards.std() + 1e-9) + self.functions.gamma * self.v_params[s[3]] - self.v_params[s[0]]
+            # update v_params
+            self.v_params[s[0]] += LR_VFUN * delta
+
+
+            # udpate abstract policy parameters
+            if not self.functions.abstract_policy_version:
+                grad_log_pol_mu, grad_log_pol_omega = self.functions.stoch_policy[s[0]].gradient_log_policy(s[1])
+                upd_mu = d_factor * delta * grad_log_pol_mu
+                upd_omega = d_factor * delta * grad_log_pol_omega
+                self.functions.stoch_policy[s[0]].update_parameters(upd_mu, upd_omega, LR_POLICY)
+            else:
+                self.functions.stoch_policy[s[0]]['{}'.format(s[1])] += LR_POLICY * d_factor * delta
+
+            # during each episode the discount factor needs to be updated
+            d_factor = d_factor * self.functions.gamma if index < (self.n_steps - 1) else 1
+            index = index + 1 if index < (self.n_steps - 1) else 0
+
+    def show_critic_vparams(self):
+        print("V parameters: ")
+        print(self.v_params)
+
 
 

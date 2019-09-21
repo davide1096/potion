@@ -1,6 +1,4 @@
 from gym.utils import seeding
-import torch
-import random
 import lqg1D.lqgspo as lqgspo
 import numpy as np
 import scipy.stats as stats
@@ -16,7 +14,7 @@ LR_VFUN = 0.01
 # 1) calculate p(x'|x, a) for all x'
 # 2) divide the space [0,1) according to these probabilities
 # 3) select the macrostate related to the space that contains the rdm_number
-def calculate_new_state(w_x, b, ac, rdm_number):
+def calc_new_state(w_x, b, ac, rdm_number):
     if rdm_number == 0:
         return 0
     den = np.sum(np.exp(w_x * ac + b[0]))
@@ -38,7 +36,7 @@ class AbstractMdp(object):
 
     def __init__(self, functions, min_action, max_action, n_samples, n_steps):
         super().__init__()
-        # here abstract policy, abstract transition and reward functions are contained
+        # in sel.functions are contained abstract policy, abstract transition and reward functions
         self.functions = functions
         self.np_random, seed = seeding.np_random(SEED)
         self.mcrst_intervals = functions.get_mcrst_intervals()
@@ -51,22 +49,11 @@ class AbstractMdp(object):
         self.n_steps = n_steps
 
     def step(self):
-        if not self.functions.abstract_policy_version:
-            # draw an action according to the stochastic policy defined for the current macrostate
-            par = self.functions.get_policy_parameters(self.state)
-            mu = next(par).detach()
-            sigma = np.exp(next(par).detach())
-            a = stats.truncnorm((self.min_action - mu)/sigma, (self.max_action - mu)/sigma, loc=mu, scale=sigma).rvs()
-        else:
-            a = self.draw_action_weighted_policy()
-
-        # calculate reward and new state according to the sampled action
+        a = self.draw_action_gaussian_policy(self.state) if not self.functions.abstract_policy_version else \
+            self.draw_action_weighted_policy(self.state)
         r = lqgspo.abstract_reward_function(self.mcrst_intervals[self.state], a)
         w_params, b_params = self.functions.get_tf_parameters(self.state)
-        new_s = calculate_new_state(w_params.detach().numpy(), b_params.detach().numpy(), a,
-                                    self.np_random.uniform(0, 1))
-
-        # print("Sample from the abstract MDP: S:{}, A:{}, R:{}, S':{}".format(self.state, a, r, new_s))
+        new_s = calc_new_state(w_params.detach().numpy(), b_params.detach().numpy(), a, self.np_random.uniform(0, 1))
         state = self.state
         self.state = new_s
         return [state, a, r, new_s]
@@ -75,22 +62,27 @@ class AbstractMdp(object):
         self.state = int(self.np_random.uniform(low=0, high=len(self.mcrst_intervals)))
 
     def sampling(self):
-        print("Sampling from the abstract mdp...")
         samples_list = []
         for i in range(0, self.n_samples):
             self.reset()
-
             for j in range(0, self.n_steps):
                 samples_list.append(self.step())
-
-        random.shuffle(samples_list)
+        # random.shuffle(samples_list)
         return samples_list
 
+    def draw_action_gaussian_policy(self, state):
+        # draw an action according to the stochastic policy defined for the current macrostate
+        par = self.functions.get_policy_parameters(state)
+        mu = next(par).detach()
+        sigma = np.exp(next(par).detach())
+        a = stats.truncnorm((self.min_action - mu) / sigma, (self.max_action - mu) / sigma, loc=mu, scale=sigma).rvs()
+        return a
+
     # draw an action according to the stochastic policy defined weighting every action performed in the previous samples
-    def draw_action_weighted_policy(self):
-        policy = self.functions.stoch_policy[self.state]
+    def draw_action_weighted_policy(self, state):
+        policy = self.functions.stoch_policy[state]
         # rdm_number between 1 and the #samples started in that macrostate
-        rdm_number = self.np_random.random_integers(sum(policy.values()))
+        rdm_number = self.np_random.random() * sum(policy.values())
         accumulator = 0
         for k in policy.keys():
             accumulator += policy[k]
@@ -104,12 +96,12 @@ class AbstractMdp(object):
         d_factor = 1
         index = 0
         for s in samples:
-            delta = (s[2] - rewards.mean()) / (rewards.std() + 1e-9) + self.functions.gamma * self.v_params[s[3]] - self.v_params[s[0]]
+            delta = (s[2] - rewards.mean()) / (rewards.std() + 1e-9) + self.functions.gamma * self.v_params[s[3]] \
+                    - self.v_params[s[0]]
             # update v_params
             self.v_params[s[0]] += LR_VFUN * delta
 
-
-            # udpate abstract policy parameters
+            # update abstract policy parameters
             if not self.functions.abstract_policy_version:
                 grad_log_pol_mu, grad_log_pol_omega = self.functions.stoch_policy[s[0]].gradient_log_policy(s[1])
                 upd_mu = d_factor * delta * grad_log_pol_mu
@@ -123,8 +115,7 @@ class AbstractMdp(object):
             index = index + 1 if index < (self.n_steps - 1) else 0
 
     def show_critic_vparams(self):
-        print("V parameters: ")
-        print(self.v_params)
+        print("V parameters: {}".format(self.v_params))
 
 
 

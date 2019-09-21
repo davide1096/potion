@@ -27,12 +27,8 @@ INTERVALS = [[-2, -0.4], [-0.4, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.4], [0.4, 
 GAMMA = 0.9
 
 
-def get_states_from_samples(samples):
-    return [sam[0] for sam in samples]
-
-
-# just a fast possibility to implement the abstract reward function
-# the offset ensure that the reward function is always positive
+# a fast possibility to implement the abstract reward function
+# the offset ensure the reward function to be always positive
 def abstract_reward_function(interval, action):
     offset = 4.
     abstract_state = (interval[0] + interval[1]) / 2
@@ -46,11 +42,11 @@ class LqgSpo(object):
         self.env = env
         self.n_mcrst = N_MACROSTATES
         self.gamma = GAMMA
+        self.abstract_policy_version = ABSTRACT_POLICY_VERSION
+        self.estimate_mcrst_dist = None
 
         # let's calculate a different stochastic policy for every macrostate
         self.stoch_policy = []
-
-        self.abstract_policy_version = ABSTRACT_POLICY_VERSION
         if not ABSTRACT_POLICY_VERSION:
             for i in range(0, N_MACROSTATES):
                 self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, LR_POLICY, -self.env.max_action, self.env.max_action))
@@ -60,31 +56,21 @@ class LqgSpo(object):
 
         # in order to represent the abstract transition functions we define a parameter for each pair of macrostates
         tf_wparams = np.full((N_MACROSTATES, N_MACROSTATES), INIT_W)
+        # we also need a par that keeps track of the state when the action = 0 is multiplied with the w parameter
         tf_bparams = np.full((1, N_MACROSTATES), INIT_B)
         self.tf_wparams = torch.tensor(tf_wparams, requires_grad=True)
         self.tf_bparams = torch.tensor(tf_bparams, requires_grad=True)
 
     def from_states_to_macrostates(self, samples):
+        mcrst_samples = [[self.get_mcrst(s[0]), s[1], s[2], self.get_mcrst(s[3])] for s in samples]
         # estimate the macrostate distribution using the samples I have
-        self.estimate_mcrst_dist = e.estimate_mcrst_dist(get_states_from_samples(samples), N_MACROSTATES,
-                                                         CONSTANT_INTERVALS, -self.env.max_pos, self.env.max_pos,
-                                                         INTERVALS)
+        state_samples = [sam[0] for sam in mcrst_samples]
+        self.estimate_mcrst_dist = e.estimate_mcrst_dist(state_samples, N_MACROSTATES)
         print("Estimate of macrostates distribution: {}".format(self.estimate_mcrst_dist))
-        mcrst_samples = []
-        for s in samples:
-            state = e.get_mcrst_const(s[0], -self.env.max_pos, self.env.max_pos, N_MACROSTATES) if CONSTANT_INTERVALS \
-                else e.get_mcrst_not_const(s[0], INTERVALS)
-            new_state = e.get_mcrst_const(s[3], -self.env.max_pos, self.env.max_pos,
-                                          N_MACROSTATES) if CONSTANT_INTERVALS else e.get_mcrst_not_const(s[3],
-                                                                                                          INTERVALS)
-            mcrst_samples.append([state, s[1], s[2], new_state])
         return mcrst_samples
 
-    def update_abs_policy(self, samples):
-        if not ABSTRACT_POLICY_VERSION:
-            self.update_abs_policy_gaussian(samples)
-        else:
-            self.update_abs_policy_weighted(samples)
+    def update_abs_policy(self, spl):
+        self.update_abs_policy_gaussian(spl) if not ABSTRACT_POLICY_VERSION else self.update_abs_policy_weighted(spl)
 
     def update_abs_policy_gaussian(self, samples):
         for s in samples:
@@ -107,8 +93,7 @@ class LqgSpo(object):
 
             # I obtain all the parameters related to the same starting macrostate
             w_row = self.tf_wparams[s[0]]
-            prob = tf.get_grad_tf_prob(w_row, self.tf_bparams, s[3], s[1],
-                                                                 TRANSITION_FUNCTION_VERSION)
+            prob = tf.get_grad_tf_prob(w_row, self.tf_bparams, s[3], s[1], TRANSITION_FUNCTION_VERSION)
 
             if TRANSITION_FUNCTION_VERSION == 0:
                 # I calculate the update terms... (negative loss, so I can sum during the update)
@@ -145,15 +130,18 @@ class LqgSpo(object):
         if not ABSTRACT_POLICY_VERSION:
             print("Transition function probabilities between macrostates given the mean action: ")
             for i in range(0, N_MACROSTATES):
-                pol = self.stoch_policy[i]
-                abs_pol_par = pol.parameters()
+                abs_pol_par = self.stoch_policy[i].parameters()
                 mu = next(abs_pol_par).detach().numpy()
                 prob = [tf.get_tf_prob(self.tf_wparams[i], self.tf_bparams, j, mu)[0] for j in range(0, N_MACROSTATES)]
                 print(prob)
 
     def get_mcrst_intervals(self):
-        return e.get_constant_intervals(-self.env.max_pos, self.env.max_pos,
-                                        N_MACROSTATES) if CONSTANT_INTERVALS else INTERVALS
+        return e.get_constant_intervals(-self.env.max_pos, self.env.max_pos, N_MACROSTATES) if CONSTANT_INTERVALS \
+            else INTERVALS
+
+    def get_mcrst(self, state):
+        return e.get_mcrst_const(state, -self.env.max_state, self.env.max_state, N_MACROSTATES) if CONSTANT_INTERVALS \
+            else e.get_mcrst_not_const(state, INTERVALS)
 
     def get_tf_parameters(self, mcrst):
         return self.tf_wparams[mcrst], self.tf_bparams

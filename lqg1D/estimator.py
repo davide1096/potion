@@ -8,13 +8,11 @@ def sampling_from_det_pol(env, n_samples, n_steps, det_pol):
     samples_list = []
     for i in range(0, n_samples):
         env.reset()
-
         for j in range(0, n_steps):
             state = env.get_state()
             det_pol.train()
             action = det_pol(torch.from_numpy(state).float())
             new_state, r, _, _ = env.step(action.detach().numpy())
-            # store each step I get
             samples_list.append([state[0], action[0], r, new_state[0]])
 
     random.shuffle(samples_list)
@@ -35,22 +33,16 @@ def get_mcrst_not_const(state, intervals):
     if state == intervals[-1][1]:
         return len(intervals) - 1
     index = 0
-    for int in intervals:
-        if int[0] <= state < int[1]:
+    for inter in intervals:
+        if inter[0] <= state < inter[1]:
             return index
         else:
             index = index + 1
 
 
-def estimate_mcrst_dist(samples_state, n_macrostates, constant_intervals, min_state, max_state, intervals=None):
-    # regular is a boolean telling if all the macrostates have the same dimension
-    accumulator = np.zeros(n_macrostates)
-    if constant_intervals:
-        index = [get_mcrst_const(sample, min_state, max_state, n_macrostates) for sample in samples_state]
-    else:
-        index = [get_mcrst_not_const(sample, intervals) for sample in samples_state]
-
-    for i in index:
+def estimate_mcrst_dist(samples_state, n_mcrst):
+    accumulator = np.zeros(n_mcrst)
+    for i in samples_state:
         accumulator[i] = accumulator[i] + 1
 
     # to avoid estimates equal to zero

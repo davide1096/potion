@@ -17,7 +17,7 @@ LR_POLICY = 0.001
 TRANSITION_FUNCTION_VERSION = 1
 INIT_W = 1.
 INIT_B = 0.5
-LR_TFUN_W = 1.
+LR_TFUN_W = 0.1
 LR_TFUN_B = 0.01
 
 # about macrostates

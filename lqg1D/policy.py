@@ -4,6 +4,8 @@ import torch.nn as nn
 import numpy as np
 from lqg1D.estimator import update_parameter
 
+GRAD_LIM = 0.1
+
 
 class StochasticPolicy(nn.Module):
 
@@ -31,7 +33,10 @@ class StochasticPolicy(nn.Module):
     def gradient_log_policy(self, action):
         out = torch.log(self.get_policy_prob(action))
         out.backward()
-        return self.mu.grad, self.omega.grad
+        # to avoid exploding gradients
+        grad_log_pol_mu = np.clip(self.mu.grad, -GRAD_LIM, GRAD_LIM)
+        grad_log_pol_omega = np.clip(self.omega.grad, -GRAD_LIM, GRAD_LIM)
+        return grad_log_pol_mu, grad_log_pol_omega
 
 
 class DeterministicPolicy(nn.Module):

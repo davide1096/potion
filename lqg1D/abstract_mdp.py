@@ -4,9 +4,9 @@ import numpy as np
 import scipy.stats as stats
 
 SEED = None
-INIT_V = 2.
+INIT_V = 1.
 # learning rate used to update with policy gradient the abstract policy
-LR_POLICY = 0.01
+LR_POLICY = 0.1
 LR_VFUN = 0.01
 
 
@@ -18,7 +18,7 @@ def calc_new_state(w_x, b, ac, rdm_number):
     if rdm_number == 0:
         return 0
     den = np.sum(np.exp(w_x * ac + b[0]))
-    prob = np.exp(w_x * ac + b[0])/den
+    prob = np.exp(w_x * ac + b[0]) / den
     index = 0
     ref = 0
     while rdm_number > ref:
@@ -96,8 +96,8 @@ class AbstractMdp(object):
         d_factor = 1
         index = 0
         for s in samples:
-            delta = (s[2] - rewards.mean()) / (rewards.std() + 1e-9) + self.functions.gamma * self.v_params[s[3]] \
-                    - self.v_params[s[0]]
+            r_norm = (s[2] - rewards.mean()) / (rewards.std() + 1e-9)
+            delta = r_norm + self.functions.gamma * self.v_params[s[3]] - self.v_params[s[0]]
             # update v_params
             self.v_params[s[0]] += LR_VFUN * delta
 

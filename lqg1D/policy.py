@@ -4,7 +4,7 @@ import torch.nn as nn
 import numpy as np
 from lqg1D.estimator import update_parameter
 
-GRAD_LIM = 0.1
+GRAD_LIM = 1
 
 
 class StochasticPolicy(nn.Module):
@@ -22,8 +22,8 @@ class StochasticPolicy(nn.Module):
     def update_parameters(self, grad_mu, grad_omega, lr):
         new_mu = np.clip(update_parameter(self.mu, lr, grad_mu), self.min_action, self.max_action)
         self.mu = nn.Parameter(torch.tensor([new_mu], requires_grad=True))
-        self.omega = nn.Parameter(torch.tensor([update_parameter(self.omega, lr, grad_omega)],
-                                               requires_grad=True))
+        new_omega = np.clip(update_parameter(self.omega, lr, grad_omega), -1.6, 1.6)
+        self.omega = nn.Parameter(torch.tensor([new_omega], requires_grad=True))
 
     def get_policy_prob(self, action):
         sigma = torch.exp(self.omega)

@@ -57,6 +57,9 @@ def get_constant_intervals(min, max, n_mcrst):
     while min < max:
         intervals.append([min, min + h])
         min += h
+    if len(intervals) > n_mcrst:
+        del intervals[-1]
+        intervals[n_mcrst - 1][1] = max
     return intervals
 
 

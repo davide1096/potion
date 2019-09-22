@@ -18,7 +18,7 @@ TRANSITION_FUNCTION_VERSION = 1
 INIT_W = 1.
 INIT_B = 0.5
 LR_TFUN_W = 0.1
-LR_TFUN_B = 0.01
+LR_TFUN_B = 0.1
 
 # about macrostates
 N_MACROSTATES = 6
@@ -140,7 +140,7 @@ class LqgSpo(object):
             else INTERVALS
 
     def get_mcrst(self, state):
-        return e.get_mcrst_const(state, -self.env.max_state, self.env.max_state, N_MACROSTATES) if CONSTANT_INTERVALS \
+        return e.get_mcrst_const(state, -self.env.max_pos, self.env.max_pos, N_MACROSTATES) if CONSTANT_INTERVALS \
             else e.get_mcrst_not_const(state, INTERVALS)
 
     def get_tf_parameters(self, mcrst):

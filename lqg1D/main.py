@@ -6,9 +6,9 @@ import lqg1D.estimator as est
 from lqg1D.abstract_mdp import AbstractMdp as AbsMdp
 import lqg1D.abstract_mdp as abs_mdp
 
-INIT_DETERMINISTIC_PARAM = -0.2
+INIT_DETERMINISTIC_PARAM = -0.1
 LR_DET_POLICY = 0.01
-N_ITERATIONS = 50
+N_ITERATIONS = 2000
 
 N_SAMPLES = 200
 N_STEPS = 20
@@ -61,4 +61,4 @@ for i in range(0, N_ITERATIONS):
         deterministic_policy_par -= LR_DET_POLICY * (deterministic_policy_par * s[0] - s[1]) * s[0]
 
     det_pol.update_param(deterministic_policy_par)
-    print("Updated deterministic policy parameter: {}".format(deterministic_policy_par))
+    print("Updated deterministic policy parameter: {}\n".format(deterministic_policy_par))

@@ -15,7 +15,7 @@ def sampling_from_det_pol(env, n_samples, n_steps, det_pol):
             new_state, r, _, _ = env.step(action.detach().numpy())
             samples_list.append([state[0], action[0], r, new_state[0]])
 
-    random.shuffle(samples_list)
+    # random.shuffle(samples_list)
     return samples_list
 
 
@@ -71,4 +71,29 @@ def update_parameter(param, learning_rate, grad):
     return update
 
 
+# working for non constant intervals!
+def alternative_sampling(env, n_samples, n_steps, stoch_policy, intervals):
+    samples_list = []
+    for i in range(0, n_samples):
+        env.reset()
+        for j in range(0, n_steps):
+            state = get_mcrst_not_const(env.get_state()[0], intervals)
+            action = draw_action_weighted_policy(stoch_policy[state])
+            new_state, r, _, _ = env.step(action)
+            ns = get_mcrst_not_const(new_state[0], intervals)
+            samples_list.append([state, action, r, ns])
+
+    # random.shuffle(samples_list)
+    return samples_list
+
+
+def draw_action_weighted_policy(mcrst_policy):
+    # rdm_number between 1 and the #samples started in that macrostate
+    rdm_number = random.random() * sum(mcrst_policy.values())
+    accumulator = 0
+    for k in mcrst_policy.keys():
+        accumulator += mcrst_policy[k]
+        if accumulator >= rdm_number:
+            # k is a key -> an action
+            return float(k)
 

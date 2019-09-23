@@ -24,6 +24,9 @@ LR_TFUN_B = 0.1
 N_MACROSTATES = 6
 CONSTANT_INTERVALS = False
 INTERVALS = [[-2, -0.4], [-0.4, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.4], [0.4, 2]]
+# INTERVALS = [[-2, -1.8], [-1.8, -1.6], [-1.6, -1.4], [-1.4, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6],
+#              [-0.6, -0.4], [-0.4, -0.2], [-0.2, 0], [0, 0.2], [0.2, 0.4], [0.4, 0.6],
+#              [0.6, 0.8], [0.8, 1], [1, 1.2], [1.2, 1.4], [1.4, 1.6], [1.6, 1.8], [1.8, 2]]
 GAMMA = 0.9
 
 
@@ -44,15 +47,11 @@ class LqgSpo(object):
         self.gamma = GAMMA
         self.abstract_policy_version = ABSTRACT_POLICY_VERSION
         self.estimate_mcrst_dist = None
+        self.intervals = INTERVALS
 
         # let's calculate a different stochastic policy for every macrostate
-        self.stoch_policy = []
-        if not ABSTRACT_POLICY_VERSION:
-            for i in range(0, N_MACROSTATES):
-                self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, LR_POLICY, -self.env.max_action, self.env.max_action))
-        else:
-            for i in range(0, N_MACROSTATES):
-                self.stoch_policy.append({})
+        self.stoch_policy = None
+        self.reset_stoch_policy()
 
         # in order to represent the abstract transition functions we define a parameter for each pair of macrostates
         tf_wparams = np.full((N_MACROSTATES, N_MACROSTATES), INIT_W)
@@ -60,6 +59,15 @@ class LqgSpo(object):
         tf_bparams = np.full((1, N_MACROSTATES), INIT_B)
         self.tf_wparams = torch.tensor(tf_wparams, requires_grad=True)
         self.tf_bparams = torch.tensor(tf_bparams, requires_grad=True)
+
+    def reset_stoch_policy(self):
+        self.stoch_policy = []
+        if not ABSTRACT_POLICY_VERSION:
+            for i in range(0, N_MACROSTATES):
+                self.stoch_policy.append(sp(INIT_MU, INIT_OMEGA, LR_POLICY, -self.env.max_action, self.env.max_action))
+        else:
+            for i in range(0, N_MACROSTATES):
+                self.stoch_policy.append({})
 
     def from_states_to_macrostates(self, samples):
         mcrst_samples = [[self.get_mcrst(s[0]), s[1], s[2], self.get_mcrst(s[3])] for s in samples]
@@ -87,6 +95,10 @@ class LqgSpo(object):
                 self.stoch_policy[s[0]]['{:.3}'.format(s[1])] += 1
             else:
                 self.stoch_policy[s[0]]['{:.3}'.format(s[1])] = 1
+        # TODO to fix it better (huge probability if we have a=0)
+        for p in self.stoch_policy:
+            if '-0.0' in p:
+                del p['-0.0']
 
     def update_abs_tf(self, samples):
         for s in samples:

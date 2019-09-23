@@ -5,14 +5,17 @@ from lqg1D.lqgspo import LqgSpo
 import lqg1D.estimator as est
 from lqg1D.abstract_mdp import AbstractMdp as AbsMdp
 import lqg1D.abstract_mdp as abs_mdp
+from torch.utils.tensorboard import SummaryWriter
 
-INIT_DETERMINISTIC_PARAM = -0.1
-LR_DET_POLICY = 0.01
+writer = SummaryWriter('runs')
+
+INIT_DETERMINISTIC_PARAM = -1.
+LR_DET_POLICY = 0.1
 N_ITERATIONS = 2000
 
-N_SAMPLES = 200
+N_SAMPLES = 400
 N_STEPS = 20
-N_SAMPLES_ABSTRACT = 200
+N_SAMPLES_ABSTRACT = 400
 N_STEPS_ABSTRACT = 20
 
 
@@ -30,18 +33,23 @@ for i in range(0, N_ITERATIONS):
     # translating the samples with regard to macrostates
     mcrst_samples = abstract_fun.from_states_to_macrostates(samples)
 
+    # abstract_fun.reset_stoch_policy()
+
     # update and visualize parameters for the abstract policies
     abstract_fun.update_abs_policy(mcrst_samples)
     abstract_fun.show_abs_policy_params()
 
     # update and visualize parameters for the abstract transition functions
-    abstract_fun.update_abs_tf(mcrst_samples)
-    abstract_fun.show_abs_tf_params()
+    # abstract_fun.update_abs_tf(mcrst_samples)
+    # abstract_fun.show_abs_tf_params()
     # show the transition probability between macrostates related to the mean action in every macrostate
-    abstract_fun.show_tf_prob()
+    # abstract_fun.show_tf_prob()
 
     # getting the samples according to the abstract (stochastic) policy
-    abs_samples = abstract_mdp.sampling()
+    # abs_samples = abstract_mdp.sampling()
+
+    abs_samples = est.alternative_sampling(env, N_SAMPLES_ABSTRACT, N_STEPS_ABSTRACT, abstract_fun.stoch_policy,
+                                           abstract_fun.intervals)
 
     # update the abstract policy with abs_samples
     abstract_mdp.policy_gradient_update(abs_samples)
@@ -58,7 +66,12 @@ for i in range(0, N_ITERATIONS):
 
     # updating the deterministic_policy_par minimizing the MSE loss function
     for s in fictitious_samples:
+        # TODO fix it better
+        if s[1] is None:
+            s[1] = 0.1
         deterministic_policy_par -= LR_DET_POLICY * (deterministic_policy_par * s[0] - s[1]) * s[0]
 
     det_pol.update_param(deterministic_policy_par)
     print("Updated deterministic policy parameter: {}\n".format(deterministic_policy_par))
+
+writer.close()

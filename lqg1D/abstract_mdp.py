@@ -4,10 +4,10 @@ import numpy as np
 import scipy.stats as stats
 
 SEED = None
-INIT_V = 1.
+INIT_V = 0.1
 # learning rate used to update with policy gradient the abstract policy
-LR_POLICY = 0.1
-LR_VFUN = 0.01
+LR_POLICY = 1
+LR_VFUN = 0.1
 
 
 # since we have the parameters related to the abstract transition functions we proceed in this way:
@@ -95,6 +95,16 @@ class AbstractMdp(object):
         rewards = np.array([sam[2] for sam in samples])
         d_factor = 1
         index = 0
+        # to avoid that actions with p=1 influence the future sampling
+        if self.functions.abstract_policy_version:
+            self.functions.reset_stoch_policy()
+            # todo
+            for s in samples:
+                if '{}'.format(s[1]) in self.functions.stoch_policy[s[0]]:
+                    self.functions.stoch_policy[s[0]]['{:.3}'.format(s[1])] += 1
+                else:
+                    self.functions.stoch_policy[s[0]]['{:.3}'.format(s[1])] = 1
+
         for s in samples:
             r_norm = (s[2] - rewards.mean()) / (rewards.std() + 1e-9)
             delta = r_norm + self.functions.gamma * self.v_params[s[3]] - self.v_params[s[0]]
@@ -108,11 +118,29 @@ class AbstractMdp(object):
                 upd_omega = d_factor * delta * grad_log_pol_omega
                 self.functions.stoch_policy[s[0]].update_parameters(upd_mu, upd_omega, LR_POLICY)
             else:
-                self.functions.stoch_policy[s[0]]['{}'.format(s[1])] += LR_POLICY * d_factor * delta
+                # tot = sum(self.functions.stoch_policy[s[0]].values())
+                prob = self.functions.stoch_policy[s[0]]['{}'.format(s[1])]
+                self.functions.stoch_policy[s[0]]['{}'.format(s[1])] += LR_POLICY * d_factor * delta * (1 / prob)
+                # if '{}'.format(s[1]) in self.functions.stoch_policy[s[0]]:
+                #     self.functions.stoch_policy[s[0]]['{}'.format(s[1])] += + LR_POLICY * d_factor * delta
+                # else:
+                #     self.functions.stoch_policy[s[0]]['{}'.format(s[1])] = 1 + LR_POLICY * d_factor * delta
+                # to avoid p<0
+                if self.functions.stoch_policy[s[0]]['{}'.format(s[1])] < 0:
+                    self.functions.stoch_policy[s[0]]['{}'.format(s[1])] = 0.001
 
             # during each episode the discount factor needs to be updated
             d_factor = d_factor * self.functions.gamma if index < (self.n_steps - 1) else 1
             index = index + 1 if index < (self.n_steps - 1) else 0
+
+        # to avoid p<0
+        # for sp in self.functions.stoch_policy:
+        #     min_val = min(sp.values())
+        #     if min_val < 0:
+        #         for k in sp.keys():
+        #             sp[k] -= min_val
+
+
 
     def show_critic_vparams(self):
         print("V parameters: {}".format(self.v_params))

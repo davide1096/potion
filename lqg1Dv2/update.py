@@ -54,7 +54,7 @@ def update_mcrst_policy(policy, action, partial_prod):
     minor = min(p[1] for p in policy)
     if minor < 0:
         for i in range(0, len(policy)):
-            policy[i][1] += minor
+            policy[i][1] -= minor
     return normalize_prob_array(policy)
 
 

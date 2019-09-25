@@ -4,7 +4,6 @@ import torch
 
 
 def sampling_from_det_pol(env, n_samples, n_steps, det_pol):
-
     samples_list = []
     for i in range(0, n_samples):
         env.reset()
@@ -96,4 +95,7 @@ def draw_action_weighted_policy(mcrst_policy):
         if accumulator >= rdm_number:
             # k is a key -> an action
             return float(k)
+
+# ----------------------------------------------------------------------------------------------------
+
 

@@ -6,7 +6,7 @@ import scipy.stats as stats
 SEED = None
 INIT_V = 0.1
 # learning rate used to update with policy gradient the abstract policy
-LR_POLICY = 1
+LR_POLICY = 10
 LR_VFUN = 0.1
 
 

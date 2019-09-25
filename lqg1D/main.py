@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 writer = SummaryWriter('runs')
 
-INIT_DETERMINISTIC_PARAM = -1.
+INIT_DETERMINISTIC_PARAM = -0.1
 LR_DET_POLICY = 0.1
 N_ITERATIONS = 2000
 

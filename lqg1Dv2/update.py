@@ -1,5 +1,5 @@
 INIT_V_PARAM = 0.1
-LR_STOCH_POLICY = 0.000001
+LR_STOCH_POLICY = 0.01
 LR_VFUN = 0.1
 
 
@@ -40,19 +40,25 @@ def is_action_sampled(action, samples):
 def clean_policy(policy, samples):
     for i in range(0, len(policy)):
         policy[i] = list(filter(lambda x: is_action_sampled(x[0], samples), policy[i]))
-    return policy
+    return [normalize_prob_array(p) for p in policy]
 
 
 # policy is the policy related to a specific macrostate
 def update_mcrst_policy(policy, action, partial_prod):
     for p in range(0, len(policy)):
         if policy[p][0] == action:
-            if policy[p][1] == 0:
-                policy[p][1] = 0.0001
-            update = partial_prod / policy[p][1]
+            update = partial_prod / policy[p][1] if not policy[p][1] == 0 else 0
             policy[p][1] += update
-    policy = list(filter(lambda x: x[1] > 0, policy))
-    # normalization after the update
+    # policy = list(filter(lambda x: x[1] > 0, policy))
+    # to avoid probabilities < 0
+    minor = min(p[1] for p in policy)
+    if minor < 0:
+        for i in range(0, len(policy)):
+            policy[i][1] += minor
+    return normalize_prob_array(policy)
+
+
+def normalize_prob_array(policy):
     den = 0
     for p in range(0, len(policy)):
         den += policy[p][1]

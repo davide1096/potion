@@ -4,17 +4,18 @@ from lqg1Dv2.abstraction import Abstraction
 from lqg1Dv2.update import Updater
 import lqg1Dv2.abstraction as abstr
 
-INIT_DETERMINISTIC_PARAM = -0.1
+INIT_DETERMINISTIC_PARAM = -0.9
 GAMMA = 0.9
 LR_DET_POLICY = 0.1
 N_ITERATIONS = 200
 
 N_EPISODES = 200
 N_STEPS = 20
-N_EPISODES_ABSTRACT = 2000
+N_EPISODES_ABSTRACT = 200
 N_STEPS_ABSTRACT = 20
 
-INTERVALS = [[-2, -0.4], [-0.4, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.4], [0.4, 2]]
+INTERVALS = [[-2, -1.2], [-1.2, -0.8], [-0.8, -0.4], [-0.4, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.4], [0.4, 0.8],
+             [0.8, 1.2], [1.2, 2]]
 
 env = gym.make('LQG1D-v0')
 det_param = INIT_DETERMINISTIC_PARAM
@@ -50,12 +51,8 @@ for i in range(0, N_ITERATIONS):
     abstraction.set_abstract_policy(updated_abstract_policy)
     # now the deterministic policy needs to be updated with the knowledge of the updated abstract policy
     fictitious_samples = [[s[0], abstraction.draw_action_weighted_policy(abstr.get_mcrst(s[0], INTERVALS))]
-                              for s in deterministic_samples]
+                          for s in deterministic_samples]
     # update the det_param by minimizing the MSE loss function
     for s in fictitious_samples:
         det_param -= LR_DET_POLICY * (det_param * s[0] - s[1]) * s[0]
     print("Updated deterministic policy parameter: {}\n".format(det_param))
-
-
-
-

@@ -14,7 +14,8 @@ class Abstraction(object):
         # intervals is an array of pairs (s_min, s_max) representing all the macrostates
         self.intervals = intervals
         self.container = self.init_container()
-        self.abstract_policy = self.init_policy()
+        self.abstract_policy = None
+        self.init_policy()
 
     def init_container(self):
         container = []
@@ -26,7 +27,7 @@ class Abstraction(object):
         policy = []
         for i in range(0, len(self.intervals)):
             policy.append([])
-        return policy
+        self.abstract_policy = policy
 
     def divide_samples(self, samples):
         self.container = self.init_container()
@@ -35,16 +36,18 @@ class Abstraction(object):
 
     def compute_abstract_policy(self):
         for i in range(0, len(self.intervals)):
-            if len(self.abstract_policy[i]) == 0:
-                self.abstract_policy[i] = [[k, 1/len(self.container[i])] for k in self.container[i].keys()]
-            else:
-                prev_len_policy = len(self.abstract_policy[i])
-                # add with a mean value the new actions
-                for k in self.container[i].keys():
-                    self.abstract_policy[i].append([k, 1 / prev_len_policy])
-                    # normalize abs_pol
-                    for prob in self.abstract_policy[i]:
-                        prob[1] = prob[1] / (1 + len(self.container[i]) / prev_len_policy)
+            self.abstract_policy[i] = [[k, 1 / len(self.container[i])] for k in self.container[i].keys()]
+        # for i in range(0, len(self.intervals)):
+        #     if len(self.abstract_policy[i]) == 0:
+        #         self.abstract_policy[i] = [[k, 1/len(self.container[i])] for k in self.container[i].keys()]
+        #     else:
+        #         prev_len_policy = len(self.abstract_policy[i])
+        #         # add with a mean value the new actions
+        #         for k in self.container[i].keys():
+        #             self.abstract_policy[i].append([k, 1 / prev_len_policy])
+        #         # normalize abs_pol
+        #         for prob in self.abstract_policy[i]:
+        #             prob[1] = prob[1] / (1 + len(self.container[i]) / prev_len_policy)
 
     def abstract_sampling(self):
         samples_list = []
@@ -59,6 +62,7 @@ class Abstraction(object):
     def abstract_step(self, state):
         action = self.draw_action_weighted_policy(state)
         # info contains: [reward, new_state]
+        a = action in self.container[state]
         info = self.container[state][action]
         return [state, action, info[0], info[1]], info[1]
 

@@ -26,9 +26,9 @@ class Updater(object):
         return True
 
     def single_step_update(self, container):
+        new_v_function = np.empty(len(self.v_function))
         for i in range(0, len(self.v_function)):
             possible_actions = {}
-            new_v_function = np.empty(len(self.v_function))
             for a in container[i].keys():
                 reward = container[i][a][0]
                 new_state = container[i][a][1]

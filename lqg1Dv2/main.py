@@ -7,8 +7,8 @@ import random
 
 INIT_DETERMINISTIC_PARAM = -0.8
 GAMMA = 0.9
-LR_DET_POLICY = 0.01
-N_ITERATIONS = 200
+LR_DET_POLICY = 0.1
+N_ITERATIONS = 100
 BATCH_SIZE = 50
 
 N_EPISODES = 2000
@@ -45,14 +45,16 @@ def sampling_from_det_pol(envir, n_episodes, n_steps, det_par):
 
 
 def sampling_abstract_optimal_pol(abs_opt, st, param):
-    # prev_action = st * param
-    # mcrst =  abstr.get_mcrst(st, INTERVALS)
-    # diff = min(abs(act - prev_action) for act in abs_opt[mcrst])
-    # return prev_action - diff if prev_action - diff in abs_opt[mcrst] else prev_action + diff
-    # todo choose the action closest to the previous one done for each state
+    prev_action = st * param
     mcrst = abstr.get_mcrst(st, INTERVALS)
+    if prev_action in abs_opt[mcrst]:
+        return prev_action
+    diff = min(abs(act - prev_action) for act in abs_opt[mcrst])
+    return prev_action - diff if prev_action - diff in abs_opt[mcrst] else prev_action + diff
+    # todo choose the action closest to the previous one done for each state
+    # mcrst = abstr.get_mcrst(st, INTERVALS)
     # return sum(abs_opt[mcrst])/len(abs_opt[mcrst])
-    return abs_opt[mcrst][0]
+    # return abs_opt[mcrst][0]
 
 
 while True:

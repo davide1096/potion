@@ -24,7 +24,8 @@ class Abstraction(object):
         self.container = self.init_container()
         for s in samples:
             mcrst = get_mcrst(s[0], self.intervals)
-            self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), get_mcrst(s[3], self.intervals)]
+            # self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), get_mcrst(s[3], self.intervals)]
+            self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), self.calc_abs_tf(mcrst, s[1])]
 
     def abstract_sampling(self):
         samples_list = []
@@ -51,9 +52,15 @@ class Abstraction(object):
         return self.container
 
     def calc_abs_reward(self, st, a):
-        ns = self.intervals[st]
-        s_mean = (abs(ns[0] + ns[1]))/2
+        s_int = self.intervals[st]
+        s_mean = (s_int[0] + s_int[1])/2
         return -0.5 * (s_mean * s_mean + a * a)
+
+    def calc_abs_tf(self, st, a):
+        s_int = self.intervals[st]
+        s_mean = (s_int[0] + s_int[1])/2
+        new_s = s_mean + a
+        return get_mcrst(new_s, self.intervals)
 
 
 def get_mcrst(state, intervals):

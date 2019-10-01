@@ -12,6 +12,7 @@ class Updater(object):
         self.gamma = gamma
 
     def solve_mdp(self, container):
+        # self.v_function = np.zeros(len(self.v_function))
         new_v = self.single_step_update(container)
         while not self.solved(new_v):
             self.v_function = new_v

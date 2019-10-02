@@ -24,29 +24,28 @@ class Abstraction(object):
         self.container = self.init_container()
         for s in samples:
             mcrst = get_mcrst(s[0], self.intervals)
-            # self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), get_mcrst(s[3], self.intervals)]
             self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), self.calc_abs_tf(mcrst, s[1])]
 
-    def abstract_sampling(self):
-        samples_list = []
-        for i in range(0, self.n_episodes):
-            state = random.randint(0, len(self.intervals) - 1)
-            for j in range(0, self.n_steps):
-                single_sample, state = self.abstract_step(state)
-                samples_list.append(single_sample)
-        # random.shuffle(samples_list)
-        return samples_list
-
-    def abstract_step(self, state):
-        action = self.draw_action_weighted_policy(state)
-        # info contains: [reward, new_state]
-        info = self.container[state][action]
-        return [state, action, info[0], info[1]], info[1]
-
-    def draw_action_weighted_policy(self, state):
-        rdm_number = random.randint(0, len(self.container[state])-1)
-        actions = self.container[state].keys()
-        return actions[rdm_number]
+    # def abstract_sampling(self):
+    #     samples_list = []
+    #     for i in range(0, self.n_episodes):
+    #         state = random.randint(0, len(self.intervals) - 1)
+    #         for j in range(0, self.n_steps):
+    #             single_sample, state = self.abstract_step(state)
+    #             samples_list.append(single_sample)
+    #     # random.shuffle(samples_list)
+    #     return samples_list
+    #
+    # def abstract_step(self, state):
+    #     action = self.draw_action_weighted_policy(state)
+    #     # info contains: [reward, new_state]
+    #     info = self.container[state][action]
+    #     return [state, action, info[0], info[1]], info[1]
+    #
+    # def draw_action_weighted_policy(self, state):
+    #     rdm_number = random.randint(0, len(self.container[state])-1)
+    #     actions = self.container[state].keys()
+    #     return actions[rdm_number]
 
     def get_container(self):
         return self.container

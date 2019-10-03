@@ -1,6 +1,6 @@
 import numpy as np
 
-EPSILON = 0.01
+EPSILON = 0.1
 
 
 class Updater(object):

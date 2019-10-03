@@ -1,21 +1,24 @@
 import random
 import numpy as np
+from lqg1Dv2.noisy_env import NoisyEnvironment
 
 SEED = None
 random.seed(SEED)
 
-SAMPLES_IN_MCRST = 2000
-RDM_SAMPLES = 500
+SAMPLES_IN_MCRST = 50
+RDM_SAMPLES = 50
 
 
 class Abstraction(object):
 
-    def __init__(self, n_episodes, n_steps, intervals):
+    def __init__(self, n_episodes, n_steps, intervals, env_noise):
         super().__init__()
         self.n_episodes = n_episodes
         self.n_steps = n_steps
         # intervals is an array of pairs (s_min, s_max) representing all the macrostates
         self.intervals = intervals
+        self.env_noise = env_noise
+        self.noisy_env_helper = NoisyEnvironment(intervals)
         self.container = self.init_container()
 
     def init_container(self):
@@ -28,15 +31,15 @@ class Abstraction(object):
         self.container = self.init_container()
         # container is an array of dictionaries. Every dict follows this configuration:
         # ---------------------------------------------------------
-        # action: abstract_reward, new_state (to be changed), state
+        # action: abstract_reward, new_state probabilities (to be changed), state
         # ---------------------------------------------------------
         for s in samples:
             mcrst = get_mcrst(s[0], self.intervals)
-            self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), s[3], s[0]]
+            self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), None, s[0]]
         # to avoid a slow computation (quadratic on the # of action sampled in each macrostate)
         self.container = [huge_mcrst_correction(cont) if len(cont.keys()) > SAMPLES_IN_MCRST else cont
                           for cont in self.container]
-        # at this point I know all the states sampled for every mcrst -> I can calculate the abstract TFs.
+        # at this point I have all the states sampled for every mcrst -> I can calculate the abstract TFs.
         self.calc_abs_tf()
 
     def get_container(self):
@@ -56,14 +59,16 @@ class Abstraction(object):
                 cont[act][1] = abs_tf
 
     def calc_single_atf(self, cont, act):
-        # every action needs an array (with length = #mcrst) to represent the abstract transition function
+        # every action needs an array (with length = #mcrst) to represent the abstract transition function.
         abs_tf = np.zeros(len(self.intervals))
-        # cont[a][2] is one of the sampled states.
-        # I consider the effect of taking a certain action in every sampled state belonging to the mcrst.
-        n_st_effect = [cont[a][2] + act for a in cont.keys()]
-        for ns in n_st_effect:
-            abs_tf[get_mcrst(ns, self.intervals)] += 1
-        abs_tf = [p / len(cont.keys()) for p in abs_tf]
+        # calculate the distribution on the arriving mcrsts given act, for every state sampled in a certain mcrst.
+        for a in cont.keys():
+            # the noise is a std gaussian to be summed to the supposed new state.
+            # mu = (supposed) new_state, sigma = const of noise; (cont[a][2] is one of the sampled states).
+            new = self.noisy_env_helper.get_mcrst_prob(cont[a][2] + act, self.env_noise)
+            abs_tf = [acc + n for acc, n in zip(abs_tf, new)]
+        den = sum(abs_tf)
+        abs_tf = [p / den for p in abs_tf]
         return abs_tf
 
 

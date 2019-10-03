@@ -6,6 +6,7 @@ import lqg1Dv2.abstraction as ab
 import random
 
 INIT_DETERMINISTIC_PARAM = -0.1
+ENV_NOISE = 0.5
 GAMMA = 0.9
 LR_DET_POLICY = 0.1
 N_ITERATIONS = 100
@@ -38,8 +39,9 @@ INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0
 
 
 env = gym.make('LQG1D-v0')
+env.sigma_noise = ENV_NOISE
 det_param = INIT_DETERMINISTIC_PARAM
-abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS)
+abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS, ENV_NOISE)
 dp_updater = Updater(len(INTERVALS), GAMMA)
 
 

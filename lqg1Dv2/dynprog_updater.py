@@ -1,6 +1,6 @@
 import numpy as np
 
-EPSILON = 0.001
+EPSILON = 0.01
 
 
 class Updater(object):
@@ -32,8 +32,10 @@ class Updater(object):
             possible_actions = {}
             for a in container[i].keys():
                 reward = container[i][a][0]
-                new_state = container[i][a][1]
-                possible_actions[a] = reward + self.gamma * self.v_function[new_state]
+                abs_tf = container[i][a][1]
+                # x is the weighted sum of v_functions related to new_mcrst (weighted according to the abs_tf)
+                x = sum([new_mcrst_prob * v_fun for new_mcrst_prob, v_fun in zip(abs_tf, self.v_function)])
+                possible_actions[a] = reward + x
             self.best_policy[i], new_v_function[i] = best_actions(possible_actions)
         return new_v_function
 

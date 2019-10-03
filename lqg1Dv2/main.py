@@ -4,9 +4,8 @@ from lqg1Dv2.abstraction import Abstraction
 from lqg1Dv2.dynprog_updater import Updater
 import lqg1Dv2.abstraction as ab
 import random
-import numpy as np
 
-INIT_DETERMINISTIC_PARAM = -0.9
+INIT_DETERMINISTIC_PARAM = -0.1
 GAMMA = 0.9
 LR_DET_POLICY = 0.1
 N_ITERATIONS = 100
@@ -70,24 +69,13 @@ def sampling_abstract_optimal_pol(abs_opt, st, param):
     return prev_action + diff if prev_action + diff in abs_opt[mcrst] else prev_action - diff
 
 
-# def est_dist(samples_state, n_mcrst):
-#     acc = np.zeros(n_mcrst)
-#     for i in samples_state:
-#         acc[i] = acc[i] + 1
-#     # to avoid estimates equal to zero
-#     zeros = len(acc) - np.count_nonzero(acc)
-#     acc = map(lambda a: 1 if a == 0 else a, acc)
-#     return [a / (len(samples_state) + zeros) for a in acc]
-
-
 while True:
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-    # mcrst_dist = est_dist([ab.get_mcrst(s[0], INTERVALS) for s in deterministic_samples], len(INTERVALS))
     abstraction.divide_samples(deterministic_samples)
     # to observe the min action sampled in each macrostate
     print([min(c.keys()) for c in abstraction.get_container()])
     abstract_optimal_policy = dp_updater.solve_mdp(abstraction.get_container())
-    # to observe the min action among the best actions for each macrostate
+    # to observe the min action among the best actions in each macrostate
     print([min(ab) for ab in abstract_optimal_policy])
 
     fictitious_samples = [[s[0], sampling_abstract_optimal_pol(abstract_optimal_policy,

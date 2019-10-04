@@ -5,8 +5,8 @@ from lqg1Dv2.dynprog_updater import Updater
 import lqg1Dv2.abstraction as ab
 import random
 
-INIT_DETERMINISTIC_PARAM = -0.1
-ENV_NOISE = 0.5
+INIT_DETERMINISTIC_PARAM = -1
+ENV_NOISE = 0.1
 GAMMA = 0.9
 LR_DET_POLICY = 0.1
 N_ITERATIONS = 100
@@ -74,11 +74,8 @@ def sampling_abstract_optimal_pol(abs_opt, st, param):
 while True:
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples)
-    # to observe the min action sampled in each macrostate
-    print([min(c.keys()) for c in abstraction.get_container()])
     abstract_optimal_policy = dp_updater.solve_mdp(abstraction.get_container())
-    # to observe the min action among the best actions in each macrostate
-    print([min(ab) for ab in abstract_optimal_policy])
+    abstraction.show_abstract_mdp()
 
     fictitious_samples = [[s[0], sampling_abstract_optimal_pol(abstract_optimal_policy,
                                                                s[0], det_param)] for s in deterministic_samples]

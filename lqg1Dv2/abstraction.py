@@ -31,7 +31,7 @@ class Abstraction(object):
         self.container = self.init_container()
         # container is an array of dictionaries. Every dict follows this configuration:
         # ---------------------------------------------------------
-        # action: abstract_reward, new_state probabilities (to be changed), state
+        # action: abstract_reward, new_state abstract probabilities (later), state
         # ---------------------------------------------------------
         for s in samples:
             mcrst = get_mcrst(s[0], self.intervals)
@@ -64,12 +64,20 @@ class Abstraction(object):
         # calculate the distribution on the arriving mcrsts given act, for every state sampled in a certain mcrst.
         for a in cont.keys():
             # the noise is a std gaussian to be summed to the supposed new state.
-            # mu = (supposed) new_state, sigma = const of noise; (cont[a][2] is one of the sampled states).
+            # mu = the supposed new_state, sigma = env_noise const; (cont[a][2] is one of the sampled states).
             new = self.noisy_env_helper.get_mcrst_prob(cont[a][2] + act, self.env_noise)
             abs_tf = [acc + n for acc, n in zip(abs_tf, new)]
         den = sum(abs_tf)
         abs_tf = [p / den for p in abs_tf]
         return abs_tf
+
+    def show_abstract_mdp(self):
+        for i in range(0, len(self.intervals)):
+            print("\n--------------------------------------")
+            print("Macrostate {} whit interval [{}, {}]".format(i, self.intervals[i][0], self.intervals[i][1]))
+            print("--------------------------------------")
+            [print("{0:.5f}".format(key), " :: ", show_helper(value)) for (key, value)
+             in sorted(self.container[i].items())]
 
 
 def huge_mcrst_correction(cont):
@@ -91,5 +99,15 @@ def get_mcrst(state, intervals):
             return index
         else:
             index = index + 1
+
+
+def show_helper(value):
+    rew_msg = "Reward: {0:.5f}\n".format(value[0])
+    tf_msg = "TF: "
+    for i in range(0, len(value[1])):
+        prob = value[1][i]
+        if prob >= 0.01:
+            tf_msg += "to {0:.0f}: ".format(i) + "{0:.2f}; ".format(prob)
+    return rew_msg + tf_msg + "\n"
 
 

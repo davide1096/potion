@@ -7,7 +7,9 @@ random.seed(SEED)
 SAMPLES_IN_MCRST = 2000
 RDM_SAMPLES = 500
 
-TF_KNOWN = False
+# when False I use Lipschitz hypothesis to calculate the abstract Transition Function
+# (assuming uniform state distribution in every macrostate)
+TF_KNOWN = True
 LIPSCHITZ_CONST_TF = 1
 
 
@@ -30,12 +32,12 @@ class Abstraction(object):
     def divide_samples(self, samples):
         self.container = self.init_container()
         # container is an array of dictionaries. Every dict follows this configuration:
-        # ---------------------------------------------------------
-        # action: abstract_reward, new_state (to be changed), state
-        # ---------------------------------------------------------
+        # ---------------------------------------------------------------
+        # action: abstract_reward, abstract_tf (later), state, new_state
+        # ---------------------------------------------------------------
         for s in samples:
             mcrst = get_mcrst(s[0], self.intervals)
-            self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), s[3], s[0]]
+            self.container[mcrst][s[1]] = [self.calc_abs_reward(mcrst, s[1]), None, s[0], s[3]]
         # to avoid a slow computation (quadratic on the # of action sampled in each macrostate)
         self.container = [huge_mcrst_correction(cont) if len(cont.keys()) > SAMPLES_IN_MCRST else cont
                           for cont in self.container]
@@ -76,7 +78,7 @@ class Abstraction(object):
 
     def calc_single_atf_lipschitz(self, cont, act):
         # from the new state in the sample, I calculate the min and the max possible values according to Lipschitz hyp.
-        new_state = cont[act][1]
+        new_state = cont[act][3]
         # mcrst is the mcrst related to the starting state in the sample
         mcrst = get_mcrst(cont[act][2], self.intervals)
         min_val = new_state - LIPSCHITZ_CONST_TF * (cont[act][2] - self.intervals[mcrst][0])

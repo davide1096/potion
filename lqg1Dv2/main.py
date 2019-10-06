@@ -40,7 +40,7 @@ INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0
 env = gym.make('LQG1D-v0')
 det_param = INIT_DETERMINISTIC_PARAM
 abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS)
-dp_updater = Updater(len(INTERVALS), GAMMA)
+dp_updater = Updater(INTERVALS, GAMMA)
 
 
 def deterministic_action(det_par, state):

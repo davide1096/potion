@@ -7,6 +7,9 @@ random.seed(SEED)
 SAMPLES_IN_MCRST = 2000
 RDM_SAMPLES = 500
 
+TF_KNOWN = False
+LIPSCHITZ_CONST_TF = 1
+
 
 class Abstraction(object):
 
@@ -49,11 +52,16 @@ class Abstraction(object):
 
     # for each action sampled it calculates the abstract TF as a vector of probabilities to end in each mcrst
     def calc_abs_tf(self):
-        for cont in self.container:
-            for act in cont.keys():
-                abs_tf = self.calc_single_atf(cont, act)
-                # the probability array (abs_tf) is put in the container, in the position [1] of new_state.
-                cont[act][1] = abs_tf
+        if TF_KNOWN:
+            for cont in self.container:
+                for act in cont.keys():
+                    abs_tf = self.calc_single_atf(cont, act)
+                    # the probability array (abs_tf) is put in the container, in the position [1] of new_state.
+                    cont[act][1] = abs_tf
+        else:
+            for cont in self.container:
+                for act in cont.keys():
+                    cont[act][1] = self.calc_single_atf_lipschitz(cont, act)
 
     def calc_single_atf(self, cont, act):
         # every action needs an array (with length = #mcrst) to represent the abstract transition function
@@ -64,6 +72,25 @@ class Abstraction(object):
         for ns in n_st_effect:
             abs_tf[get_mcrst(ns, self.intervals)] += 1
         abs_tf = [p / len(cont.keys()) for p in abs_tf]
+        return abs_tf
+
+    def calc_single_atf_lipschitz(self, cont, act):
+        # from the new state in the sample, I calculate the min and the max possible values according to Lipschitz hyp.
+        new_state = cont[act][1]
+        # mcrst is the mcrst related to the starting state in the sample
+        mcrst = get_mcrst(cont[act][2], self.intervals)
+        min_val = new_state - LIPSCHITZ_CONST_TF * (cont[act][2] - self.intervals[mcrst][0])
+        max_val = new_state + LIPSCHITZ_CONST_TF * (self.intervals[mcrst][1] - cont[act][2])
+        # knowing min & max val I calculate the transition probs (a uniform state dist in the mcrst is supposed).
+        abs_tf = np.zeros(len(self.intervals))
+        min_val_mcrst = get_mcrst(min_val, self.intervals)
+        max_val_mcrst = get_mcrst(max_val, self.intervals)
+        abs_tf[min_val_mcrst] = self.intervals[min_val_mcrst][1] - min_val
+        abs_tf[max_val_mcrst] = max_val - self.intervals[max_val_mcrst][0]
+        for i in range(min_val_mcrst + 1, max_val_mcrst):
+            abs_tf[i] = self.intervals[i][1] - self.intervals[i][0]
+        den = sum(abs_tf)
+        abs_tf = [p / den for p in abs_tf]
         return abs_tf
 
 
@@ -78,8 +105,10 @@ def huge_mcrst_correction(cont):
 
 def get_mcrst(state, intervals):
     # in the case of the highest possible state
-    if state == intervals[-1][1]:
+    if state >= intervals[-1][1]:
         return len(intervals) - 1
+    if state <= intervals[0][0]:
+        return 0
     index = 0
     for inter in intervals:
         if inter[0] <= state < inter[1]:

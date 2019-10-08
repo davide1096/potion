@@ -47,22 +47,22 @@ class Updater(object):
                     possible_actions[a] = reward + self.gamma * x
             else:
                 for a in container[i].keys():
-                    possible_actions[a] = self.manage_multiaction(container[i][a], a)
+                    possible_actions[a] = self.manage_multiaction(container[i][a], a, mean_reward(container))
             self.best_policy[i], new_v_function[i] = best_actions(possible_actions)
         return new_v_function
 
-    def manage_multiaction(self, action_tuple, action):
+    def manage_multiaction(self, action_tuple, action, mean_reward):
         reward = action_tuple[0]
         state = action_tuple[2]
         new_state = action_tuple[3]
         if get_mcrst(state, self.intervals) != get_mcrst(new_state, self.intervals):
-            return reward + self.gamma * self.v_function[get_mcrst(new_state, self.intervals)]
+            return (reward - mean_reward) + self.gamma * self.v_function[get_mcrst(new_state, self.intervals)]
         else:
             # the new  state is in the same mcrst of the prev state
-            acc = reward
+            acc = reward - mean_reward
             gam = self.gamma
             while get_mcrst(state, self.intervals) == get_mcrst(new_state, self.intervals):
-                acc += reward * gam
+                acc += (reward - mean_reward) * gam
                 gam *= self.gamma
                 new_state = new_state + action
             return acc + gam * self.v_function[get_mcrst(new_state, self.intervals)]
@@ -72,4 +72,14 @@ def best_actions(possibilities):
     target = max(possibilities.values())
     best_acts = [k for k in possibilities.keys() if possibilities[k] == target]
     return best_acts, target
+
+
+def mean_reward(container):
+    acc = 0
+    i = 0
+    for cont in container:
+        for a in cont.keys():
+            acc += cont[a][0]
+            i += 1
+    return acc / i
 

@@ -8,6 +8,7 @@ EPSILON = 0.01
 # 2) the transition function in the deterministic environment is known
 # 3) no abstract transition function, the effect of an action is the one related to the sample
 MULTIACTION = False
+MAX_ITERATIONS = 50
 
 
 class Updater(object):
@@ -22,9 +23,11 @@ class Updater(object):
     def solve_mdp(self, container):
         # self.v_function = np.zeros(len(self.v_function))
         new_v = self.single_step_update(container)
-        while not self.solved(new_v):
+        n_iterations = 0
+        while not self.solved(new_v) and n_iterations < MAX_ITERATIONS:
             self.v_function = new_v
             new_v = self.single_step_update(container)
+            n_iterations += 1
         self.v_function = new_v
         return self.best_policy
 

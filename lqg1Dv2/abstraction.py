@@ -9,7 +9,7 @@ RDM_SAMPLES = 500
 
 # when False I use Lipschitz hypothesis to calculate the abstract Transition Function
 # (assuming uniform state distribution in every macrostate)
-TF_KNOWN = True
+TF_KNOWN = False
 LIPSCHITZ_CONST_TF = 1
 
 
@@ -77,22 +77,24 @@ class Abstraction(object):
         return abs_tf
 
     def calc_single_atf_lipschitz(self, cont, act):
-        # from the new state in the sample, I calculate the min and the max possible values according to Lipschitz hyp.
-        new_state = cont[act][3]
-        # mcrst is the mcrst related to the starting state in the sample
-        mcrst = get_mcrst(cont[act][2], self.intervals)
-        min_val = new_state - LIPSCHITZ_CONST_TF * (cont[act][2] - self.intervals[mcrst][0])
-        max_val = new_state + LIPSCHITZ_CONST_TF * (self.intervals[mcrst][1] - cont[act][2])
-        # knowing min & max val I calculate the transition probs (a uniform state dist in the mcrst is supposed).
         abs_tf = np.zeros(len(self.intervals))
+        min_a = min(list(cont.keys()))
+        max_a = max(list(cont.keys()))
+        new_st_min = cont[max_a][3]
+        new_st_max = cont[min_a][3]
+        # I obtain the min and max new state I would get performing action act in the mcrst, according to the samples.
+        min_val = new_st_min - LIPSCHITZ_CONST_TF * (max_a - act)
+        max_val = new_st_max + LIPSCHITZ_CONST_TF * (act - min_a)
         min_val_mcrst = get_mcrst(min_val, self.intervals)
         max_val_mcrst = get_mcrst(max_val, self.intervals)
-        abs_tf[min_val_mcrst] = self.intervals[min_val_mcrst][1] - min_val
-        abs_tf[max_val_mcrst] = max_val - self.intervals[max_val_mcrst][0]
-        for i in range(min_val_mcrst + 1, max_val_mcrst):
-            abs_tf[i] = self.intervals[i][1] - self.intervals[i][0]
-        den = sum(abs_tf)
-        abs_tf = [p / den for p in abs_tf]
+        if min_val_mcrst == max_val_mcrst:
+            abs_tf[min_val_mcrst] += 1
+        else:
+            norm = max_val - min_val
+            abs_tf[min_val_mcrst] += (self.intervals[min_val_mcrst][1] - min_val) / norm
+            abs_tf[max_val_mcrst] += (max_val - self.intervals[max_val_mcrst][0]) / norm
+            for i in range(min_val_mcrst + 1, max_val_mcrst):
+                abs_tf[i] += (self.intervals[i][1] - self.intervals[i][0]) / norm
         return abs_tf
 
 
@@ -118,4 +120,28 @@ def get_mcrst(state, intervals):
         else:
             index = index + 1
 
+# for a in cont.keys():
+#     # dist = distance between the sample related to the specific action act and a sample in the same mcrst.
+#     dist = abs(cont[act][2] - cont[a][2])
+#     min_val = new_state - LIPSCHITZ_CONST_TF * dist
+#     max_val = new_state + LIPSCHITZ_CONST_TF * dist
+#     # knowing min & max val I calculate the transition probs (a uniform state dist in the mcrst is supposed).
+#     min_val_mcrst = get_mcrst(min_val, self.intervals)
+#     max_val_mcrst = get_mcrst(max_val, self.intervals)
+#     abs_tf[min_val_mcrst] += self.intervals[min_val_mcrst][1] - min_val
+#     abs_tf[max_val_mcrst] += max_val - self.intervals[max_val_mcrst][0]
+#     for i in range(min_val_mcrst + 1, max_val_mcrst):
+#         abs_tf[i] += self.intervals[i][1] - self.intervals[i][0]
 
+# dist = distance between the sample related to the specific action act and a sample in the same mcrst.
+# mcrst = get_mcrst(cont[act][2], self.intervals)
+# dist = max(self.intervals[mcrst][1] - cont[act][2], cont[act][2] - self.intervals[mcrst][0])
+# min_val = new_state - LIPSCHITZ_CONST_TF * dist
+# max_val = new_state + LIPSCHITZ_CONST_TF * dist
+# # knowing min & max val I calculate the transition probs (a uniform state dist in the mcrst is supposed).
+# min_val_mcrst = get_mcrst(min_val, self.intervals)
+# max_val_mcrst = get_mcrst(max_val, self.intervals)
+# abs_tf[min_val_mcrst] = self.intervals[min_val_mcrst][1] - min_val
+# abs_tf[max_val_mcrst] = max_val - self.intervals[max_val_mcrst][0]
+# for i in range(min_val_mcrst + 1, max_val_mcrst):
+#     abs_tf[i] = self.intervals[i][1] - self.intervals[i][0]

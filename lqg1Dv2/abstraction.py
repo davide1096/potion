@@ -10,18 +10,20 @@ RDM_SAMPLES = 500
 # when False I use Lipschitz hypothesis to calculate the abstract Transition Function
 # (assuming uniform state distribution in every macrostate)
 TF_KNOWN = False
-LIPSCHITZ_CONST_TF = 1
 
 
 class Abstraction(object):
 
-    def __init__(self, n_episodes, n_steps, intervals):
+    def __init__(self, n_episodes, n_steps, intervals, a, b):
         super().__init__()
         self.n_episodes = n_episodes
         self.n_steps = n_steps
         # intervals is an array of pairs (s_min, s_max) representing all the macrostates
         self.intervals = intervals
         self.container = self.init_container()
+        self.a = a
+        self.b = b
+        self.LIPSCHITZ_CONST_TF = b
 
     def init_container(self):
         container = []
@@ -70,7 +72,7 @@ class Abstraction(object):
         abs_tf = np.zeros(len(self.intervals))
         # cont[a][2] is one of the sampled states.
         # I consider the effect of taking a certain action in every sampled state belonging to the mcrst.
-        n_st_effect = [cont[a][2] + act for a in cont.keys()]
+        n_st_effect = [self.a * cont[a][2] + self.b * act for a in cont.keys()]
         for ns in n_st_effect:
             abs_tf[get_mcrst(ns, self.intervals)] += 1
         abs_tf = [p / len(cont.keys()) for p in abs_tf]
@@ -83,8 +85,8 @@ class Abstraction(object):
         new_st_min = cont[max_a][3]
         new_st_max = cont[min_a][3]
         # I obtain the min and max new state I would get performing action act in the mcrst, according to the samples.
-        min_val = new_st_min - LIPSCHITZ_CONST_TF * (max_a - act)
-        max_val = new_st_max + LIPSCHITZ_CONST_TF * (act - min_a)
+        min_val = new_st_min - self.LIPSCHITZ_CONST_TF * (max_a - act)
+        max_val = new_st_max + self.LIPSCHITZ_CONST_TF * (act - min_a)
         min_val_mcrst = get_mcrst(min_val, self.intervals)
         max_val_mcrst = get_mcrst(max_val, self.intervals)
         if min_val_mcrst == max_val_mcrst:
@@ -96,6 +98,10 @@ class Abstraction(object):
             for i in range(min_val_mcrst + 1, max_val_mcrst):
                 abs_tf[i] += (self.intervals[i][1] - self.intervals[i][0]) / norm
         return abs_tf
+
+
+def get_tf_known():
+    return TF_KNOWN
 
 
 def huge_mcrst_correction(cont):

@@ -3,13 +3,18 @@ import potion.envs
 from lqg1Dv2.abstraction import Abstraction
 from lqg1Dv2.dynprog_updater import Updater
 import lqg1Dv2.abstraction as ab
+import lqg1Dv2.visualization as vis
 import random
+import numpy as np
 
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0.1
+ENV_NOISE = 0
+A = 2
+B = 1
 GAMMA = 0.9
 LR_DET_POLICY = 0.1
-N_ITERATIONS = 100
+N_ITERATION = 50
+N_ITERATIONS_BATCH_GRAD = 100
 BATCH_SIZE = 50
 
 N_EPISODES = 2000
@@ -40,9 +45,13 @@ INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0
 
 env = gym.make('LQG1D-v0')
 env.sigma_noise = ENV_NOISE
+env.A = np.array([A]).reshape((1, 1))
+env.B = np.array([B]).reshape((1, 1))
+print("Optimal value: ", env.computeOptimalK())
 det_param = INIT_DETERMINISTIC_PARAM
-abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS)
+abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS, A, B)
 dp_updater = Updater(INTERVALS, GAMMA)
+vis.initialization(A, B, round(env.computeOptimalK()[0][0], 3), ENV_NOISE)
 
 
 def deterministic_action(det_par, state):
@@ -71,7 +80,7 @@ def sampling_abstract_optimal_pol(abs_opt, st, param):
     return prev_action + diff if prev_action + diff in abs_opt[mcrst] else prev_action - diff
 
 
-while True:
+for i in range(0, N_ITERATION):
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples)
     # to observe the min action sampled in each macrostate
@@ -82,10 +91,13 @@ while True:
 
     fictitious_samples = [[s[0], sampling_abstract_optimal_pol(abstract_optimal_policy,
                                                                s[0], det_param)] for s in deterministic_samples]
-    for e in range(0, N_ITERATIONS):
+    for e in range(0, N_ITERATIONS_BATCH_GRAD):
         accumulator = 0
         for b in range(0, BATCH_SIZE):
             s = fictitious_samples[random.randint(0, len(fictitious_samples) - 1)]
             accumulator += (det_param * s[0] - s[1]) * s[0]
         det_param = det_param - LR_DET_POLICY * (accumulator / BATCH_SIZE)
     print("Updated deterministic policy parameter: {}\n".format(det_param))
+    vis.show_new_value(det_param)
+vis.save_img(ab.get_tf_known(), A, B, ENV_NOISE)
+

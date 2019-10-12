@@ -8,12 +8,12 @@ import random
 import numpy as np
 
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0
-A = 2
+ENV_NOISE = 0.1
+A = 1
 B = 1
 GAMMA = 0.9
 LR_DET_POLICY = 0.1
-N_ITERATION = 50
+N_ITERATION = 30
 N_ITERATIONS_BATCH_GRAD = 100
 BATCH_SIZE = 50
 
@@ -48,10 +48,11 @@ env.sigma_noise = ENV_NOISE
 env.A = np.array([A]).reshape((1, 1))
 env.B = np.array([B]).reshape((1, 1))
 print("Optimal value: ", env.computeOptimalK())
+opt_par4visual = round(env.computeOptimalK()[0][0], 3)
 det_param = INIT_DETERMINISTIC_PARAM
 abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS, A, B)
 dp_updater = Updater(INTERVALS, GAMMA)
-vis.initialization(A, B, round(env.computeOptimalK()[0][0], 3), ENV_NOISE)
+vis.initialization(A, B, opt_par4visual, ENV_NOISE, INIT_DETERMINISTIC_PARAM)
 
 
 def deterministic_action(det_par, state):
@@ -98,6 +99,6 @@ for i in range(0, N_ITERATION):
             accumulator += (det_param * s[0] - s[1]) * s[0]
         det_param = det_param - LR_DET_POLICY * (accumulator / BATCH_SIZE)
     print("Updated deterministic policy parameter: {}\n".format(det_param))
-    vis.show_new_value(det_param)
+    vis.show_new_value(det_param, opt_par4visual)
 vis.save_img(ab.get_tf_known(), A, B, ENV_NOISE)
 

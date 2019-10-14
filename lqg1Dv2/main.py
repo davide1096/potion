@@ -7,6 +7,7 @@ import lqg1Dv2.visualization as vis
 import random
 import numpy as np
 
+folder = "lqg1d"
 INIT_DETERMINISTIC_PARAM = -0.9
 ENV_NOISE = 0.1
 A = 1
@@ -59,12 +60,12 @@ def deterministic_action(det_par, state):
     return det_par * state
 
 
-def sampling_from_det_pol(envir, n_episodes, n_steps, det_par):
+def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
     samples_list = []
     for j in range(0, n_episodes):
-        envir.reset()
+        env.reset()
         for k in range(0, n_steps):
-            state = envir.get_state()
+            state = env.get_state()
             action = deterministic_action(det_par, state)
             new_state, r, _, _ = env.step(action)
             samples_list.append([state[0], action[0], r, new_state[0]])
@@ -100,5 +101,5 @@ for i in range(0, N_ITERATION):
         det_param = det_param - LR_DET_POLICY * (accumulator / BATCH_SIZE)
     print("Updated deterministic policy parameter: {}\n".format(det_param))
     vis.show_new_value(det_param, opt_par4visual)
-vis.save_img(ab.get_tf_known(), A, B, ENV_NOISE)
+vis.save_img(ab.get_tf_known(), A, B, ENV_NOISE, folder)
 

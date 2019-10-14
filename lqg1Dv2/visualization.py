@@ -21,8 +21,8 @@ def show_new_value(par, par_opt):
     plt.pause(0.001)
 
 
-def save_img(tf_known, a, b, noise):
+def save_img(tf_known, a, b, noise, folder):
     key = "{}_{}_{}_{}_{}".format(a, b, noise, 1 if tf_known else 0, parameter[0])
     key = key.replace('.', ',')
-    filename = "./images/img" + key + ".jpg"
+    filename = "./images/" + folder + "/img" + key + ".jpg"
     plt.savefig(filename, dpi=150, transparent=False)

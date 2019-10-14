@@ -80,13 +80,12 @@ class Abstraction(object):
 
     def calc_single_atf_lipschitz(self, cont, act):
         abs_tf = np.zeros(len(self.intervals))
-        min_a = min(list(cont.keys()))
-        max_a = max(list(cont.keys()))
-        new_st_min = cont[max_a][3]
-        new_st_max = cont[min_a][3]
+        new_states = sorted([[v[3], k] for k, v in cont.items()])
+        new_st_min = new_states[0][0]
+        new_st_max = new_states[-1][0]
         # I obtain the min and max new state I would get performing action act in the mcrst, according to the samples.
-        min_val = new_st_min - self.LIPSCHITZ_CONST_TF * (max_a - act)
-        max_val = new_st_max + self.LIPSCHITZ_CONST_TF * (act - min_a)
+        min_val = new_st_min - self.LIPSCHITZ_CONST_TF * abs(new_states[0][1] - act)
+        max_val = new_st_max + self.LIPSCHITZ_CONST_TF * abs(new_states[-1][1] - act)
         min_val_mcrst = get_mcrst(min_val, self.intervals)
         max_val_mcrst = get_mcrst(max_val, self.intervals)
         if min_val_mcrst == max_val_mcrst:

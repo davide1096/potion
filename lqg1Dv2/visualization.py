@@ -22,6 +22,7 @@ def show_new_value(par, par_opt):
 
 
 def save_img(tf_known, a, b, noise):
-    key = "{}_{}_{}_{}".format(a, b, noise, 1 if tf_known else 0)
+    key = "{}_{}_{}_{}_{}".format(a, b, noise, 1 if tf_known else 0, parameter[0])
+    key = key.replace('.', ',')
     filename = "./images/img" + key + ".jpg"
     plt.savefig(filename, dpi=150, transparent=False)

@@ -44,7 +44,7 @@ class Abstraction(object):
         self.container = [huge_mcrst_correction(cont) if len(cont.keys()) > SAMPLES_IN_MCRST else cont
                           for cont in self.container]
         # at this point I know all the states sampled for every mcrst -> I can calculate the abstract TFs.
-        # self.calc_abs_tf()
+        self.calc_abs_tf()
 
     def get_container(self):
         return self.container

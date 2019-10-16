@@ -53,7 +53,7 @@ env.B = np.array([B]).reshape((1, 1))
 print("Optimal value: ", env.computeOptimalK())
 opt_par4visual = round(env.computeOptimalK()[0][0], 3)
 det_param = INIT_DETERMINISTIC_PARAM
-abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS, A, 1.4)
+abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS, A, B)
 dp_updater = Updater(INTERVALS, GAMMA)
 vis.initialization(A, B, opt_par4visual, ENV_NOISE, INIT_DETERMINISTIC_PARAM)
 
@@ -84,13 +84,17 @@ def sampling_abstract_optimal_pol(abs_opt, st, param):
     return prev_action + diff if prev_action + diff in abs_opt[mcrst] else prev_action - diff
 
 
+def compute_performance(det_samples, det_param):
+    return -0.5 * (1 + det_param * det_param) * sum([s[0] * s[0] for s in det_samples]) / len(det_samples)
+
+
 for i in range(0, N_ITERATION):
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples)
-    n_actions = abstraction.count_actions()
-    abstract_tf_solver = AbstractTF(abstraction.get_container(), 7.5, INTERVALS)
-    abstract_tf, id_actions = abstract_tf_solver.get_abstract_tf()
-    abstraction.set_abstract_tf(abstract_tf, id_actions)
+    # n_actions = abstraction.count_actions()
+    # abstract_tf_solver = AbstractTF(abstraction.get_container(), 7.5, INTERVALS)
+    # abstract_tf, id_actions = abstract_tf_solver.get_abstract_tf()
+    # abstraction.set_abstract_tf(abstract_tf, id_actions)
     # to observe the min action sampled in each macrostate
     # print([min(c.keys()) for c in abstraction.get_container() if len(list(c.keys())) > 0])
     abstract_optimal_policy = dp_updater.solve_mdp(abstraction.get_container())
@@ -105,7 +109,9 @@ for i in range(0, N_ITERATION):
             s = fictitious_samples[random.randint(0, len(fictitious_samples) - 1)]
             accumulator += (det_param * s[0] - s[1]) * s[0]
         det_param = det_param - LR_DET_POLICY * (accumulator / BATCH_SIZE)
+    j = compute_performance(deterministic_samples, det_param)
     print("Updated deterministic policy parameter: {}\n".format(det_param))
-    vis.show_new_value(det_param, opt_par4visual)
+    print("Updated performance measure: {}\n".format(j))
+    vis.show_new_value(det_param, opt_par4visual, j)
 vis.save_img(ab.get_tf_known(), A, B, ENV_NOISE, folder)
 

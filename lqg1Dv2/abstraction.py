@@ -4,8 +4,8 @@ import numpy as np
 SEED = None
 random.seed(SEED)
 
-SAMPLES_IN_MCRST = 2000
-RDM_SAMPLES = 500
+SAMPLES_IN_MCRST = 20
+RDM_SAMPLES = 20
 
 # when False I use Lipschitz hypothesis to calculate the abstract Transition Function
 # (assuming uniform state distribution in every macrostate)
@@ -44,7 +44,7 @@ class Abstraction(object):
         self.container = [huge_mcrst_correction(cont) if len(cont.keys()) > SAMPLES_IN_MCRST else cont
                           for cont in self.container]
         # at this point I know all the states sampled for every mcrst -> I can calculate the abstract TFs.
-        self.calc_abs_tf()
+        # self.calc_abs_tf()
 
     def get_container(self):
         return self.container
@@ -97,6 +97,19 @@ class Abstraction(object):
             for i in range(min_val_mcrst + 1, max_val_mcrst):
                 abs_tf[i] += (self.intervals[i][1] - self.intervals[i][0]) / norm
         return abs_tf
+
+    def count_actions(self):
+        n_actions = 0
+        for i in range(0, len(self.container)):
+            n_actions += len(list(self.container[i].keys()))
+        return n_actions
+
+    # probabilities is a matrix (#actions, #mcrst)
+    def set_abstract_tf(self, probabilities, id_actions):
+        for i in range(0, len(self.container)):
+            for act in self.container[i].keys():
+                id_act = id_actions[act]
+                self.container[i][act][1] = probabilities[id_act]
 
 
 def get_tf_known():

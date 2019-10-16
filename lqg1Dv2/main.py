@@ -4,22 +4,24 @@ from lqg1Dv2.abstraction import Abstraction
 from lqg1Dv2.dynprog_updater import Updater
 import lqg1Dv2.abstraction as ab
 import lqg1Dv2.visualization as vis
+from lqg1Dv2.abstract_tf import AbstractTF
 import random
 import numpy as np
 
 folder = "lqg1d"
-INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0.1
+INIT_DETERMINISTIC_PARAM = -0.1
+ENV_NOISE = 0
 A = 1
 B = 1
 GAMMA = 0.9
 LR_DET_POLICY = 0.1
 N_ITERATION = 30
-N_ITERATIONS_BATCH_GRAD = 100
+N_ITERATIONS_BATCH_GRAD = 200
 BATCH_SIZE = 50
 
 N_EPISODES = 2000
 N_STEPS = 20
+
 N_EPISODES_ABSTRACT = 2000
 N_STEPS_ABSTRACT = 20
 
@@ -51,7 +53,7 @@ env.B = np.array([B]).reshape((1, 1))
 print("Optimal value: ", env.computeOptimalK())
 opt_par4visual = round(env.computeOptimalK()[0][0], 3)
 det_param = INIT_DETERMINISTIC_PARAM
-abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS, A, B)
+abstraction = Abstraction(N_EPISODES_ABSTRACT, N_STEPS_ABSTRACT, INTERVALS, A, 1.4)
 dp_updater = Updater(INTERVALS, GAMMA)
 vis.initialization(A, B, opt_par4visual, ENV_NOISE, INIT_DETERMINISTIC_PARAM)
 
@@ -85,11 +87,15 @@ def sampling_abstract_optimal_pol(abs_opt, st, param):
 for i in range(0, N_ITERATION):
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples)
+    n_actions = abstraction.count_actions()
+    abstract_tf_solver = AbstractTF(abstraction.get_container(), 7.5, INTERVALS)
+    abstract_tf, id_actions = abstract_tf_solver.get_abstract_tf()
+    abstraction.set_abstract_tf(abstract_tf, id_actions)
     # to observe the min action sampled in each macrostate
-    print([min(c.keys()) for c in abstraction.get_container()])
+    # print([min(c.keys()) for c in abstraction.get_container() if len(list(c.keys())) > 0])
     abstract_optimal_policy = dp_updater.solve_mdp(abstraction.get_container())
     # to observe the min action among the best actions in each macrostate
-    print([min(ab) for ab in abstract_optimal_policy])
+    # print([min(ab) for ab in abstract_optimal_policy if ab is not None])
 
     fictitious_samples = [[s[0], sampling_abstract_optimal_pol(abstract_optimal_policy,
                                                                s[0], det_param)] for s in deterministic_samples]

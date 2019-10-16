@@ -1,20 +1,26 @@
 import cvxpy as cp
 import numpy as np
+import lqg1Dv2.abstraction as ab
 
 
 class AbstractTF(object):
 
-    def __init__(self, i, j, samples, L):
+    def __init__(self, samples, L, intervals):
         super().__init__()
-        self.i = i # number of macrostates
-        self.j = j # (total) number of actions
+        self.i = len(samples)
         self.samples = samples
         self.L = L
-        self.I = cp.Parameter((i*j, i))
+        self.intervals = intervals
+        self.n_actions = self.count_actions()
+        self.I = cp.Parameter((self.n_actions, self.i))
         self.action_index = {}
         self.create_action_index()
         self.fill_I()
-        self.construct_problem()
+        self.solution = self.construct_problem()
+
+    # for every macrostate I count the number of actions performed in the samples.
+    def count_actions(self):
+        return sum([len(list(s.keys())) for s in self.samples])
 
     def create_action_index(self):
         id = 0
@@ -31,53 +37,57 @@ class AbstractTF(object):
         return [k for k, v in self.action_index.items() if v == id][0]
 
     def fill_I(self):
-        matrix_i = np.zeros((self.i*self.j, self.i))
+        matrix_i = np.zeros((self.n_actions, self.i))
         for i in range(0, self.i):
             for act in self.samples[i].keys():
                 single_sample = self.samples[i][act]
-                # for every macrostate I have a block of rows representing all the actions:
-                # single_sample[2] * self.j brings me at the beginning of the block
-                # self.get_action_id(act) is the offset in the block
-                row_index = single_sample[2] * self.j + self.get_id_from_action(act)
-                matrix_i[row_index][single_sample[3]] += 1
+                new_mcrst = ab.get_mcrst(single_sample[3], self.intervals)
+                # I assume that all the actions are different.
+                matrix_i[self.get_id_from_action(act)][new_mcrst] += 1
         self.I.value = matrix_i
 
     def construct_problem(self):
-        theta = cp.Variable((self.i * self.j, self.i), nonneg=True)
+        theta = cp.Variable((self.n_actions, self.i), nonneg=True)
         objective = cp.Minimize(-cp.sum(cp.log(cp.multiply(self.I, theta) + 1)))
 
         constraints = []
         # sum of rows = 1
-        for k in range(0, self.i * self.j):
+        for k in range(0, self.n_actions):
             constraints.append(cp.sum(theta[k]) == 1)
 
         # Lipschitz hypothesis between actions in the same macrostate
         for k in range(0, self.i):
-            for i in range(0, self.j - 1):
-                for j in range(i+1, self.j):
-                    row_index_i = k * self.j + i
-                    row_index_j = k * self.j + j
-                    for k2 in range(0, self.i):
-                        constraints.append(theta[row_index_i][k2] - theta[row_index_j][k2] <=
-                                           self.L * abs(self.get_action_from_id(i) - self.get_action_from_id(j)))
-                        constraints.append(theta[row_index_i][k2] - theta[row_index_j][k2] >=
-                                           - self.L * abs(self.get_action_from_id(i) - self.get_action_from_id(j)))
+            actions_mcrst = sorted(list(self.samples[k].keys()))
+            for i in range(0, len(actions_mcrst) - 1):
+                for k2 in range(0, self.i):
+                    constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
+                                       theta[self.get_id_from_action(actions_mcrst[i+1])][k2] <=
+                                       self.L * abs(actions_mcrst[i] - actions_mcrst[i+1]))
+                    constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
+                                       theta[self.get_id_from_action(actions_mcrst[i+1])][k2] >=
+                                       - self.L * abs(actions_mcrst[i] - actions_mcrst[i+1]))
 
         problem = cp.Problem(objective, constraints)
         problem.solve()
         print(theta.value)
 
+        return theta.value
+
+    def get_abstract_tf(self):
+        return self.solution, self.action_index
+
+
 
 # test
 
-n_states = 2
-n_actions = 3
-lip = 0.1
-samples = []
-for i in range(0, n_states):
-    samples.append({})
-samples[0][0] = [None, None, 0, 0]
-samples[0][2] = [None, None, 0, 1]
-samples[0][1] = [None, None, 0, 0]
-samples[1][2] = [None, None, 1, 1]
-tester = AbstractTF(n_states, n_actions, samples, lip)
+# lip = 0.1
+# intervals = [[0.0, 0.2], [0.2, 0.4]]
+# samples = []
+# for i in range(0, len(intervals)):
+#     samples.append({})
+# samples[0][0] = [None, None, 0.1, 0.1]
+# samples[0][2] = [None, None, 0.1, 0.3]
+# samples[0][1] = [None, None, 0.1, 0.1]
+# samples[0][3] = [None, None, 0.1, 0.3]
+# samples[1][4] = [None, None, 0.3, 0.3]
+# tester = AbstractTF(samples, lip, intervals)

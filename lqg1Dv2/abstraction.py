@@ -14,7 +14,7 @@ TF_KNOWN = False
 
 class Abstraction(object):
 
-    def __init__(self, n_episodes, n_steps, intervals, a, b):
+    def __init__(self, n_episodes, n_steps, intervals, a, b, l):
         super().__init__()
         self.n_episodes = n_episodes
         self.n_steps = n_steps
@@ -23,7 +23,7 @@ class Abstraction(object):
         self.container = self.init_container()
         self.a = a
         self.b = b
-        self.LIPSCHITZ_CONST_TF = b
+        self.LIPSCHITZ_CONST_TF = l
 
     def init_container(self):
         container = []

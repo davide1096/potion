@@ -14,7 +14,7 @@ def initialization(a, b, det_par_opt, noise, init_par):
     parameter.append(init_par)
 
 
-def show_new_value(par, par_opt, j):
+def show_new_value(par, par_opt, j, j_opt):
     parameter.append(par)
     performance_measure.append(j)
     # plot the deterministic parameter
@@ -22,6 +22,7 @@ def show_new_value(par, par_opt, j):
     # plot the performance measure
     plt.plot(range(1, len(performance_measure) + 1), performance_measure)
     plt.hlines(par_opt, 0, len(parameter) - 1, colors='r', linestyles='dashed')
+    plt.hlines(j_opt, 0, len(parameter) - 1, colors='r', linestyles='dashed')
     plt.draw()
     plt.pause(0.001)
 

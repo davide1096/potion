@@ -9,6 +9,7 @@ BATCH_SIZE = 50
 
 
 def batch_gradient_update(det_param, samples):
+    samples = helper.flat_listoflists(samples)
     for e in range(0, N_ITERATIONS_BATCH_GRAD):
         accumulator = 0
         for b in range(0, BATCH_SIZE):

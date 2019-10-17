@@ -44,3 +44,18 @@ def count_actions(container):
 def normalize_array(array):
     den = sum(array)
     return [p / den for p in array]
+
+
+def flat_listoflists(list):
+    return [item for sublist in list for item in sublist]
+
+
+def estimate_abstractJ(fict_samples, gamma, intervals):
+    acc = 0
+    for sample in fict_samples:
+        g = 1
+        for s in sample:
+            abs_rew = calc_abs_reward(intervals, get_mcrst(s[0], intervals), s[1])
+            acc += g * abs_rew
+            g *= gamma
+    return acc / len(fict_samples)

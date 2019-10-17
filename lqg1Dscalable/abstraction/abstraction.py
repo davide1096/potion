@@ -27,11 +27,12 @@ class Abstraction(object):
         # The second dict has 'state', 'new_state', 'abs_reward', 'abs_tf' as keys.
         self.container = self.init_container()
 
-        for s in samples:
-            # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
-            mcrst = helper.get_mcrst(s[0], self.intervals)
-            abs_rew = helper.calc_abs_reward(self.intervals, mcrst, s[1])
-            self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3], 'abs_reward': abs_rew}
+        for sam in samples:
+            for s in sam:
+                # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
+                mcrst = helper.get_mcrst(s[0], self.intervals)
+                abs_rew = helper.calc_abs_reward(self.intervals, mcrst, s[1])
+                self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3], 'abs_reward': abs_rew}
 
         # to avoid a slow computation.
         self.container = [helper.big_mcrst_correction(cont) if len(cont.items()) > helper.MAX_SAMPLES_IN_MCRST else cont

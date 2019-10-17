@@ -16,8 +16,6 @@ class Abstraction(object):
 
     def __init__(self, n_episodes, n_steps, intervals, a, b, l):
         super().__init__()
-        self.n_episodes = n_episodes
-        self.n_steps = n_steps
         # intervals is an array of pairs (s_min, s_max) representing all the macrostates
         self.intervals = intervals
         self.container = self.init_container()

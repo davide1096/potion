@@ -81,8 +81,10 @@ def sampling_abstract_optimal_pol(abs_opt, st, param):
     mcrst = ab.get_mcrst(st, INTERVALS)
     if prev_action in abs_opt[mcrst]:
         return prev_action
-    diff = min(abs(act - prev_action) for act in abs_opt[mcrst])
-    return prev_action + diff if prev_action + diff in abs_opt[mcrst] else prev_action - diff
+    # diff = min(abs(act - prev_action) for act in abs_opt[mcrst])
+    # return prev_action + diff if prev_action + diff in abs_opt[mcrst] else prev_action - diff
+    index = np.argmin([abs(act - prev_action) for act in abs_opt[mcrst]])
+    return abs_opt[mcrst][index]
 
 
 for i in range(0, N_ITERATION):

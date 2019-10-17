@@ -1,6 +1,8 @@
 import numpy as np
 from lqg1Dscalable.abstraction.abstraction import Abstraction
 import lqg1Dscalable.helper as helper
+import lqg1Dscalable.abstraction.abstract_tf.sample_distribution as sample_dist
+import lqg1Dscalable.abstraction.abstract_tf.uniform_state_distribution as uni_dist
 
 
 class FKnown(Abstraction):
@@ -11,9 +13,12 @@ class FKnown(Abstraction):
         self.b = b
 
     def calculate_single_atf(self, cont, act):
-        abs_tf = np.zeros(len(self.intervals))
+
+        new_state_bounds = []
         # I consider the effect of taking a certain action in every sampled state belonging to the mcrst.
-        n_st_effect = [self.a * cont[action]['state'] + self.b * act for action in cont.keys()]
-        for ns in n_st_effect:
-            abs_tf[helper.get_mcrst(ns, self.intervals)] += 1
-        return helper.normalize_array(abs_tf)
+        for action in cont.keys():
+            new_state = self.a * cont[action]['state'] + self.b * act
+            new_state_bounds.append([new_state, new_state])
+
+        return sample_dist.abstract_tf(self.intervals, new_state_bounds)
+        # return uni_dist.abstract_tf(self.intervals, new_state_bounds)

@@ -1,6 +1,8 @@
 import numpy as np
 from lqg1Dscalable.abstraction.abstraction import Abstraction
 import lqg1Dscalable.helper as helper
+import lqg1Dscalable.abstraction.abstract_tf.uniform_state_distribution as uni_dist
+import lqg1Dscalable.abstraction.abstract_tf.sample_distribution as sample_dist
 
 
 class LipschitzF(Abstraction):
@@ -10,24 +12,13 @@ class LipschitzF(Abstraction):
         self.LIPSCHITZ_CONST_F = lipschitz
 
     def calculate_single_atf(self, cont, act):
-        abs_tf = np.zeros(len(self.intervals))
-        new_states = sorted([[v['new_state'], k] for k, v in cont.items()])
-        new_st_min = new_states[0][0]
-        new_st_max = new_states[-1][0]
 
-        # I obtain the min & max new state I would get by performing action act in the mcrst, according to the samples.
-        min_val = new_st_min - self.LIPSCHITZ_CONST_F * abs(new_states[0][1] - act)
-        max_val = new_st_max + self.LIPSCHITZ_CONST_F * abs(new_states[-1][1] - act)
-        min_val_mcrst = helper.get_mcrst(min_val, self.intervals)
-        max_val_mcrst = helper.get_mcrst(max_val, self.intervals)
+        new_state_bounds = []
+        for action in cont.keys():
+            # I obtain the min & max new state I would get by performing action act in every state sampled.
+            min_val = cont[action]['new_state'] - self.LIPSCHITZ_CONST_F * abs(action - act)
+            max_val = cont[action]['new_state'] + self.LIPSCHITZ_CONST_F * abs(action - act)
+            new_state_bounds.append([min_val, max_val])
 
-        if min_val_mcrst == max_val_mcrst:
-            abs_tf[min_val_mcrst] += 1
-
-        else:
-            abs_tf[min_val_mcrst] += (self.intervals[min_val_mcrst][1] - min_val)
-            abs_tf[max_val_mcrst] += (max_val - self.intervals[max_val_mcrst][0])
-            for i in range(min_val_mcrst + 1, max_val_mcrst):
-                abs_tf[i] += (self.intervals[i][1] - self.intervals[i][0])
-
-        return helper.normalize_array(abs_tf)
+        return uni_dist.abstract_tf(self.intervals, new_state_bounds)
+        # return sample_dist.abstract_tf(self.intervals, new_state_bounds) # NOT WORKING!

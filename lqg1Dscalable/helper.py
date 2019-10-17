@@ -1,6 +1,6 @@
 import random
 
-SEED = None
+SEED = 42
 random.seed(SEED)
 
 MAX_SAMPLES_IN_MCRST = 20

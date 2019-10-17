@@ -4,13 +4,14 @@ import random
 import numpy as np
 from lqg1Dscalable.abstraction.lipschitz_f import LipschitzF
 from lqg1Dscalable.abstraction.f_known import FKnown
+from lqg1Dscalable.abstraction.lipschitz_deltas import LipschitzDeltaS
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 import lqg1Dscalable.updater_deterministic.updater as det_upd
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 import lqg1Dscalable.helper as helper
 
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0.1
+ENV_NOISE = 0
 A = 1
 B = 1
 GAMMA = 0.9
@@ -30,6 +31,7 @@ env = gym.make('LQG1D-v0')
 env.sigma_noise = ENV_NOISE
 env.A = np.array([A]).reshape((1, 1))
 env.B = np.array([B]).reshape((1, 1))
+env.seed(helper.SEED)
 
 # calculate the optimal values of the problem.
 opt_par4vis = round(env.computeOptimalK()[0][0], 3)
@@ -37,8 +39,9 @@ det_param = INIT_DETERMINISTIC_PARAM
 optJ4vis = round(env.computeJ(env.computeOptimalK(), ENV_NOISE, N_EPISODES), 3)
 
 # instantiate the components of the algorithm.
-abstraction = LipschitzF(LIPSCHITZ_CONST_F, INTERVALS)
+# abstraction = LipschitzF(LIPSCHITZ_CONST_F, INTERVALS)
 # abstraction = FKnown(A, B, INTERVALS)
+abstraction = LipschitzDeltaS(0, B, INTERVALS)
 abs_updater = AbsUpdater(GAMMA, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)

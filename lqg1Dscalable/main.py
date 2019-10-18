@@ -19,7 +19,7 @@ GAMMA = 0.9
 LIPSCHITZ_CONST_F = B
 
 N_ITERATION = 30
-N_EPISODES = 2000
+N_EPISODES = 6000
 N_STEPS = 20
 
 INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0.6, -0.5], [-0.5, -0.4], [-0.4, -0.3],
@@ -40,9 +40,9 @@ det_param = INIT_DETERMINISTIC_PARAM
 optJ4vis = round(env.computeJ(env.computeOptimalK(), ENV_NOISE, N_EPISODES), 3)
 
 # instantiate the components of the algorithm.
-# abstraction = LipschitzF(LIPSCHITZ_CONST_F, INTERVALS)
-# abstraction = FKnown(A, B, INTERVALS)
-abstraction = LipschitzDeltaS(0, B, INTERVALS)
+# abstraction = LipschitzF(LIPSCHITZ_CONST_F, GAMMA, INTERVALS)
+# abstraction = FKnown(A, B, GAMMA, INTERVALS)
+abstraction = LipschitzDeltaS(0, B, GAMMA, INTERVALS)
 abs_updater = AbsUpdater(GAMMA, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
@@ -98,12 +98,12 @@ for i in range(0, N_ITERATION):
     fictitious_samples = sampling_abstract_optimal_pol(abstract_optimal_policy, deterministic_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
     j = env.computeJ(det_param, ENV_NOISE, N_EPISODES)
-    absj = helper.estimate_abstractJ(fictitious_samples, GAMMA, INTERVALS)
+    estj = helper.estimate_J(deterministic_samples, GAMMA)
 
     print("Updated deterministic policy parameter: {}".format(det_param))
     print("Updated performance measure: {}".format(j))
-    print("Updated abstract performance measure: {}\n".format(absj))
-    visualizer.show_values(det_param, j, absj)
+    print("Updated abstract performance measure: {}\n".format(estj))
+    visualizer.show_values(det_param, j, estj)
 
 visualizer.save_image()
 

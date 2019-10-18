@@ -3,10 +3,11 @@ import lqg1Dscalable.helper as helper
 
 class Abstraction(object):
 
-    def __init__(self, intervals=None):
+    def __init__(self, gamma, intervals=None):
         super().__init__()
         self.intervals = intervals
         self.container = []
+        self.gamma = gamma
 
     def init_container(self):
         container = []
@@ -28,13 +29,13 @@ class Abstraction(object):
         self.container = self.init_container()
 
         for sam in samples:
-            for s in sam:
+            for i, s in enumerate(sam):
                 # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
                 mcrst = helper.get_mcrst(s[0], self.intervals)
                 if problem == 'lqg1d':
                     abs_rew = helper.calc_abs_reward(self.intervals, mcrst, s[1])
                 elif problem == 'cartpole1d':
-                    abs_rew = 1
+                    abs_rew = helper.calc_abs_reward_cartpole(i, sam, self.gamma)
                 self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3], 'abs_reward': abs_rew}
 
         # to avoid a slow computation.

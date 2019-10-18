@@ -3,7 +3,7 @@ import random
 SEED = 42
 random.seed(SEED)
 
-MAX_SAMPLES_IN_MCRST = 20
+MAX_SAMPLES_IN_MCRST = 50
 
 
 def big_mcrst_correction(cont):
@@ -50,15 +50,23 @@ def flat_listoflists(list):
     return [item for sublist in list for item in sublist]
 
 
-def estimate_abstractJ(fict_samples, gamma, intervals):
+def estimate_J(samples, gamma):
     acc = 0
-    for sample in fict_samples:
+    for sam in samples:
         g = 1
-        for s in sample:
-            abs_rew = calc_abs_reward(intervals, get_mcrst(s[0], intervals), s[1])
-            acc += g * abs_rew
+        for s in sam:
+            acc += g * s[2]
             g *= gamma
-    return acc / len(fict_samples)
+    return acc / len(samples)
+
+
+def calc_abs_reward_cartpole(index, samples, gamma):
+    acc = 0
+    g = 1
+    for i in range(index, len(samples)):
+        acc += g
+        g *= gamma
+    return acc
 
 
 def estimate_absstractJ_cartpole(fict_samples, gamma):

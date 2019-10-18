@@ -7,8 +7,8 @@ import lqg1Dscalable.abstraction.abstract_tf.sample_distribution as sample_dist
 
 class LipschitzDeltaS(Abstraction):
 
-    def __init__(self, lipschitz_st, lipschitz_act, intervals=None):
-        super().__init__(intervals)
+    def __init__(self, lipschitz_st, lipschitz_act, gamma, intervals=None):
+        super().__init__(gamma, intervals)
         self.LIPSCHITZ_CONST_S = lipschitz_st
         self.LIPSCHITZ_CONST_A = lipschitz_act
 

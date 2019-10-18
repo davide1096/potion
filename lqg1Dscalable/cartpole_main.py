@@ -11,7 +11,7 @@ from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 import lqg1Dscalable.helper as helper
 
 problem = 'cartpole1d'
-INIT_DETERMINISTIC_PARAM = 5
+INIT_DETERMINISTIC_PARAM = 0.1
 GAMMA = 0.9
 LIPSCHITZ_CONST_F = 1
 
@@ -28,9 +28,9 @@ INTERVALS = [[-0.21, -0.05], [-0.05, -0.04], [-0.04, -0.03], [-0.03, -0.02], [-0
 env = gym.make('CartPole1d-v0')
 
 # instantiate the components of the algorithm.
-abstraction = LipschitzF(LIPSCHITZ_CONST_F, INTERVALS)
-# abstraction = FKnown(A, B, INTERVALS)
-# abstraction = LipschitzDeltaS(0, B, INTERVALS)
+abstraction = LipschitzF(LIPSCHITZ_CONST_F, GAMMA, INTERVALS)
+# abstraction = FKnown(A, B, GAMMA, INTERVALS)
+# abstraction = LipschitzDeltaS(0, B, GAMMA, INTERVALS)
 abs_updater = AbsUpdater(GAMMA, INTERVALS)
 
 visualizer = Lqg1dVisualizer("cartpole", "number of iterations", "parameter", " performance", "cartpole.jpg")

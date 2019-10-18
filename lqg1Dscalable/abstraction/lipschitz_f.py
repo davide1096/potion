@@ -7,8 +7,8 @@ import lqg1Dscalable.abstraction.abstract_tf.sample_distribution as sample_dist
 
 class LipschitzF(Abstraction):
 
-    def __init__(self, lipschitz, intervals=None):
-        super().__init__(intervals)
+    def __init__(self, lipschitz, gamma, intervals=None):
+        super().__init__(gamma, intervals)
         self.LIPSCHITZ_CONST_F = lipschitz
 
     def calculate_single_atf(self, cont, act):

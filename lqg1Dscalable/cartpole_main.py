@@ -25,7 +25,7 @@ INTERVALS = [[-0.21, -0.05], [-0.05, -0.04], [-0.04, -0.03], [-0.03, -0.02], [-0
 
 
 # load and configure the environment.
-env = gym.make('ContCartPole-v0')
+env = gym.make('CartPole1d-v0')
 
 # instantiate the components of the algorithm.
 abstraction = LipschitzF(LIPSCHITZ_CONST_F, INTERVALS)
@@ -52,7 +52,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
             state = env.state[2]
             action = [deterministic_action(det_par, state)]
             new_state, r, done, _ = env.step(action)
-            single_sample.append([state.item(), action[0].item(), r, new_state[2].item()])
+            single_sample.append([state.item(), action[0].item(), r, new_state.item()])
             k += 1
         samples_list.append(single_sample)
     return samples_list

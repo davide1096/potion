@@ -15,6 +15,11 @@ register(
 )
 
 register(
+    id='CartPole1d-v0',
+    entry_point='potion.envs.cartpole1d:CartPole1d'
+)
+
+register(
     id='MiniGolf-v0',
     entry_point='potion.envs.minigolf:MiniGolf'
 )

@@ -59,3 +59,13 @@ def estimate_abstractJ(fict_samples, gamma, intervals):
             acc += g * abs_rew
             g *= gamma
     return acc / len(fict_samples)
+
+
+def estimate_absstractJ_cartpole(fict_samples, gamma):
+    acc = 0
+    for sample in fict_samples:
+        g = 1
+        for s in sample:
+            acc += g
+            g *= gamma
+    return acc / len(fict_samples)

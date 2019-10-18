@@ -17,7 +17,7 @@ class Abstraction(object):
     def get_container(self):
         return self.container
 
-    def divide_samples(self, samples, intervals=None):
+    def divide_samples(self, samples, problem, intervals=None):
 
         if intervals is not None:
             self.intervals = intervals
@@ -31,7 +31,10 @@ class Abstraction(object):
             for s in sam:
                 # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
                 mcrst = helper.get_mcrst(s[0], self.intervals)
-                abs_rew = helper.calc_abs_reward(self.intervals, mcrst, s[1])
+                if problem == 'lqg1d':
+                    abs_rew = helper.calc_abs_reward(self.intervals, mcrst, s[1])
+                elif problem == 'cartpole1d':
+                    abs_rew = 1
                 self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3], 'abs_reward': abs_rew}
 
         # to avoid a slow computation.

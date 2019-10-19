@@ -11,6 +11,7 @@ from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 import lqg1Dscalable.helper as helper
 
 problem = 'lqg1d'
+SINK = False
 INIT_DETERMINISTIC_PARAM = -0.9
 ENV_NOISE = 0
 A = 1
@@ -40,10 +41,10 @@ det_param = INIT_DETERMINISTIC_PARAM
 optJ4vis = round(env.computeJ(env.computeOptimalK(), ENV_NOISE, N_EPISODES), 3)
 
 # instantiate the components of the algorithm.
-# abstraction = LipschitzF(LIPSCHITZ_CONST_F, GAMMA, INTERVALS)
-# abstraction = FKnown(A, B, GAMMA, INTERVALS)
-abstraction = LipschitzDeltaS(0, B, GAMMA, INTERVALS)
-abs_updater = AbsUpdater(GAMMA, INTERVALS)
+# abstraction = LipschitzF(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
+# abstraction = FKnown(A, B, GAMMA, SINK, INTERVALS)
+abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
+abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
 key = "{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param)
@@ -79,7 +80,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param):
         single_sample = []
         for s in sam:
             prev_action = deterministic_action(param, s[0])
-            mcrst = helper.get_mcrst(s[0], INTERVALS)
+            mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
             if prev_action in abs_opt_policy[mcrst]:
                 single_sample.append([s[0], prev_action])
             else:

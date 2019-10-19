@@ -1,13 +1,15 @@
 import lqg1Dscalable.helper as helper
+import numpy as np
 
 
 class Abstraction(object):
 
-    def __init__(self, gamma, intervals=None):
+    def __init__(self, gamma, sink, intervals=None):
         super().__init__()
         self.intervals = intervals
         self.container = []
         self.gamma = gamma
+        self.sink = sink
 
     def init_container(self):
         container = []
@@ -27,11 +29,13 @@ class Abstraction(object):
         # Every dict has the actions as key and another dict as value.
         # The second dict has 'state', 'new_state', 'abs_reward', 'abs_tf' as keys.
         self.container = self.init_container()
+        if self.sink:
+            self.container.append({})
 
         for sam in samples:
             for i, s in enumerate(sam):
                 # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
-                mcrst = helper.get_mcrst(s[0], self.intervals)
+                mcrst = helper.get_mcrst(s[0], self.intervals, self.sink)
                 self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3]}
 
         # to avoid a slow computation.
@@ -48,9 +52,17 @@ class Abstraction(object):
                 cont[act]['abs_reward'] = reward_func(cont, act)
 
     def compute_abstract_tf(self):
-        for cont in self.container:
-            for act in cont.keys():
-                cont[act]['abs_tf'] = self.calculate_single_atf(cont, act)
+
+        range_max = len(self.container) if not self.sink else len(self.container) - 1
+        for i in range(0, range_max):
+            for act in self.container[i].keys():
+                self.container[i][act]['abs_tf'] = self.calculate_single_atf(self.container[i], act)
+
+        if self.sink:
+            sink_tf = np.zeros(len(self.intervals) + 1)
+            sink_tf[-1] = 1
+            for act in self.container[-1].keys():
+                self.container[-1][act]['abs_tf'] = sink_tf
 
     def calculate_single_atf(self, cont, act):
         pass

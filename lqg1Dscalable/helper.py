@@ -15,7 +15,13 @@ def big_mcrst_correction(cont):
     return new_cont
 
 
-def get_mcrst(state, intervals):
+def get_mcrst(state, intervals, sink):
+
+    if sink and state < intervals[0][0]:
+        return -1
+    elif sink and state > intervals[-1][1]:
+        return len(intervals)
+
     if state >= intervals[-1][1]:   # above the upper bound of the state space
         return len(intervals) - 1
     if state <= intervals[0][0]:    # below the lower bound of the state space
@@ -63,10 +69,10 @@ def estimate_J_lqg(samples, gamma):
 
 
 def calc_abs_reward_cartpole(cont, action):
-    return 1
+    return 1 if -0.2093 <= cont[action]['state'] <= 0.2093 else 0
 
 
-def estimate_absstractJ_cartpole(fict_samples, gamma):
+def estimate_J_cartpole(fict_samples, gamma):
     acc = 0
     for sample in fict_samples:
         g = 1

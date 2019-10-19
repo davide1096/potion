@@ -7,8 +7,8 @@ import lqg1Dscalable.abstraction.abstract_tf.uniform_state_distribution as uni_d
 
 class FKnown(Abstraction):
 
-    def __init__(self, a, b, gamma, intervals=None):
-        super().__init__(gamma, intervals)
+    def __init__(self, a, b, gamma, sink, intervals=None):
+        super().__init__(gamma, sink, intervals)
         self.a = a
         self.b = b
 
@@ -20,5 +20,5 @@ class FKnown(Abstraction):
             new_state = self.a * cont[action]['state'] + self.b * act
             new_state_bounds.append([new_state, new_state])
 
-        return sample_dist.abstract_tf(self.intervals, new_state_bounds)
-        # return uni_dist.abstract_tf(self.intervals, new_state_bounds)
+        return sample_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)
+        # return uni_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)

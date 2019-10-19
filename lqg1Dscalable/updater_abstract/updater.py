@@ -7,22 +7,25 @@ EPSILON = 0.01
 
 class AbsUpdater(object):
 
-    def __init__(self, gamma, intervals=None):
+    def __init__(self, gamma, sink, intervals=None):
         super().__init__()
         self.intervals = intervals
         self.gamma = gamma
+        self.sink = sink
         self.v_function = []
         self.best_policy = []
 
         if intervals is not None:
-            self.v_function = np.zeros(len(intervals))
-            self.best_policy = [[] for i in range(0, len(intervals))]
+            adder = 1 if self.sink else 0
+            self.v_function = np.zeros(len(intervals) + adder)
+            self.best_policy = [[] for i in range(0, len(intervals) + adder)]
 
     def solve_mdp(self, container, intervals=None):
 
         if intervals is not None:
-            self.v_function = np.zeros(len(intervals))
-            self.best_policy = [[] for i in range(0, len(intervals))]
+            adder = 1 if self.sink else 0
+            self.v_function = np.zeros(len(intervals) + adder)
+            self.best_policy = [[] for i in range(0, len(intervals) + adder)]
 
         new_vf = self.single_step_update(container)
         n_iterations = 0

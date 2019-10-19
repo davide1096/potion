@@ -7,8 +7,8 @@ import lqg1Dscalable.abstraction.abstract_tf.sample_distribution as sample_dist
 
 class LipschitzDeltaS(Abstraction):
 
-    def __init__(self, lipschitz_st, lipschitz_act, gamma, intervals=None):
-        super().__init__(gamma, intervals)
+    def __init__(self, lipschitz_st, lipschitz_act, gamma, sink, intervals=None):
+        super().__init__(gamma, sink, intervals)
         self.LIPSCHITZ_CONST_S = lipschitz_st
         self.LIPSCHITZ_CONST_A = lipschitz_act
 
@@ -28,4 +28,4 @@ class LipschitzDeltaS(Abstraction):
             max_val = cont[action]['state'] + delta_s + bound
             new_state_bounds.append([min_val, max_val])
 
-        return sample_dist.abstract_tf(self.intervals, new_state_bounds)
+        return sample_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)

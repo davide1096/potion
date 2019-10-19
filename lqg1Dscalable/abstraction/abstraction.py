@@ -32,15 +32,20 @@ class Abstraction(object):
             for i, s in enumerate(sam):
                 # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
                 mcrst = helper.get_mcrst(s[0], self.intervals)
-                if problem == 'lqg1d':
-                    abs_rew = helper.calc_abs_reward(self.intervals, mcrst, s[1])
-                elif problem == 'cartpole1d':
-                    abs_rew = helper.calc_abs_reward_cartpole(i, sam, self.gamma)
-                self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3], 'abs_reward': abs_rew}
+                self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3]}
 
         # to avoid a slow computation.
         self.container = [helper.big_mcrst_correction(cont) if len(cont.items()) > helper.MAX_SAMPLES_IN_MCRST else cont
                           for cont in self.container]
+
+        # calculate the abstract reward for every sample.
+        if problem == 'lqg1d':
+            reward_func = helper.calc_abs_reward_lqg
+        elif problem == 'cartpole1d':
+            reward_func = helper.calc_abs_reward_cartpole
+        for cont in self.container:
+            for act in cont.keys():
+                cont[act]['abs_reward'] = reward_func(cont, act)
 
     def compute_abstract_tf(self):
         for cont in self.container:

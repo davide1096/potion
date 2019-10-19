@@ -28,10 +28,11 @@ def get_mcrst(state, intervals):
             index = index + 1
 
 
-def calc_abs_reward(intervals, mcrst, action):
-    mcrst_bounds = intervals[mcrst]
-    mcrst_mean = (mcrst_bounds[0] + mcrst_bounds[1])/2
-    return -0.5 * (mcrst_mean * mcrst_mean + action * action)
+def calc_abs_reward_lqg(cont, action):
+    rew = 0
+    for act in cont.keys():
+        rew += -0.5 * (cont[act]['state'] * cont[act]['state'] + action * action)
+    return rew / len(cont.items())
 
 
 def count_actions(container):
@@ -50,23 +51,19 @@ def flat_listoflists(list):
     return [item for sublist in list for item in sublist]
 
 
-def estimate_J(samples, gamma):
+def estimate_J_lqg(samples, gamma):
     acc = 0
     for sam in samples:
         g = 1
         for s in sam:
+            # sum of discounted rewards of the initial samples.
             acc += g * s[2]
             g *= gamma
     return acc / len(samples)
 
 
-def calc_abs_reward_cartpole(index, samples, gamma):
-    acc = 0
-    g = 1
-    for i in range(index, len(samples)):
-        acc += g
-        g *= gamma
-    return acc
+def calc_abs_reward_cartpole(cont, action):
+    return 1
 
 
 def estimate_absstractJ_cartpole(fict_samples, gamma):

@@ -19,7 +19,7 @@ GAMMA = 0.9
 LIPSCHITZ_CONST_F = B
 
 N_ITERATION = 30
-N_EPISODES = 6000
+N_EPISODES = 2000
 N_STEPS = 20
 
 INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0.6, -0.5], [-0.5, -0.4], [-0.4, -0.3],
@@ -98,7 +98,7 @@ for i in range(0, N_ITERATION):
     fictitious_samples = sampling_abstract_optimal_pol(abstract_optimal_policy, deterministic_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
     j = env.computeJ(det_param, ENV_NOISE, N_EPISODES)
-    estj = helper.estimate_J(deterministic_samples, GAMMA)
+    estj = helper.estimate_J_lqg(deterministic_samples, GAMMA)
 
     print("Updated deterministic policy parameter: {}".format(det_param))
     print("Updated performance measure: {}".format(j))

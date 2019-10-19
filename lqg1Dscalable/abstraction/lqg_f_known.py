@@ -5,7 +5,7 @@ import lqg1Dscalable.abstraction.abstract_tf.sample_distribution as sample_dist
 import lqg1Dscalable.abstraction.abstract_tf.uniform_state_distribution as uni_dist
 
 
-class FKnown(Abstraction):
+class LqgFKnown(Abstraction):
 
     def __init__(self, a, b, gamma, sink, intervals=None):
         super().__init__(gamma, sink, intervals)

@@ -2,8 +2,8 @@ import gym
 import potion.envs
 import random
 import numpy as np
-from lqg1Dscalable.abstraction.lipschitz_f import LipschitzF
-from lqg1Dscalable.abstraction.f_known import FKnown
+from lqg1Dscalable.abstraction.lipschitz_f_da import LipschitzFda
+from lqg1Dscalable.abstraction.lqg_f_known import LqgFKnown
 from lqg1Dscalable.abstraction.lipschitz_deltas import LipschitzDeltaS
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 import lqg1Dscalable.updater_deterministic.updater as det_upd
@@ -12,10 +12,10 @@ import lqg1Dscalable.helper as helper
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.9
+INIT_DETERMINISTIC_PARAM = -0.1
 ENV_NOISE = 0
 A = 1
-B = 1
+B = 5
 GAMMA = 0.9
 LIPSCHITZ_CONST_F = B
 
@@ -41,8 +41,8 @@ det_param = INIT_DETERMINISTIC_PARAM
 optJ4vis = round(env.computeJ(env.computeOptimalK(), ENV_NOISE, N_EPISODES), 3)
 
 # instantiate the components of the algorithm.
-# abstraction = LipschitzF(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
-# abstraction = FKnown(A, B, GAMMA, SINK, INTERVALS)
+# abstraction = LipschitzFda(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
+# abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
 abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 

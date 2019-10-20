@@ -3,7 +3,7 @@ import random
 SEED = 42
 random.seed(SEED)
 
-MAX_SAMPLES_IN_MCRST = 20
+MAX_SAMPLES_IN_MCRST = 50
 
 
 def big_mcrst_correction(cont):

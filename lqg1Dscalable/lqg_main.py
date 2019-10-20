@@ -9,11 +9,12 @@ import lqg1Dscalable.updater_deterministic.updater as det_upd
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 from lqg1Dscalable.abstraction.stochastic_abstraction import StochasticAbstraction
 import lqg1Dscalable.helper as helper
+import logging
 
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0.1
+ENV_NOISE = 0
 A = 1
 B = 1
 GAMMA = 0.9
@@ -40,12 +41,13 @@ env.seed(helper.SEED)
 opt_par4vis = round(env.computeOptimalK()[0][0], 3)
 det_param = INIT_DETERMINISTIC_PARAM
 optJ4vis = round(env.computeJ(env.computeOptimalK(), ENV_NOISE, N_EPISODES), 3)
+logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(message)s')
 
 # instantiate the components of the algorithm.
 # abstraction = LipschitzFda(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-# abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
-abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
+abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
+# abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
@@ -96,8 +98,10 @@ for i in range(0, N_ITERATION):
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples, problem)
     abstraction.compute_abstract_tf()
-
+    logging.debug([min(list(cont.keys())) for cont in abstraction.get_container()])
     abstract_optimal_policy = abs_updater.solve_mdp(abstraction.get_container())
+    logging.debug([min(a) for a in abstract_optimal_policy])
+    logging.debug("\n")
 
     fictitious_samples = sampling_abstract_optimal_pol(abstract_optimal_policy, deterministic_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)

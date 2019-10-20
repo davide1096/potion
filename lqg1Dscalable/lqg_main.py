@@ -1,25 +1,26 @@
 import gym
 import potion.envs
-import random
 import numpy as np
-from lqg1Dscalable.abstraction.lipschitz_f_da import LipschitzFda
-from lqg1Dscalable.abstraction.lqg_f_known import LqgFKnown
-from lqg1Dscalable.abstraction.lipschitz_deltas import LipschitzDeltaS
+from lqg1Dscalable.abstraction.compute_atf.lqg_f_known import LqgFKnown
+from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_da import LipschitzFda
+from lqg1Dscalable.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 import lqg1Dscalable.updater_deterministic.updater as det_upd
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
+from lqg1Dscalable.abstraction.stochastic_abstraction import StochasticAbstraction
 import lqg1Dscalable.helper as helper
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.1
+INIT_DETERMINISTIC_PARAM = -0.9
 ENV_NOISE = 0
 A = 1
-B = 5
+B = 1
 GAMMA = 0.9
 LIPSCHITZ_CONST_F = B
+LIPSCHITZ_STOCH_ATF = 0.01
 
-N_ITERATION = 30
+N_ITERATION = 300
 N_EPISODES = 2000
 N_STEPS = 20
 
@@ -43,7 +44,8 @@ optJ4vis = round(env.computeJ(env.computeOptimalK(), ENV_NOISE, N_EPISODES), 3)
 # instantiate the components of the algorithm.
 # abstraction = LipschitzFda(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
+# abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
+abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
@@ -94,6 +96,7 @@ for i in range(0, N_ITERATION):
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples, problem)
     abstraction.compute_abstract_tf()
+
     abstract_optimal_policy = abs_updater.solve_mdp(abstraction.get_container())
 
     fictitious_samples = sampling_abstract_optimal_pol(abstract_optimal_policy, deterministic_samples, det_param)

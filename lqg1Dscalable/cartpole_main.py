@@ -1,11 +1,7 @@
 import gym
 import potion.envs
-import random
 import numpy as np
-from lqg1Dscalable.abstraction.lipschitz_f_da import LipschitzFda
-from lqg1Dscalable.abstraction.lipschitz_f_ds import LipschitzFds
-from lqg1Dscalable.abstraction.lqg_f_known import LqgFKnown
-from lqg1Dscalable.abstraction.lipschitz_deltas import LipschitzDeltaS
+from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_ds import LipschitzFds
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 import lqg1Dscalable.updater_deterministic.updater as det_upd
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer

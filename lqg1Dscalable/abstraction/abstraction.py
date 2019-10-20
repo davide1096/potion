@@ -52,24 +52,5 @@ class Abstraction(object):
                 cont[act]['abs_reward'] = reward_func(cont, act)
 
     def compute_abstract_tf(self):
-
-        range_max = len(self.container) if not self.sink else len(self.container) - 1
-        for i in range(0, range_max):
-            for act in self.container[i].keys():
-                self.container[i][act]['abs_tf'] = self.calculate_single_atf(self.container[i], act)
-
-        if self.sink:
-            sink_tf = np.zeros(len(self.intervals) + 1)
-            sink_tf[-1] = 1
-            for act in self.container[-1].keys():
-                self.container[-1][act]['abs_tf'] = sink_tf
-
-    def calculate_single_atf(self, cont, act):
         pass
 
-    # probabilities is a matrix with the shape (#actions, #mcrst)
-    def set_abstract_tf(self, probabilities, id_actions):
-        for i in range(0, len(self.container)):
-            for act in self.container[i].keys():
-                id_act = id_actions[act]
-                self.container[i][act]['abs_tf'] = probabilities[id_act]

@@ -13,12 +13,12 @@ import lqg1Dscalable.helper as helper
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0
+ENV_NOISE = 0.1
 A = 1
 B = 1
 GAMMA = 0.9
 LIPSCHITZ_CONST_F = B
-LIPSCHITZ_STOCH_ATF = 0.01
+LIPSCHITZ_STOCH_ATF = B
 
 N_ITERATION = 300
 N_EPISODES = 2000
@@ -106,7 +106,7 @@ for i in range(0, N_ITERATION):
 
     print("Updated deterministic policy parameter: {}".format(det_param))
     print("Updated performance measure: {}".format(j))
-    print("Updated abstract performance measure: {}\n".format(estj))
+    print("Updated estimated performance measure: {}\n".format(estj))
     visualizer.show_values(det_param, j, estj)
 
 visualizer.save_image()

@@ -56,7 +56,6 @@ class StochasticAbstraction(Abstraction):
         theta = cp.Variable((self.n_actions, self.i), nonneg=True)
         objective = cp.Minimize(-cp.sum(cp.log(cp.multiply(self.I, theta) + 1)))
 
-        constraints = []
         # sum of rows = 1
         for k in range(0, self.n_actions):
             constraints.append(cp.sum(theta[k]) == 1)

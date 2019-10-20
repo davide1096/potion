@@ -93,7 +93,7 @@ for i in range(0, N_ITERATION):
     absj = helper.estimate_J_cartpole(fictitious_samples, GAMMA)
 
     print("Updated deterministic policy parameter: {}".format(det_param))
-    print("Updated abstract performance measure: {}\n".format(absj))
+    print("Updated estimated performance measure: {}\n".format(absj))
     visualizer.show_values(det_param, absj, absj)
 
 visualizer.save_image()

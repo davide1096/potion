@@ -1,7 +1,7 @@
 import cvxpy as cp
 import numpy as np
-import lqg1Dv2.abstraction as ab
 from lqg1Dscalable.abstraction.abstraction import Abstraction
+import lqg1Dscalable.helper as helper
 
 
 class StochasticAbstraction(Abstraction):
@@ -34,6 +34,7 @@ class StochasticAbstraction(Abstraction):
                 if act not in self.action_index:
                     self.action_index[act] = id
                     id += 1
+        assert (id == self.count_actions())
 
     def get_id_from_action(self, action):
         return self.action_index[action]
@@ -46,7 +47,7 @@ class StochasticAbstraction(Abstraction):
         for i in range(0, self.i):
             for act in self.container[i].keys():
                 single_sample = self.container[i][act]
-                new_mcrst = ab.get_mcrst(single_sample['new_state'], self.intervals)
+                new_mcrst = helper.get_mcrst(single_sample['new_state'], self.intervals, self.sink)
                 # I assume that all the actions are different.
                 matrix_i[self.get_id_from_action(act)][new_mcrst] += 1
         self.I.value = matrix_i
@@ -56,21 +57,29 @@ class StochasticAbstraction(Abstraction):
         theta = cp.Variable((self.n_actions, self.i), nonneg=True)
         objective = cp.Minimize(-cp.sum(cp.log(cp.multiply(self.I, theta) + 1)))
 
-        # sum of rows = 1
+        constraints = []
+        # sum of rows must be equal to 1.
         for k in range(0, self.n_actions):
             constraints.append(cp.sum(theta[k]) == 1)
 
-        # Lipschitz hypothesis between actions in the same macrostate
+        # Lipschitz hypothesis between actions in the same macrostate.
         for k in range(0, self.i):
-            actions_mcrst = sorted(list(self.container[k].keys()))
+
+            actions_mcrst = sorted(list(self.container[k].keys()), reverse=True)
+            new_mcrst_possible = []
+            for act in actions_mcrst:
+                new_mcrst = helper.get_mcrst(self.container[k][act]['new_state'], self.intervals, self.sink)
+                if new_mcrst not in new_mcrst_possible:
+                    new_mcrst_possible.append(new_mcrst)
+
             for i in range(0, len(actions_mcrst) - 1):
-                for k2 in range(0, self.i):
+                for k2 in new_mcrst_possible:
                     constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
-                                       theta[self.get_id_from_action(actions_mcrst[i+1])][k2] <=
-                                       self.L * abs(actions_mcrst[i] - actions_mcrst[i+1]))
+                                       theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] <=
+                                       self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
                     constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
-                                       theta[self.get_id_from_action(actions_mcrst[i+1])][k2] >=
-                                       - self.L * abs(actions_mcrst[i] - actions_mcrst[i+1]))
+                                       theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] >=
+                                       - self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
 
         problem = cp.Problem(objective, constraints)
         problem.solve()
@@ -93,7 +102,6 @@ class StochasticAbstraction(Abstraction):
             sink_tf[-1] = 1
             for act in self.container[-1].keys():
                 self.container[-1][act]['abs_tf'] = sink_tf
-
 
 # test
 

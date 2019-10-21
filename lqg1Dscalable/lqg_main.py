@@ -14,7 +14,7 @@ import logging
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0
+ENV_NOISE = 0.1
 A = 1
 B = 1
 GAMMA = 0.9
@@ -29,6 +29,9 @@ INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0
              [-0.3, -0.2], [-0.2, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.4, 0.5],
              [0.5, 0.6], [0.6, 0.8], [0.8, 1], [1, 1.2], [1.2, 1.6], [1.6, 2]]
 
+# INTERVALS = [[-2, -1.4], [-1.4, -1], [-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0],
+#              [0, 0.1], [0.1, 0.3], [0.3, 0.5], [0.5, 0.7], [0.7, 1], [1, 1.4], [1.4, 2]]
+
 
 # load and configure the environment.
 env = gym.make('LQG1D-v0')
@@ -40,14 +43,14 @@ env.seed(helper.SEED)
 # calculate the optimal values of the problem.
 opt_par4vis = round(env.computeOptimalK()[0][0], 3)
 det_param = INIT_DETERMINISTIC_PARAM
-optJ4vis = round(env.computeJ(env.computeOptimalK(), ENV_NOISE, N_EPISODES), 3)
+optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
 logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(message)s')
 
 # instantiate the components of the algorithm.
 # abstraction = LipschitzFda(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
-# abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
+# abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
+abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
@@ -105,7 +108,7 @@ for i in range(0, N_ITERATION):
 
     fictitious_samples = sampling_abstract_optimal_pol(abstract_optimal_policy, deterministic_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
-    j = env.computeJ(det_param, ENV_NOISE, N_EPISODES)
+    j = env.computeJ(det_param, 0, N_EPISODES)
     estj = helper.estimate_J_lqg(deterministic_samples, GAMMA)
 
     print("Updated deterministic policy parameter: {}".format(det_param))

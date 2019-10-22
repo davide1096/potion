@@ -10,9 +10,12 @@ class StochasticAbstraction(Abstraction):
         super().__init__(gamma, sink, intervals)
         self.i = None
         self.L = L
+        # n_actions is the number of row of the matrix.
         self.n_actions = None
         self.I = None
         self.action_index = {}
+        # it allows to consider fictitious samples.
+        self.arriving_mcrst_helper = {}
         self.solution = None
 
     def init_operation(self):
@@ -21,6 +24,8 @@ class StochasticAbstraction(Abstraction):
         self.I = cp.Parameter((self.n_actions, self.i))
         self.action_index = {}
         self.create_action_index()
+        self.arriving_mcrst_helper = {}
+        self.create_arriving_mcrst_helper()
         self.fill_I()
 
     # for every macrostate I count the number of actions performed in the samples.
@@ -34,23 +39,52 @@ class StochasticAbstraction(Abstraction):
                 if act not in self.action_index:
                     self.action_index[act] = id
                     id += 1
-        assert (id == self.count_actions())
+        assert (id == self.n_actions)
 
     def get_id_from_action(self, action):
         return self.action_index[action]
 
-    def get_action_from_id(self, id):
-        return [k for k, v in self.action_index.items() if v == id][0]
+    # def get_action_from_id(self, id):
+    #     return [k for k, v in self.action_index.items() if v == id][0]
 
     def fill_I(self):
+
         matrix_i = np.zeros((self.n_actions, self.i))
         for i in range(0, self.i):
+
             for act in self.container[i].keys():
                 single_sample = self.container[i][act]
                 new_mcrst = helper.get_mcrst(single_sample['new_state'], self.intervals, self.sink)
                 # I assume that all the actions are different.
                 matrix_i[self.get_id_from_action(act)][new_mcrst] += 1
+
+            # contribution of the fictitious samples.
+            for act in self.arriving_mcrst_helper.keys():
+                for mcrst in self.arriving_mcrst_helper[act].keys():
+                    matrix_i[self.get_id_from_action(act)][mcrst] += self.arriving_mcrst_helper[act][mcrst]
+
         self.I.value = matrix_i
+
+    def create_arriving_mcrst_helper(self):
+
+        for cont in self.container:
+            for act in cont.keys():
+
+                # evaluate the effect of act on the single sample.
+                sample = cont[act]
+                delta_s = sample['new_state'] - sample['state']
+                self.arriving_mcrst_helper[act] = {}
+
+                # apply the effect to every state in the macrostate.
+                for act2 in cont.keys():
+                    if act != act2:
+                        new_state = cont[act2]['state'] + delta_s
+                        new_state_mcrst = helper.get_mcrst(new_state, self.intervals, self.sink)
+
+                        if new_state_mcrst in self.arriving_mcrst_helper[act].keys():
+                            self.arriving_mcrst_helper[act][new_state_mcrst] += 1
+                        else:
+                            self.arriving_mcrst_helper[act][new_state_mcrst] = 1
 
     def construct_problem(self):
         self.init_operation()
@@ -69,8 +103,15 @@ class StochasticAbstraction(Abstraction):
             new_mcrst_possible = []
             for act in actions_mcrst:
                 new_mcrst = helper.get_mcrst(self.container[k][act]['new_state'], self.intervals, self.sink)
+
                 if new_mcrst not in new_mcrst_possible:
                     new_mcrst_possible.append(new_mcrst)
+
+                # from helper might contain new_mcrst that are not yet included in new_mcrst_possible.
+                from_helper = self.arriving_mcrst_helper[act].keys()
+                for mcrst in from_helper:
+                    if mcrst not in new_mcrst_possible:
+                        new_mcrst_possible.append(mcrst)
 
             for i in range(0, len(actions_mcrst) - 1):
                 for k2 in new_mcrst_possible:

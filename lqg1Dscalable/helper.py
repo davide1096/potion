@@ -1,9 +1,12 @@
 import random
+import numpy as np
 
 SEED = 42
 random.seed(SEED)
+MAX_CARTPOLE_THETA = 0.2093
+MIN_CARTPOLE_THETA = -0.2093
 
-MAX_SAMPLES_IN_MCRST = 50
+MAX_SAMPLES_IN_MCRST = 40
 
 
 def big_mcrst_correction(cont):
@@ -17,21 +20,32 @@ def big_mcrst_correction(cont):
 
 def get_mcrst(state, intervals, sink):
 
-    if sink and state < intervals[0][0]:
-        return -1
-    elif sink and state > intervals[-1][1]:
-        return len(intervals)
+    # len(intervals) is the number of dimensions.
+    macrostate = np.empty(len(intervals))
 
-    if state >= intervals[-1][1]:   # above the upper bound of the state space
-        return len(intervals) - 1
-    if state <= intervals[0][0]:    # below the lower bound of the state space
-        return 0
-    index = 0                       # inside the state space
-    for inter in intervals:
-        if inter[0] <= state < inter[1]:
-            return index
-        else:
-            index = index + 1
+    for i, dim_interval in enumerate(intervals):
+
+        # if we have to consider the sink state.
+        if sink and state[i] < dim_interval[0][0]:
+            macrostate[i] = -1
+        elif sink and state[i] > dim_interval[-1][1]:
+            macrostate[i] = len(dim_interval)
+
+        # in absence of a sink state.
+        elif state[i] >= dim_interval[-1][1]:             # above the upper bound of the state space
+            macrostate[i] = len(dim_interval) - 1
+        elif state[i] <= dim_interval[0][0]:              # below the lower bound of the state space
+            macrostate[i] = 0
+
+        else:                                              # inside the state space
+            index = 0
+            for inter in dim_interval:
+                if inter[0] <= state[i] < inter[1]:
+                    macrostate[i] = index
+                else:
+                    index += 1
+
+    return macrostate
 
 
 def calc_abs_reward_lqg(cont, action):
@@ -41,11 +55,17 @@ def calc_abs_reward_lqg(cont, action):
     return rew / len(cont.items())
 
 
+def calc_abs_reward_lqg2d():
+    # TODO
+    pass
+
+
+def calc_abs_reward_cartpole(cont, action):
+    return 1 if MIN_CARTPOLE_THETA <= cont[action]['state'] <= MAX_CARTPOLE_THETA else 0
+
+
 def count_actions(container):
-    n_actions = 0
-    for i in range(0, len(container)):
-        n_actions += len(list(container[i].keys()))
-    return n_actions
+    return sum([len(cont.item()) for cont in container])
 
 
 def normalize_array(array):
@@ -68,10 +88,9 @@ def estimate_J_lqg(samples, gamma):
     return acc / len(samples)
 
 
-def calc_abs_reward_cartpole(cont, action):
-    return 1 if -0.2093 <= cont[action]['state'] <= 0.2093 else 0
-
-
+# different from the previous function because I need to pass the fictitious sample for cartpole
+# they don't have any action in the sink state (added for a correct value iteration).
+# they don't have the reward in the structure of the sample.
 def estimate_J_cartpole(fict_samples, gamma):
     acc = 0
     for sample in fict_samples:

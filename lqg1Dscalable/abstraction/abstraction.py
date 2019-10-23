@@ -12,10 +12,10 @@ class Abstraction(object):
         self.sink = sink
 
     def init_container(self):
-        container = []
-        for i in range(0, len(self.intervals)):
-            container.append({})
-        return container
+        # the container is a multidimensional matrix, eventually it consider also the sink state.
+        adder = 1 if self.sink else 0
+        shape = [len(dim_interval) + adder for dim_interval in self.intervals]
+        return np.full(shape, {})
 
     def get_container(self):
         return self.container
@@ -29,9 +29,8 @@ class Abstraction(object):
         # Every dict has the actions as key and another dict as value.
         # The second dict has 'state', 'new_state', 'abs_reward', 'abs_tf' as keys.
         self.container = self.init_container()
-        if self.sink:
-            self.container.append({})
 
+        # ---------------- HERE!!! ------------------------
         for sam in samples:
             for i, s in enumerate(sam):
                 # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']

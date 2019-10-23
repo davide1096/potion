@@ -11,59 +11,53 @@ from lqg1Dscalable.abstraction.stochastic_abstraction import StochasticAbstracti
 import lqg1Dscalable.helper as helper
 import logging
 
-problem = 'lqg1d'
+problem = 'lqg2d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0.1
-A = 1
-B = 1
-GAMMA = 0.9
-LIPSCHITZ_CONST_F = B
-LIPSCHITZ_STOCH_ATF = B
+INIT_DETERMINISTIC_PARAM = np.array([[-0.5, -0.5]])
+ENV_NOISE = 0
 
 N_ITERATION = 300
 N_EPISODES = 2000
 N_STEPS = 20
 
-INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0.6, -0.5], [-0.5, -0.4], [-0.4, -0.3],
-             [-0.3, -0.2], [-0.2, -0.1], [-0.1, 0.], [0., 0.1], [0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.4, 0.5],
-             [0.5, 0.6], [0.6, 0.8], [0.8, 1], [1, 1.2], [1.2, 1.6], [1.6, 2]]
-
-# INTERVALS = [[-2, -1.4], [-1.4, -1], [-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0],
-#              [0, 0.1], [0.1, 0.3], [0.3, 0.5], [0.5, 0.7], [0.7, 1], [1, 1.4], [1.4, 2]]
-
+INTERVALS = [[[-1, -0.4], [-0.4, -0.1], [-0.1, 0.1], [0.1, 0.4], [0.4, 1]],  # s[0]
+             [-2, -1.2], [-1.2, -0.6], [-0.6, -0.15], [-0.15, 0.15], [0.15, 0.6], [0.6, 1.2], [1.2, 2]]  # s[1]
 
 # load and configure the environment.
-env = gym.make('LQG1D-v0')
-env.sigma_noise = ENV_NOISE
-env.A = np.array([A]).reshape((1, 1))
-env.B = np.array([B]).reshape((1, 1))
+env = gym.make('DoubleIntegrator-v0')
+GAMMA = env.gamma
+LIPSCHITZ_STATE_DS = np.array([[0, env.tau],
+                               [0, 0]])
+LIPSCHITZ_ACTION_DS = np.array([[0],
+                               [env.tau/env.mass]])
+env.sigma_noise = ENV_NOISE * np.eye(env.ds)
 env.seed(helper.SEED)
 
 # calculate the optimal values of the problem.
-opt_par4vis = round(env.computeOptimalK()[0][0], 3)
+dim = env.computeOptimalK()
+opt_par4vis = [np.round(par, decimals=3) for par in env.computeOptimalK()]
 det_param = INIT_DETERMINISTIC_PARAM
 optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
-logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(message)s')
+# logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(message)s')
 
 # instantiate the components of the algorithm.
 # abstraction = LipschitzFda(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-# abstraction = LipschitzDeltaS(A, B, GAMMA, SINK, INTERVALS)
-abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
+abstraction = LipschitzDeltaS(LIPSCHITZ_STATE_DS, LIPSCHITZ_ACTION_DS, GAMMA, SINK, INTERVALS)
+# abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
-title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
-key = "{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param)
-key = key.replace('.', ',')
-key = key + ".jpg"
-initJ = env.computeJ(det_param, ENV_NOISE, N_EPISODES)
-visualizer = Lqg1dVisualizer(title, "number of iterations", "parameter", " performance", key, det_param, opt_par4vis,
-                             initJ, optJ4vis)
+# title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
+# key = "{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param)
+# key = key.replace('.', ',')
+# key = key + ".jpg"
+initJ = env.computeJ(det_param, 0, N_EPISODES)
+# visualizer = Lqg1dVisualizer(title, "number of iterations", "parameter", " performance", key, det_param, opt_par4vis,
+#                              initJ, optJ4vis)
 
 
 def deterministic_action(det_par, state):
-    return det_par * state
+    return np.dot(det_par, state)
 
 
 def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
@@ -75,7 +69,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
             state = env.get_state()
             action = deterministic_action(det_par, state)
             new_state, r, _, _ = env.step(action)
-            single_sample.append([state[0], action[0], r, new_state[0]])
+            single_sample.append([state, action[0], r, new_state])
         samples_list.append(single_sample)
     return samples_list
 
@@ -114,7 +108,7 @@ for i in range(0, N_ITERATION):
     print("Updated deterministic policy parameter: {}".format(det_param))
     print("Updated performance measure: {}".format(j))
     print("Updated estimated performance measure: {}\n".format(estj))
-    visualizer.show_values(det_param, j, estj)
+    # visualizer.show_values(det_param, j, estj)
 
-visualizer.save_image()
+# visualizer.save_image()
 

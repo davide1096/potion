@@ -49,7 +49,7 @@ logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', forma
 # instantiate the components of the algorithm.
 # abstraction = LipschitzFda(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-# abstraction = LipschitzDeltaS(0, B, GAMMA, SINK, INTERVALS)
+# abstraction = LipschitzDeltaS(A, B, GAMMA, SINK, INTERVALS)
 abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
@@ -101,10 +101,10 @@ for i in range(0, N_ITERATION):
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples, problem)
     abstraction.compute_abstract_tf()
-    logging.debug([min(list(cont.keys())) for cont in abstraction.get_container()])
+    # logging.debug([min(list(cont.keys())) for cont in abstraction.get_container()])
     abstract_optimal_policy = abs_updater.solve_mdp(abstraction.get_container())
-    logging.debug([min(a) for a in abstract_optimal_policy])
-    logging.debug("\n")
+    # logging.debug([min(a) for a in abstract_optimal_policy])
+    # logging.debug("\n")
 
     fictitious_samples = sampling_abstract_optimal_pol(abstract_optimal_policy, deterministic_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)

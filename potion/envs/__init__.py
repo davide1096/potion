@@ -20,6 +20,16 @@ register(
 )
 
 register(
+    id='LQ-v0',
+    entry_point='potion.envs.lq:LQ'
+)
+
+register(
+    id='DoubleIntegrator-v0',
+    entry_point='potion.envs.double_integrator:DoubleIntegrator'
+)
+
+register(
     id='MiniGolf-v0',
     entry_point='potion.envs.minigolf:MiniGolf'
 )

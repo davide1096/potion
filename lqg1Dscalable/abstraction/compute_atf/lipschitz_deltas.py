@@ -4,10 +4,10 @@ import lqg1Dscalable.abstraction.compute_atf.abstract_tf.sample_distribution as 
 
 class LipschitzDeltaS(DeterministicAbstraction):
 
-    def __init__(self, lipschitz_st, lipschitz_act, gamma, sink, intervals=None):
+    def __init__(self, a, b, gamma, sink, intervals=None):
         super().__init__(gamma, sink, intervals)
-        self.LIPSCHITZ_CONST_S = lipschitz_st
-        self.LIPSCHITZ_CONST_A = lipschitz_act
+        self.LIPSCHITZ_CONST_S = a - 1
+        self.LIPSCHITZ_CONST_A = b
 
     def calculate_single_atf(self, cont, act):
 

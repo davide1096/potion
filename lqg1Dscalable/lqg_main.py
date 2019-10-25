@@ -14,7 +14,7 @@ import logging
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0
+ENV_NOISE = 0.1
 A = 1
 B = 1
 GAMMA = 0.9

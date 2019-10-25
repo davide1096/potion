@@ -131,7 +131,7 @@ class MaxLikelihoodAbstraction(Abstraction):
     def get_abstract_tf(self):
         return self.solution, self.action_index
 
-    def compute_abstract_tf(self):
+    def compute_abstract_tf(self, std=0):
         self.solution = self.construct_problem()
         for i in range(0, len(self.container)):
             for act in self.container[i].keys():

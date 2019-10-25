@@ -1,7 +1,7 @@
 import gym
 import potion.envs
 import numpy as np
-from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_ds import LipschitzFds
+from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_dads import LipschitzFdads
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 import lqg1Dscalable.updater_deterministic.updater as det_upd
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
@@ -11,7 +11,8 @@ problem = 'cartpole1d'
 SINK = True
 INIT_DETERMINISTIC_PARAM = 30
 GAMMA = 1
-LIPSCHITZ_CONST_F = 0.5
+LIPSCHITZ_CONST_STATE = 0.5
+LIPSCHITZ_CONST_ACTION = 0.5
 
 N_ITERATION = 3000
 N_EPISODES = 100
@@ -26,7 +27,7 @@ INTERVALS = [[-0.2093, -0.05], [-0.05, -0.04], [-0.04, -0.03], [-0.03, -0.02], [
 env = gym.make('CartPole1d-v0')
 
 # instantiate the components of the algorithm.
-abstraction = LipschitzFds(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
+abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, INTERVALS)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
 visualizer = Lqg1dVisualizer("cartpole", "number of iterations", "parameter", " performance", "cartpole.jpg")

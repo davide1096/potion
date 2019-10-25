@@ -4,7 +4,7 @@ from lqg1Dscalable.abstraction.abstraction import Abstraction
 import lqg1Dscalable.helper as helper
 
 
-class StochasticAbstraction(Abstraction):
+class MaxLikelihoodAbstraction(Abstraction):
 
     def __init__(self, gamma, sink, intervals, L):
         super().__init__(gamma, sink, intervals)

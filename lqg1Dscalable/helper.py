@@ -80,3 +80,12 @@ def estimate_J_cartpole(fict_samples, gamma):
             acc += g
             g *= gamma
     return acc / len(fict_samples)
+
+
+def interval_intersection(bounds):
+    mins = [b[0] for b in bounds]
+    maxs = [b[1] for b in bounds]
+    if max(mins) <= min(maxs):
+        return max(mins), min(maxs)
+    else:
+        return min(mins), max(maxs)

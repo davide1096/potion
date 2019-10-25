@@ -1,8 +1,8 @@
-from lqg1Dscalable.abstraction.deterministic_abstraction import DeterministicAbstraction
+from lqg1Dscalable.abstraction.lipschitz_abstraction import LipschitzAbstraction
 import lqg1Dscalable.abstraction.compute_atf.abstract_tf.sample_distribution as sample_dist
 
 
-class LqgFKnown(DeterministicAbstraction):
+class LqgFKnown(LipschitzAbstraction):
 
     def __init__(self, a, b, gamma, sink, intervals=None):
         super().__init__(gamma, sink, intervals)

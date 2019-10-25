@@ -2,23 +2,24 @@ import gym
 import potion.envs
 import numpy as np
 from lqg1Dscalable.abstraction.compute_atf.lqg_f_known import LqgFKnown
-from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_da import LipschitzFda
+from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_dads import LipschitzFdads
 from lqg1Dscalable.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 import lqg1Dscalable.updater_deterministic.updater as det_upd
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
-from lqg1Dscalable.abstraction.stochastic_abstraction import StochasticAbstraction
+from lqg1Dscalable.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
 import lqg1Dscalable.helper as helper
 import logging
 
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0.1
+ENV_NOISE = 0
 A = 1
 B = 1
 GAMMA = 0.9
-LIPSCHITZ_CONST_F = B
+LIPSCHITZ_CONST_STATE = A
+LIPSCHITZ_CONST_ACTION = B
 LIPSCHITZ_STOCH_ATF = B
 
 N_ITERATION = 300
@@ -47,10 +48,10 @@ optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
 logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(message)s')
 
 # instantiate the components of the algorithm.
-# abstraction = LipschitzFda(LIPSCHITZ_CONST_F, GAMMA, SINK, INTERVALS)
+abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
 # abstraction = LipschitzDeltaS(A, B, GAMMA, SINK, INTERVALS)
-abstraction = StochasticAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
+# abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
@@ -100,7 +101,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param):
 for i in range(0, N_ITERATION):
     deterministic_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(deterministic_samples, problem)
-    abstraction.compute_abstract_tf()
+    abstraction.compute_abstract_tf(ENV_NOISE)
     # logging.debug([min(list(cont.keys())) for cont in abstraction.get_container()])
     abstract_optimal_policy = abs_updater.solve_mdp(abstraction.get_container())
     # logging.debug([min(a) for a in abstract_optimal_policy])

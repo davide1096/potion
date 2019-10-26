@@ -18,18 +18,21 @@ class LipschitzFdads(LipschitzAbstraction):
 
         # I obtain the min & max new state I would get by performing action act in every state sampled.
         for action in cont.keys():
-            min_val1 = cont[action]['new_state'] - self.LIPSCHITZ_CONST_ACTION * abs(action - act)
-            max_val1 = cont[action]['new_state'] + self.LIPSCHITZ_CONST_ACTION * abs(action - act)
+            bounds = []
 
-            state_distance = abs(cont[act]['state'] - cont[action]['state'])
-            min_val2 = cont[act]['new_state'] - self.LIPSCHITZ_CONST_STATE * state_distance
-            max_val2 = cont[act]['new_state'] + self.LIPSCHITZ_CONST_STATE * state_distance
+            if std == 0:
+                min_val1 = cont[action]['new_state'] - self.LIPSCHITZ_CONST_ACTION * abs(action - act)
+                max_val1 = cont[action]['new_state'] + self.LIPSCHITZ_CONST_ACTION * abs(action - act)
+                bounds.append([round(min_val1, 3), round(max_val1, 3)])
 
-            bounds = [[round(min_val1, 3), round(max_val1, 3)], [round(min_val2, 3), round(max_val2, 3)]]
+                state_distance = abs(cont[act]['state'] - cont[action]['state'])
+                min_val2 = cont[act]['new_state'] - self.LIPSCHITZ_CONST_STATE * state_distance
+                max_val2 = cont[act]['new_state'] + self.LIPSCHITZ_CONST_STATE * state_distance
+                bounds.append([round(min_val2, 3), round(max_val2, 3)])
 
             # if the env is stochastic we need to consider the bound generated from every sample.
             # in this way the bias due to the noise is weighted among all the samples.
-            if std > 0:
+            else:
                 eps_bound = 2 * std * math.sqrt(2 / math.pi)
                 for a in cont.keys():
                     dist_s_shat = abs(cont[a]['state'] - cont[action]['state'])

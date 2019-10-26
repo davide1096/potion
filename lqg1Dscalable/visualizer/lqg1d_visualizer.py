@@ -9,7 +9,7 @@ class Lqg1dVisualizer(Visualizer):
         super().__init__()
         self.par = []
         self.J = []
-        self.absJ = []
+        self.estJ = []
         self.opt_par = opt_par
         self.optJ = optJ
         self.filename = filename
@@ -17,7 +17,6 @@ class Lqg1dVisualizer(Visualizer):
             self.par.append(init_par)
         if initJ is not None:
             self.J.append(initJ)
-            self.absJ.append(initJ)
 
         plt.subplot(2, 1, 1)
         plt.title(title)
@@ -30,11 +29,11 @@ class Lqg1dVisualizer(Visualizer):
         plt.ion()
         plt.show()
 
-    def show_values(self, new_par, newJ, new_absJ):
+    def show_values(self, new_par, newJ, new_estJ):
 
         self.par.append(new_par)
         self.J.append(newJ)
-        self.absJ.append(new_absJ)
+        self.estJ.append(new_estJ)
 
         plt.subplot(2, 1, 1)
         plt.plot(self.par)
@@ -43,7 +42,8 @@ class Lqg1dVisualizer(Visualizer):
 
         plt.subplot(2, 1, 2)
         plt.plot(self.J, 'b')
-        plt.plot(self.absJ, 'g')
+        if len(self.estJ) > 1:
+            plt.plot(range(1, len(self.estJ) + 1), self.estJ, 'g')
         if self.optJ is not None:
             plt.hlines(self.optJ, 0, len(self.J) - 1, colors='r', linestyles='dashed')
 

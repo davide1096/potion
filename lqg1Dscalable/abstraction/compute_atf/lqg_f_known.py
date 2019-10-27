@@ -9,7 +9,7 @@ class LqgFKnown(LipschitzAbstraction):
         self.a = a
         self.b = b
 
-    def calculate_single_atf(self, cont, act):
+    def calculate_single_atf(self, cont, act, std=0):
 
         new_state_bounds = []
         # I consider the effect of taking a certain action in every sampled state belonging to the mcrst.

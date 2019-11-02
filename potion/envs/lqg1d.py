@@ -58,6 +58,10 @@ class LQG1D(gym.Env):
 
     def step(self, action, render=False):
         u = np.clip(action, -self.max_action, self.max_action)
+        # uu = [np.sign(u[0]) * np.abs(u[0]) ** (1/3)]
+        # uu = [u[0] ** 3]
+        # uu = np.clip(uu, -self.max_action, self.max_action)
+        # st = [np.sign(self.state[0]) * np.abs(self.state[0]) ** (1/3)]
         noise = 0
         if self.sigma_noise > 0:
             noise = self.np_random.randn() * self.sigma_noise

@@ -33,7 +33,8 @@ class LipschitzFdads(LipschitzAbstraction):
             # if the env is stochastic we need to consider the bound generated from every sample.
             # in this way the bias due to the noise is weighted among all the samples.
             else:
-                eps_bound = 2 * std * math.sqrt(2 / math.pi)
+                # eps_bound = 2 * std * math.sqrt(2 / math.pi)
+                eps_bound = 0
                 for a in cont.keys():
                     dist_s_shat = abs(cont[a]['state'] - cont[action]['state'])
                     dist_a_ahat = abs(a - act)

@@ -14,7 +14,7 @@ import logging
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0.1
+ENV_NOISE = 0
 A = 1
 B = 1
 GAMMA = 0.9
@@ -75,10 +75,6 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
         for j in range(0, n_steps):
             state = env.get_state()
             action = deterministic_action(det_par, state)
-            # mod_a = [np.sign(action[0]) * np.abs(action[0]) ** (1/3)]
-            # mod_s = [np.sign(state[0]) * np.abs(state[0]) ** (1/3)]
-            # env.set_state = mod_s
-            # new_state, r, _, _ = env.step(mod_a)
             new_state, r, _, _ = env.step(action)
             single_sample.append([state[0], action[0], r, new_state[0]])
         samples_list.append(single_sample)

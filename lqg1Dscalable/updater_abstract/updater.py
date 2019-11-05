@@ -70,4 +70,4 @@ class AbsUpdater(object):
             return best_acts, target
 
         else:
-            return None, min(self.v_function)
+            return None, 0

@@ -1,6 +1,7 @@
 from lqg1Dscalable.abstraction.lipschitz_abstraction import LipschitzAbstraction
 import lqg1Dscalable.abstraction.compute_atf.abstract_tf.uniform_state_distribution as uni_dist
 import lqg1Dscalable.abstraction.compute_atf.abstract_tf.sample_distribution as sample_dist
+import lqg1Dscalable.abstraction.compute_atf.abstract_tf.bounded_atf as bounded_atf
 import lqg1Dscalable.helper as helper
 import math
 
@@ -48,5 +49,6 @@ class LipschitzFdads(LipschitzAbstraction):
 
             new_state_bounds.append([min_val, max_val])
 
-        return uni_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)
-        # return sample_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)
+        # it uses the computed bounds to build a bounded abstract tf.
+        return bounded_atf.abstract_tf(self.intervals, new_state_bounds, self.sink)
+        # return uni_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)

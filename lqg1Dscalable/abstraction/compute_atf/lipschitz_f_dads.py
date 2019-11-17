@@ -2,8 +2,10 @@ from lqg1Dscalable.abstraction.lipschitz_abstraction import LipschitzAbstraction
 import lqg1Dscalable.abstraction.compute_atf.abstract_tf.uniform_state_distribution as uni_dist
 import lqg1Dscalable.abstraction.compute_atf.abstract_tf.sample_distribution as sample_dist
 import lqg1Dscalable.abstraction.compute_atf.abstract_tf.bounded_atf as bounded_atf
+# import lqg1Dscalable.visualizer.bounds_visualizer as bvis
 import lqg1Dscalable.helper as helper
 import math
+import logging
 
 
 class LipschitzFdads(LipschitzAbstraction):
@@ -13,9 +15,10 @@ class LipschitzFdads(LipschitzAbstraction):
         self.LIPSCHITZ_CONST_STATE = lip_state
         self.LIPSCHITZ_CONST_ACTION = lip_action
 
-    def calculate_single_atf(self, cont, act, std=0):
+    def calculate_single_atf(self, mcrst, act, std=0):
 
         new_state_bounds = []
+        cont = self.container[mcrst]
 
         # I obtain the min & max new state I would get by performing action act in every state sampled.
         for action in cont.keys():
@@ -33,22 +36,38 @@ class LipschitzFdads(LipschitzAbstraction):
 
             # if the env is stochastic we need to consider the bound generated from every sample.
             # in this way the bias due to the noise is weighted among all the samples.
-            else:
-                # eps_bound = 2 * std * math.sqrt(2 / math.pi)
-                eps_bound = 0
-                for a in cont.keys():
-                    dist_s_shat = abs(cont[a]['state'] - cont[action]['state'])
-                    dist_a_ahat = abs(a - act)
-                    bound3 = self.LIPSCHITZ_CONST_STATE * dist_s_shat + self.LIPSCHITZ_CONST_ACTION * dist_a_ahat + \
-                        eps_bound
-                    min_val3 = cont[a]['new_state'] - bound3
-                    max_val3 = cont[a]['new_state'] + bound3
-                    bounds.append([round(min_val3, 3), round(max_val3, 3)])
+            # else:
+            #     for a in cont.keys():
+            #         dist_s_shat = abs(cont[a]['state'] - cont[action]['state'])
+            #         dist_a_ahat = abs(a - act)
+            #         bound3 = abs(self.LIPSCHITZ_CONST_STATE * dist_s_shat + self.LIPSCHITZ_CONST_ACTION * dist_a_ahat)
+            #         min_val3 = cont[a]['new_state'] - bound3
+            #         max_val3 = cont[a]['new_state'] + bound3
+            #         bounds.append([round(min_val3, 3), round(max_val3, 3)])
 
             min_val, max_val = helper.interval_intersection(bounds)
+            # if abs(min_val1 - min_val) > 0.001 or abs(max_val1 - max_val) > 0.001:
+            #     print("here")
 
             new_state_bounds.append([min_val, max_val])
 
+        # --- LOG ---
+        if mcrst == 0 and act == min(list(self.container[0].keys())):
+            logging.debug("Bounds related to min action in mcrst 0: ")
+            logging.debug(new_state_bounds)
+        if mcrst == 0 and act == max(list(self.container[0].keys())):
+            logging.debug("Bounds related to max action in mcrst 0: ")
+            logging.debug(new_state_bounds)
+        # -----------
+
+        # --- matplot ---
+        # if mcrst == 0 and act == min(list(self.container[0].keys())):
+        #     bvis.plot_bounds(new_state_bounds, "min action")
+        # if mcrst == 0 and act == max(list(self.container[0].keys())):
+        #     bvis.plot_bounds(new_state_bounds, "max action")
+        # ---------------
+
         # it uses the computed bounds to build a bounded abstract tf.
-        return bounded_atf.abstract_tf(self.intervals, new_state_bounds, self.sink)
+        # return bounded_atf.abstract_tf(self.intervals, new_state_bounds, self.sink)
         # return uni_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)
+        return sample_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)

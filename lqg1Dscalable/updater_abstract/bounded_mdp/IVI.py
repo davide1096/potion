@@ -80,12 +80,12 @@ class IVI(object):
                 max_v = VI.update([v[1] for v in self.v_function], [u[1] for u in ub], a, container[i], self.gamma)
                 poss_actions[a] = [min_v, max_v]
 
-            bp[i], vf[i] = self.best_actions_pes(poss_actions) if self.pes else self.best_actions_opt(poss_actions)
+            bp[i], vf[i] = self.best_actions_pes(poss_actions, i) if self.pes else self.best_actions_opt(poss_actions, i)
 
         self.best_policy = bp
         self.v_function = vf
 
-    def best_actions_pes(self, possibilities):
+    def best_actions_pes(self, possibilities, mcrst):
 
         # find the best interval according to the pessimistic definition of MAX.
         if len(possibilities.items()) > 0:
@@ -105,9 +105,9 @@ class IVI(object):
 
         # sink state
         else:
-            return None, 0
+            return None, self.v_function[mcrst]
 
-    def best_actions_opt(self, possibilities):
+    def best_actions_opt(self, possibilities, mcrst):
         # find the best interval according to the pessimistic ">" definition.
         if len(possibilities.items()) > 0:
             # target is the value of the v_function of the macrostate at this iteration.
@@ -121,7 +121,7 @@ class IVI(object):
             return [b[0] for b in best_acts], best_acts[0][1]
 
         else:
-            return None, 0
+            return None, self.v_function[mcrst]
 
 
 

@@ -11,7 +11,7 @@ class LipschitzAbstraction(Abstraction):
         range_max = len(self.container) if not self.sink else len(self.container) - 1
         for i in range(0, range_max):
             for act in self.container[i].keys():
-                self.container[i][act]['abs_tf'] = self.calculate_single_atf(self.container[i], act, std)
+                self.container[i][act]['abs_tf'] = self.calculate_single_atf(i, act, std)
 
         if self.sink:
             sink_tf = np.zeros(len(self.intervals) + 1)

@@ -1,6 +1,7 @@
 from lqg1Dscalable.abstraction.lipschitz_abstraction import LipschitzAbstraction
 import lqg1Dscalable.abstraction.compute_atf.abstract_tf.sample_distribution as sample_dist
 import numpy as np
+import logging
 
 
 class LqgFKnown(LipschitzAbstraction):
@@ -10,8 +11,9 @@ class LqgFKnown(LipschitzAbstraction):
         self.a = a
         self.b = b
 
-    def calculate_single_atf(self, cont, act, std=0):
+    def calculate_single_atf(self, mcrst, act, std=0):
 
+        cont = self.container[mcrst]
         new_state_bounds = []
         # mod_a = np.sign(act) * np.abs(act) ** (1/3)
         # mod_a = act * act * act
@@ -20,7 +22,16 @@ class LqgFKnown(LipschitzAbstraction):
         for action in cont.keys():
             # mod_s = np.sign(cont[action]['state']) * np.abs(cont[action]['state']) ** (1/3)
             new_state = self.a * cont[action]['state'] + self.b * act
-            new_state_bounds.append([new_state, new_state])
+            new_state_bounds.append([round(new_state, 3), round(new_state, 3)])
+
+        # --- LOG ---
+        if mcrst == 0 and act == min(list(self.container[0].keys())):
+            logging.debug("Bounds related to min action in mcrst 0: ")
+            logging.debug(new_state_bounds)
+        if mcrst == 0 and act == max(list(self.container[0].keys())):
+            logging.debug("Bounds related to max action in mcrst 0: ")
+            logging.debug(new_state_bounds)
+        # -----------
 
         return sample_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)
         # return uni_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)

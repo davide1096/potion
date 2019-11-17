@@ -11,11 +11,11 @@ class LipschitzDeltaS(LipschitzAbstraction):
         self.LIPSCHITZ_CONST_S = abs(a - 1)
         self.LIPSCHITZ_CONST_A = b
 
-    def calculate_single_atf(self, cont, act, std=0):
+    def calculate_single_atf(self, mcrst, act, std=0):
 
+        cont = self.container[mcrst]
         new_state_bounds = []
         delta_s = cont[act]['new_state'] - cont[act]['state']
-        # epsilon_bound = 2 * std * math.sqrt(2 / math.pi)
 
         for action in cont.keys():
 

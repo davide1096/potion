@@ -43,8 +43,8 @@ class MiniGolf(gym.Env):
         high = np.array([self.max_pos])
         self.action_space = spaces.Box(low=self.min_action,
                                        high=self.max_action,
-                                       shape=(1,))
-        self.observation_space = spaces.Box(low=low, high=high)
+                                       shape=(1,),dtype=float)
+        self.observation_space = spaces.Box(low=low, high=high, dtype=float)
 
         # initialize state
         self.seed()
@@ -57,7 +57,7 @@ class MiniGolf(gym.Env):
         self.sigma_noise = m.sqrt(env_param[-1])
 
     def step(self, action, render=False):
-        action = np.clip(np.array(action), self.min_action, self.max_action / 2)
+        action = np.clip(action, self.min_action, self.max_action / 2)
 
         noise = 10
         while abs(noise) > 1:
@@ -82,8 +82,7 @@ class MiniGolf(gym.Env):
 
         self.state = xn
 
-        # TODO the last three values should not be used
-        return self.get_state(), float(reward), done, (xn, action, xn)
+        return self.get_state(), float(reward), done, {'state':self.get_state(), 'action':action}
 
     #Custom param for transfer
 
@@ -184,7 +183,6 @@ class MiniGolf(gym.Env):
         return pdf[:, :, 0]
 
     def reward(self, state, action, next_state):
-
         deceleration = 5 / 7 * self.friction * 9.81
 
         u = np.sqrt(2 * deceleration * (state - next_state))
@@ -295,7 +293,9 @@ class ComplexMiniGolf(gym.Env):
         self.min_action = 1e-5
         self.max_action = 10.0
         self.putter_length = 1.0 # [0.7:1.0]
-        self.friction = 0.131 # [0.065:0.196]
+        #self.friction = 0.131 # [0.065:0.196]
+        self.friction_low = 0.131
+        self.friction_high =  0.19 #0.190
         self.hole_size = 0.10 # [0.10:0.15]
         self.sigma_noise = 0.3
         self.ball_radius = 0.02135
@@ -320,6 +320,15 @@ class ComplexMiniGolf(gym.Env):
         self.hole_size = env_param[2]
         self.sigma_noise = m.sqrt(env_param[-1])
 
+    def computeFriction(self, state):
+        if state < (self.max_pos - self.min_pos) / 3:
+            friction = self.friction_low
+        elif state < (self.max_pos - self.min_pos) * 2 / 3:
+            friction = self.friction_low
+        else:
+            friction = self.friction_high
+        return friction
+
     def step(self, action, render=False):
         action = np.clip(action, self.min_action, self.max_action / 2)
 
@@ -328,10 +337,12 @@ class ComplexMiniGolf(gym.Env):
             noise = self.np_random.randn() * self.sigma_noise
         u = action * self.putter_length * (1 + noise)
 
-        v_min = np.sqrt(10 / 7 * self.friction * 9.81 * self.state)
+        friction = self.computeFriction(self.state)
+
+        v_min = np.sqrt(10 / 7 * friction * 9.81 * self.state)
         v_max = np.sqrt((2*self.hole_size - self.ball_radius)**2*(9.81/(2*self.ball_radius)) + v_min**2)
 
-        deceleration = 5 / 7 * self.friction * 9.81
+        deceleration = 5 / 7 * friction * 9.81
 
         t = u / deceleration
         xn = self.state - u * t + 0.5 * deceleration * t ** 2
@@ -343,11 +354,11 @@ class ComplexMiniGolf(gym.Env):
             done = False
         elif u > v_max:
             reward = -100
-
+        state = self.state
         self.state = xn
 
         # TODO the last three values should not be used
-        return self.get_state(), float(reward), done, (xn, action, xn)
+        return self.get_state(), float(reward), done, {"state":state, "next_state":self.state, "action":action}
 
     #Custom param for transfer
 
@@ -355,6 +366,7 @@ class ComplexMiniGolf(gym.Env):
         return np.asarray([np.ravel(self.putter_length), np.ravel(self.friction), np.ravel(self.hole_size), np.ravel(self.sigma_noise**2)])
 
     def reset(self, state=None):
+        #TODO change reset
         if state is None:
             self.state = np.array([self.np_random.uniform(low=self.min_pos,
                                                           high=self.max_pos)])
@@ -381,5 +393,23 @@ class ComplexMiniGolf(gym.Env):
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+ 
+    def reward(self, state, action, next_state):
+        #FIXME: two problems. (1,probably fixed) When the next_state is less than state. (2) reward of -100 is never returned
+        friction = self.computeFriction(state)
+        deceleration = 5 / 7 * friction * 9.81
 
+        u = np.sqrt(2 * deceleration * max((state - next_state), 0))
 
+        v_min = np.sqrt(10 / 7 * friction * 9.81 * state)
+        v_max = np.sqrt((2*self.hole_size - self.ball_radius)**2*(9.81/(2*self.ball_radius)) + v_min**2)
+
+        reward = 0
+        done = True
+        if u < v_min:
+            reward = -1
+            done = False
+        elif u > v_max:
+            reward = -100
+
+        return reward, done

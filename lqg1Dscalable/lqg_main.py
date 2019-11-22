@@ -19,6 +19,9 @@ ENV_NOISE = 0
 A = 1
 B = 1
 GAMMA = 0.9
+# optA = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
+# Set optA = 0 to use the standard algorithm.
+optA = 0
 LIPSCHITZ_CONST_STATE = A
 LIPSCHITZ_CONST_ACTION = B
 LIPSCHITZ_STOCH_ATF = B
@@ -65,13 +68,12 @@ optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
 logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(message)s')
 
 # instantiate the components of the algorithm.
-# abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, INTERVALS)
+# abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
 abstraction = LipschitzDeltaS(A, B, GAMMA, SINK, INTERVALS)
 # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 
-abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-# abs_updater = IVI(GAMMA, SINK, True, INTERVALS)
+abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
 key = "{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param)
@@ -119,7 +121,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param):
 for i in range(0, N_ITERATION):
     determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
     abstraction.divide_samples(determin_samples, problem)
-    abstraction.compute_abstract_tf(ENV_NOISE)
+    abstraction.compute_abstract_tf(optA, ENV_NOISE)
 
     # --- LOG ---
     min_action = [min(list(cont.keys())) for cont in abstraction.get_container()]

@@ -88,7 +88,8 @@ def interval_intersection(bounds):
     if max(mins) <= min(maxs):
         return max(mins), min(maxs)
     else:
-        return min(mins), max(maxs)
+        # return min(mins), max(maxs)
+        return None, None
 
 # INTERVALS = [[-2, -1.95], [-1.95, -1.9], [-1.9, -1.85], [-1.85, -1.8], [-1.8, -1.75], [-1.75, -1.7], [-1.7, -1.65],
 #              [-1.65, -1.6], [-1.6, -1.55], [-1.55, -1.5], [-1.5, -1.45], [-1.45, -1.4], [-1.4, -1.35], [-1.35, -1.3],

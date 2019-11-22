@@ -10,10 +10,12 @@ import logging
 
 class LipschitzFdads(LipschitzAbstraction):
 
-    def __init__(self, lip_state, lip_action, gamma, sink, intervals=None):
+    def __init__(self, lip_state, lip_action, gamma, sink, a, b, intervals=None):
         super().__init__(gamma, sink, intervals)
         self.LIPSCHITZ_CONST_STATE = lip_state
         self.LIPSCHITZ_CONST_ACTION = lip_action
+        self.a = a
+        self.b = b
 
     def calculate_single_atf(self, mcrst, act, std=0):
 
@@ -62,9 +64,15 @@ class LipschitzFdads(LipschitzAbstraction):
 
         # --- matplot ---
         # if mcrst == 0 and act == min(list(self.container[0].keys())):
-        #     bvis.plot_bounds(new_state_bounds, "min action")
+        #     true_value = []
+        #     for action in cont.keys():
+        #         true_value.append(self.a * cont[action]['state'] + self.b * act)
+        #     bvis.plot_bounds(new_state_bounds, "min action", true_value)
         # if mcrst == 0 and act == max(list(self.container[0].keys())):
-        #     bvis.plot_bounds(new_state_bounds, "max action")
+        #     true_value = []
+        #     for action in cont.keys():
+        #         true_value.append(self.a * cont[action]['state'] + self.b * act)
+        #     bvis.plot_bounds(new_state_bounds, "max action", true_value)
         # ---------------
 
         # it uses the computed bounds to build a bounded abstract tf.

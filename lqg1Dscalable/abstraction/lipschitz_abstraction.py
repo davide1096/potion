@@ -14,6 +14,7 @@ class LipschitzAbstraction(Abstraction):
                 self.container[i][act]['abs_tf'] = self.calculate_single_atf(i, act, optA, std)
 
         if self.sink:
+            # sink_tf is the tf array associated to actions in sink state
             sink_tf = np.zeros(len(self.intervals) + 1)
             sink_tf[-1] = 1
             for act in self.container[-1].keys():

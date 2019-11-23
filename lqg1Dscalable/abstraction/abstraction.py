@@ -47,6 +47,8 @@ class Abstraction(object):
             reward_func = helper.calc_abs_reward_lqg
         elif problem == 'cartpole1d':
             reward_func = helper.calc_abs_reward_cartpole
+        elif problem == 'minigolf':
+            reward_func = helper.calc_abs_reward_minigolf
         for cont in self.container:
             for act in cont.keys():
                 cont[act]['abs_reward'] = reward_func(cont, act)

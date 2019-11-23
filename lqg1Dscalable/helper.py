@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 SEED = 42
 random.seed(SEED)
@@ -57,7 +58,23 @@ def flat_listoflists(list):
     return [item for sublist in list for item in sublist]
 
 
-def estimate_J_lqg(samples, gamma):
+def calc_abs_reward_cartpole(cont, action):
+    return 1 if -0.2093 <= cont[action]['state'] <= 0.2093 else 0
+
+
+def calc_abs_reward_minigolf(cont, action):
+    rew = 0
+    for act in cont.keys():
+        if action < np.sqrt(1.836 * cont[act]['state']):
+            rew += -1
+        elif action > np.sqrt(7.33 + 1.836 * cont[act]['state']):
+            rew += -100
+        else:
+            rew += 0
+    return rew / len(cont.items())
+
+
+def estimate_J_from_samples(samples, gamma):
     acc = 0
     for sam in samples:
         g = 1
@@ -66,20 +83,6 @@ def estimate_J_lqg(samples, gamma):
             acc += g * s[2]
             g *= gamma
     return acc / len(samples)
-
-
-def calc_abs_reward_cartpole(cont, action):
-    return 1 if -0.2093 <= cont[action]['state'] <= 0.2093 else 0
-
-
-def estimate_J_cartpole(fict_samples, gamma):
-    acc = 0
-    for sample in fict_samples:
-        g = 1
-        for s in sample:
-            acc += g
-            g *= gamma
-    return acc / len(fict_samples)
 
 
 def interval_intersection(bounds):

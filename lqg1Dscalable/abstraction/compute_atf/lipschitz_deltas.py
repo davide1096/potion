@@ -8,12 +8,14 @@ import logging
 
 class LipschitzDeltaS(LipschitzAbstraction):
 
-    def __init__(self, a, b, gamma, sink, intervals=None):
+    def __init__(self, gamma, sink, intervals=None, a=None, b=None):
         super().__init__(gamma, sink, intervals)
-        self.LIPSCHITZ_CONST_S = abs(a - 1)
-        self.LIPSCHITZ_CONST_A = b
-        self.a = a
-        self.b = b
+        if a is not None:
+            self.LIPSCHITZ_CONST_S = abs(a - 1)
+            self.a = a
+        if b is not None:
+            self.LIPSCHITZ_CONST_A = b
+            self.b = b
 
     def calculate_single_atf(self, mcrst, act, optA, std=0):
 

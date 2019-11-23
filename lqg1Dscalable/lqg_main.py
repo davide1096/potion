@@ -70,7 +70,7 @@ logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', form
 # instantiate the components of the algorithm.
 # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-abstraction = LipschitzDeltaS(A, B, GAMMA, SINK, INTERVALS)
+abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
 # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
 
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
@@ -144,7 +144,7 @@ for i in range(0, N_ITERATION):
     fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
     j = env.computeJ(det_param, 0, N_EPISODES)
-    estj = helper.estimate_J_lqg(determin_samples, GAMMA)
+    estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
     print("Updated deterministic policy parameter: {}".format(det_param))
     print("Updated performance measure: {}".format(j))

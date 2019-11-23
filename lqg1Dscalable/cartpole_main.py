@@ -91,7 +91,7 @@ for i in range(0, N_ITERATION):
     fictitious_samples = sampling_abstract_optimal_pol(abstract_optimal_policy, deterministic_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
     # j = env.computeJ(det_param, ENV_NOISE, N_EPISODES)
-    absj = helper.estimate_J_cartpole(fictitious_samples, GAMMA)
+    absj = helper.estimate_J_from_samples(deterministic_samples, GAMMA)
 
     print("Updated deterministic policy parameter: {}".format(det_param))
     print("Updated estimated performance measure: {}\n".format(absj))

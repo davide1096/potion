@@ -5,14 +5,13 @@ from lqg1Dscalable.abstraction.compute_atf.lipschitz_deltas import LipschitzDelt
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 from lqg1Dscalable.updater_abstract.bounded_mdp.IVI import IVI
 import lqg1Dscalable.updater_deterministic.updater as det_upd
+from lqg1Dscalable.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
 import lqg1Dscalable.helper as helper
 import logging
 from lqg1Dscalable.RBFNet import RBFNet
 
 problem = 'minigolf'
 SINK = True
-INIT_DETERMINISTIC_PARAM_A = 0.5
-INIT_DETERMINISTIC_PARAM_B = 1
 ENV_NOISE = 0
 GAMMA = 0.99
 # optA = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
@@ -20,10 +19,12 @@ GAMMA = 0.99
 optA = 1
 
 N_ITERATION = 500
-N_EPISODES = 200
+N_EPISODES = 1000
 N_STEPS = 20
 
 INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
+# INTERVALS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12],
+#              [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20]]
 
 # load and configure the environment.
 env = gym.make('MiniGolf-v0')
@@ -31,22 +32,19 @@ env.sigma_noise = ENV_NOISE
 env.gamma = GAMMA
 env.seed(helper.SEED)
 
-# calculate the optimal values of the problem.
-det_param_a = INIT_DETERMINISTIC_PARAM_A
-det_param_b = INIT_DETERMINISTIC_PARAM_B
 logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(message)s')
 
 abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
+# abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 1)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if optA else IVI(GAMMA, SINK, True, INTERVALS)
 rbf = RBFNet()
 
 
-def deterministic_action(det_par_a, det_param_b, state):
-    # return np.sqrt(det_par_a * state + det_param_b)
+def deterministic_action(state):
     return rbf.predict(state)[0]
 
 
-def sampling_from_det_pol(env, n_episodes, n_steps, det_par_a, det_param_b):
+def sampling_from_det_pol(env, n_episodes, n_steps):
     samples_list = []
     for j in range(0, n_episodes):
         env.reset()
@@ -55,7 +53,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par_a, det_param_b):
         done = False
         while k < n_steps and not done:
             state = env.get_state()
-            action = deterministic_action(det_par_a, det_param_b, state)
+            action = deterministic_action(state)
             new_state, r, done, _ = env.step(action)
             single_sample.append([state[0], action[0], r, new_state[0]])
             k += 1
@@ -64,12 +62,12 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par_a, det_param_b):
     return samples_list
 
 
-def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param_a, param_b):
+def sampling_abstract_optimal_pol(abs_opt_policy, det_samples):
     fictitious_samples = []
     for sam in det_samples:
         single_sample = []
         for s in sam:
-            prev_action = deterministic_action(param_a, param_b, np.reshape(s[0], (1,1)))
+            prev_action = deterministic_action(np.reshape(s[0], (1, 1)))
             prev_action = prev_action[0]
             mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
             if prev_action in abs_opt_policy[mcrst]:
@@ -83,28 +81,23 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param_a, param_b)
 
 for i in range(0, N_ITERATION):
 
-    determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param_a, det_param_b)
+    determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS)
     abstraction.divide_samples(determin_samples, problem)
     abstraction.compute_abstract_tf(optA, ENV_NOISE)
 
     abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
 
-    fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param_a, det_param_b)
-    # det_param_a = det_upd.batch_gradient_update_a(det_param_a, det_param_b, fictitious_samples)
-    # det_param_b = det_upd.batch_gradient_update_b(det_param_a, det_param_b, fictitious_samples)
+    fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples)
     fictitious_samples = helper.flat_listoflists(fictitious_samples)
     X = np.reshape([f[0] for f in fictitious_samples], (len(fictitious_samples),))
     y = np.reshape([f[1] for f in fictitious_samples], (len(fictitious_samples),))
     rbf.fit(X, y)
     estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
-    # print("Updated deterministic policy parameter A: {}".format(det_param_a))
-    # print("Updated deterministic policy parameter B: {}".format(det_param_b))
     print("W: {}".format(rbf.w))
     print("b: {}".format(rbf.b))
-    for i in range(0, rbf.k):
-        print("Gaussian #{}: center = {}, sigma = {}".format(i, rbf.centers[i], rbf.stds[i]))
     print("Updated estimated performance measure: {}".format(estj))
-    zeros, hundred = helper.minigolf_reward_counter(determin_samples)
-    print("Number of zeroes: {} - Number of big penalties: {}\n".format(zeros, hundred))
+    zeros, hundred, failing_states = helper.minigolf_reward_counter(determin_samples)
+    print("Number of zeroes: {} - Number of big penalties: {}".format(zeros, hundred))
+    print("Failing states: {}\n".format(failing_states))
 

@@ -88,13 +88,20 @@ def estimate_J_from_samples(samples, gamma):
 def minigolf_reward_counter(samples):
     zeros = 0
     hundred = 0
+    # max_action = 0
+    failing_states = []
     for sam in samples:
         for s in sam:
+            # if s[1] > max_action:
+            #     max_action = s[1]
             if s[2] == 0:
                 zeros += 1
             if s[2] == -100:
                 hundred += 1
-    return zeros, hundred
+                failing_states.append(s[0])
+
+    # print("Max action: {}".format(max_action))
+    return zeros, hundred, failing_states
 
 
 def interval_intersection(bounds):

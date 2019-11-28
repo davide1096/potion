@@ -124,7 +124,6 @@ class MaxLikelihoodAbstraction(Abstraction):
 
         problem = cp.Problem(objective, constraints)
         problem.solve()
-        print(theta.value)
 
         return theta.value
 

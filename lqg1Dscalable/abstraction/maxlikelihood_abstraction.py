@@ -75,7 +75,7 @@ class MaxLikelihoodAbstraction(Abstraction):
                 delta_s = sample['new_state'] - sample['state']
                 self.arriving_mcrst_helper[act] = {}
 
-                # apply the effect to every state in the macrostate.
+                # apply the delta s of the sample to every other state in the macrostate.
                 for act2 in cont.keys():
                     if act != act2:
                         new_state = cont[act2]['state'] + delta_s
@@ -131,7 +131,7 @@ class MaxLikelihoodAbstraction(Abstraction):
     def get_abstract_tf(self):
         return self.solution, self.action_index
 
-    def compute_abstract_tf(self, std=0):
+    def compute_abstract_tf(self, optA, std=0):
         self.solution = self.construct_problem()
         for i in range(0, len(self.container)):
             for act in self.container[i].keys():

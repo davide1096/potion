@@ -4,7 +4,7 @@ import numpy as np
 SEED = 42
 random.seed(SEED)
 
-MAX_SAMPLES_IN_MCRST = 100
+MAX_SAMPLES_IN_MCRST = 60
 
 
 def big_mcrst_correction(cont):
@@ -83,6 +83,18 @@ def estimate_J_from_samples(samples, gamma):
             acc += g * s[2]
             g *= gamma
     return acc / len(samples)
+
+
+def minigolf_reward_counter(samples):
+    zeros = 0
+    hundred = 0
+    for sam in samples:
+        for s in sam:
+            if s[2] == 0:
+                zeros += 1
+            if s[2] == -100:
+                hundred += 1
+    return zeros, hundred
 
 
 def interval_intersection(bounds):

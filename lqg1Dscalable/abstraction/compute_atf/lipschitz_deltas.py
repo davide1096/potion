@@ -42,7 +42,7 @@ class LipschitzDeltaS(LipschitzAbstraction):
                 delta_s2 = cont[action]['new_state'] - cont[action]['state']
                 # the bound is the difference I can have when I take act instead of action
                 # according to the Lipschitz hypothesis on delta s.
-                bound2 = self.LIPSCHITZ_CONST_A * dist_a_ahat + 0 * std
+                bound2 = self.LIPSCHITZ_CONST_A * dist_a_ahat
                 min_val2 = cont[action]['state'] + delta_s2 - bound2
                 max_val2 = cont[action]['state'] + delta_s2 + bound2
 

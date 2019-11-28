@@ -14,9 +14,9 @@ import logging
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.7
-ENV_NOISE = 0
-A = 1
+INIT_DETERMINISTIC_PARAM = -0.4
+ENV_NOISE = 0.1
+A = 0.7
 B = 1
 GAMMA = 0.9
 # optA = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
@@ -30,28 +30,13 @@ N_ITERATION = 500
 N_EPISODES = 2000
 N_STEPS = 20
 
-INTERVALS = [[-2, -1.8], [-1.8, -1.6], [-1.6, -1.4], [-1.4, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0.6, -0.5],
-             [-0.5, -0.4], [-0.4, -0.3], [-0.3, -0.2], [-0.2, -0.1], [-0.1, -0.025], [-0.025, 0.025], [0.025, 0.1],
-             [0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.4, 0.5], [0.5, 0.6], [0.6, 0.8], [0.8, 1], [1, 1.2], [1.2, 1.4],
-             [1.4, 1.6], [1.6, 1.8], [1.8, 2]]
+# INTERVALS = [[-2, -1.8], [-1.8, -1.6], [-1.6, -1.4], [-1.4, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0.6, -0.4],
+#              [-0.4, -0.2], [-0.2, -0.1], [-0.1, 0], [0, 0.1], [0.1, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1],
+#              [1, 1.2], [1.2, 1.4], [1.4, 1.6], [1.6, 1.8], [1.8, 2]]
 
-# INTERVALS = [[-2, -1.4], [-1.4, -1], [-1, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05],
-#              [0.05, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 1], [1, 1.4], [1.4, 2]]
+INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1],
+             [0.1, 0.3], [0.3, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]
 
-# INTERVALS = [[-2, -1], [-1, -0.4], [-0.4, -0.1], [-0.1, 0.1], [0.1, 0.4], [0.4, 1], [1, 2]]
-
-# INTERVALS = [[-2, -1.95], [-1.95, -1.9], [-1.9, -1.85], [-1.85, -1.8], [-1.8, -1.75], [-1.75, -1.7], [-1.7, -1.65],
-#              [-1.65, -1.6], [-1.6, -1.55], [-1.55, -1.5], [-1.5, -1.45], [-1.45, -1.4], [-1.4, -1.35], [-1.35, -1.3],
-#              [-1.3, -1.25], [-1.25, -1.2], [-1.2, -1.15], [-1.15, -1.1], [-1.1, -1.05], [-1.05, -1.0], [-1.0, -0.95],
-#              [-0.95, -0.9], [-0.9, -0.85], [-0.85, -0.8], [-0.8, -0.75], [-0.75, -0.7], [-0.7, -0.65], [-0.65, -0.6],
-#              [-0.6, -0.55], [-0.55, -0.5], [-0.5, -0.45], [-0.45, -0.4], [-0.4, -0.35], [-0.35, -0.3], [-0.3, -0.25],
-#              [-0.25, -0.2], [-0.2, -0.15], [-0.15, -0.1],
-#              [-0.1, -0.05], [-0.05, -0.015], [-0.015, 0.015], [0.015, 0.05], [0.05, 0.1],
-#              [0.1, 0.15], [0.15, 0.2], [0.2, 0.25], [0.25, 0.3], [0.3, 0.35], [0.35, 0.4], [0.4, 0.45], [0.45, 0.5],
-#              [0.5, 0.55], [0.55, 0.6], [0.6, 0.65], [0.65, 0.7], [0.7, 0.75], [0.75, 0.8], [0.8, 0.85], [0.85, 0.9],
-#              [0.9, 0.95], [0.95, 1.0], [1.0, 1.05], [1.05, 1.1], [1.1, 1.15], [1.15, 1.2], [1.2, 1.25], [1.25, 1.3],
-#              [1.3, 1.35], [1.35, 1.4], [1.4, 1.45], [1.45, 1.5], [1.5, 1.55], [1.55, 1.6], [1.6, 1.65], [1.65, 1.7],
-#              [1.7, 1.75], [1.75, 1.8], [1.8, 1.85], [1.85, 1.9], [1.9, 1.95], [1.95, 2.0]]
 
 # load and configure the environment.
 env = gym.make('LQG1D-v0')
@@ -70,10 +55,11 @@ logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', form
 # instantiate the components of the algorithm.
 # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
 # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
-# abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, LIPSCHITZ_STOCH_ATF)
+# abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
+abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
 
-abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
+# abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
+abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
 title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
 key = "{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param)
@@ -124,22 +110,23 @@ for i in range(0, N_ITERATION):
     abstraction.compute_abstract_tf(optA, ENV_NOISE)
 
     # --- LOG ---
-    min_action = [min(list(cont.keys())) for cont in abstraction.get_container()]
-    max_action = [max(list(cont.keys())) for cont in abstraction.get_container()]
-    logging.debug("Parameter: {}\n".format(det_param))
-
-    for i in range(0, len(INTERVALS)):
-        logging.debug("Macrostate {} - min action: {}".format(i, min_action[i]))
-        logging.debug(abstraction.get_container()[i][min_action[i]]['abs_tf'])
-        logging.debug("\n")
-        logging.debug("Macrostate {} - max action: {}".format(i, max_action[i]))
-        logging.debug(abstraction.get_container()[i][max_action[i]]['abs_tf'])
-        logging.debug("\n")
+    # min_action = [min(list(cont.keys())) for cont in abstraction.get_container()]
+    # max_action = [max(list(cont.keys())) for cont in abstraction.get_container()]
+    # logging.debug("Parameter: {}\n".format(det_param))
+    #
+    # for i in range(0, len(INTERVALS)):
+    #     logging.debug("Macrostate {} - min action: {}".format(i, min_action[i]))
+    #     logging.debug(abstraction.get_container()[i][min_action[i]]['abs_tf'])
+    #     logging.debug("\n")
+    #     logging.debug("Macrostate {} - max action: {}".format(i, max_action[i]))
+    #     logging.debug(abstraction.get_container()[i][max_action[i]]['abs_tf'])
+    #     logging.debug("\n")
     # -----------
 
     abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
     # logging.debug([min(a) for a in abstract_optimal_policy])
     # logging.debug("\n")
+    logging.debug("Optimal policy: {}".format(abs_opt_pol))
 
     fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param)
     det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)

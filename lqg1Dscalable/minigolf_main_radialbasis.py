@@ -18,8 +18,8 @@ GAMMA = 0.99
 # Set optA = 0 to use the standard algorithm.
 optA = 1
 
-N_ITERATION = 500
-N_EPISODES = 1000
+N_ITERATION = 5000
+N_EPISODES = 2000
 N_STEPS = 20
 
 INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
@@ -94,6 +94,7 @@ for i in range(0, N_ITERATION):
     rbf.fit(X, y)
     estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
+    print("Iteration n.{}".format(i))
     print("W: {}".format(rbf.w))
     print("b: {}".format(rbf.b))
     print("Updated estimated performance measure: {}".format(estj))

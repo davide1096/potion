@@ -65,7 +65,7 @@ title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_pa
 key = "{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param)
 key = key.replace('.', ',')
 key = key + ".jpg"
-initJ = env.computeJ(det_param, ENV_NOISE, N_EPISODES)
+initJ = env.computeJ(det_param, 0, N_EPISODES)
 visualizer = Lqg1dVisualizer(title, "number of iterations", "parameter", " performance", key, det_param, opt_par4vis,
                              initJ, optJ4vis)
 

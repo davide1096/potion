@@ -21,7 +21,7 @@ class MaxLikelihoodAbstraction(Abstraction):
     def init_operation(self):
         self.i = len(self.container)
         self.n_actions = self.count_actions()
-        self.I = cp.Parameter((self.n_actions, self.i))
+        self.I = cp.Parameter((self.n_actions, self.i), nonneg=True)
         self.action_index = {}
         self.create_action_index()
         self.arriving_mcrst_helper = {}
@@ -89,7 +89,7 @@ class MaxLikelihoodAbstraction(Abstraction):
     def construct_problem(self):
         self.init_operation()
         theta = cp.Variable((self.n_actions, self.i), nonneg=True)
-        objective = cp.Minimize(-cp.sum(cp.log(cp.multiply(self.I, theta) + 1)))
+        objective = cp.Minimize(-cp.sum(cp.multiply(self.I, cp.log(theta))))
 
         constraints = []
         # sum of rows must be equal to 1.
@@ -123,7 +123,7 @@ class MaxLikelihoodAbstraction(Abstraction):
                                        - self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
 
         problem = cp.Problem(objective, constraints)
-        problem.solve()
+        problem.solve(solver=cp.ECOS, verbose=True, abstol=1e-4, max_iters=200)
 
         return theta.value
 

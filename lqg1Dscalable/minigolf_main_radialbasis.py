@@ -27,7 +27,7 @@ INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 1
 #              [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20]]
 
 # load and configure the environment.
-env = gym.make('MiniGolf-v0')
+env = gym.make('ComplexMiniGolf-v0')
 env.sigma_noise = ENV_NOISE
 env.gamma = GAMMA
 env.seed(helper.SEED)
@@ -37,7 +37,8 @@ logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', form
 abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
 # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 1)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if optA else IVI(GAMMA, SINK, True, INTERVALS)
-rbf = RBFNet()
+# abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)
+rbf = RBFNet([3, 6, 10, 14, 17], [0.1, 0.3, 0.5, 0.7, 1], 1)
 
 
 def deterministic_action(state):

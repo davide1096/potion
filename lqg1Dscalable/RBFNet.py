@@ -14,23 +14,19 @@ def rbf(x, c, s):
 class RBFNet(object):
     """Implementation of a Radial Basis Function Network"""
 
-    def __init__(self, k=5, lr=0.01, epochs=100, rbf=rbf, inferStds=True):
+    def __init__(self, centers, w, b, k=5, lr=0.01, epochs=100, rbf=rbf, inferStds=True):
         self.k = k
         self.lr = lr
         self.epochs = epochs
         self.rbf = rbf
         self.inferStds = inferStds
-        # ---
-        self.centers = [3, 6, 10, 14, 17]
+        self.centers = centers
         self.stds = np.repeat(3, k)
-        # ---
 
-        self.w = np.random.randn(k)
-        for i in range(len(self.w)):
-            self.w[i] = 0.5
+        self.w = w
         self.b = np.random.randn(1)
         for i in range(len(self.b)):
-            self.b[i] = 1
+            self.b[i] = b
 
     def fit(self, X, y):
 

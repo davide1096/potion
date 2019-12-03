@@ -14,7 +14,7 @@ import logging
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.7
+INIT_DETERMINISTIC_PARAM = -1
 ENV_NOISE = 0
 A = 1
 B = 1
@@ -26,48 +26,16 @@ LIPSCHITZ_CONST_STATE = A
 LIPSCHITZ_CONST_ACTION = B
 LIPSCHITZ_STOCH_ATF = B
 
-N_ITERATION = 500
+N_ITERATION = 40
 N_EPISODES = 2000
 N_STEPS = 20
 
 # INTERVALS = [[-2, -1.8], [-1.8, -1.6], [-1.6, -1.4], [-1.4, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0.6, -0.4],
-#              [-0.4, -0.2], [-0.2, -0.1], [-0.1, 0], [0, 0.1], [0.1, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1],
-#              [1, 1.2], [1.2, 1.4], [1.4, 1.6], [1.6, 1.8], [1.8, 2]]
+#              [-0.4, -0.2], [-0.2, -0.1], [-0.1, -0.025], [-0.025, 0.025], [0.025, 0.1], [0.1, 0.2], [0.2, 0.4],
+#              [0.4, 0.6], [0.6, 0.8], [0.8, 1], [1, 1.2], [1.2, 1.4], [1.4, 1.6], [1.6, 1.8], [1.8, 2]]
 
 INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1],
              [0.1, 0.3], [0.3, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]
-
-
-# load and configure the environment.
-env = gym.make('LQG1D-v0')
-env.sigma_noise = ENV_NOISE
-env.A = np.array([A]).reshape((1, 1))
-env.B = np.array([B]).reshape((1, 1))
-env.gamma = GAMMA
-env.seed(helper.SEED)
-
-# calculate the optimal values of the problem.
-opt_par4vis = round(env.computeOptimalK()[0][0], 3)
-det_param = INIT_DETERMINISTIC_PARAM
-optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
-logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(message)s')
-
-# instantiate the components of the algorithm.
-# abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
-# abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
-# abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
-
-abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
-# abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-
-title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
-key = "{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param)
-key = key.replace('.', ',')
-key = key + ".jpg"
-initJ = env.computeJ(det_param, 0, N_EPISODES)
-visualizer = Lqg1dVisualizer(title, "number of iterations", "parameter", " performance", key, det_param, opt_par4vis,
-                             initJ, optJ4vis)
 
 
 def deterministic_action(det_par, state):
@@ -118,44 +86,94 @@ def estimate_performance_abstract_policy(env, n_episodes, n_steps, abstract_poli
     return acc / n_episodes
 
 
-for i in range(0, N_ITERATION):
-    determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-    abstraction.divide_samples(determin_samples, problem)
-    abstraction.compute_abstract_tf(optA, ENV_NOISE)
+def main():
+    # load and configure the environment.
+    env = gym.make('LQG1D-v0')
+    env.sigma_noise = ENV_NOISE
+    env.A = np.array([A]).reshape((1, 1))
+    env.B = np.array([B]).reshape((1, 1))
+    env.gamma = GAMMA
+    env.seed(helper.SEED)
 
-    # --- LOG ---
-    # min_action = [min(list(cont.keys())) for cont in abstraction.get_container()]
-    # max_action = [max(list(cont.keys())) for cont in abstraction.get_container()]
-    # logging.debug("Parameter: {}\n".format(det_param))
-    #
-    # for i in range(0, len(INTERVALS)):
-    #     logging.debug("Macrostate {} - min action: {}".format(i, min_action[i]))
-    #     logging.debug(abstraction.get_container()[i][min_action[i]]['abs_tf'])
-    #     logging.debug("\n")
-    #     logging.debug("Macrostate {} - max action: {}".format(i, max_action[i]))
-    #     logging.debug(abstraction.get_container()[i][max_action[i]]['abs_tf'])
-    #     logging.debug("\n")
-    # -----------
+    # calculate the optimal values of the problem.
+    opt_par4vis = round(env.computeOptimalK()[0][0], 3)
+    det_param = INIT_DETERMINISTIC_PARAM
+    optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
+    logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(message)s')
 
-    abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
-    # logging.debug([min(a) for a in abstract_optimal_policy])
-    # logging.debug("\n")
-    logging.debug("Optimal policy: {}".format(abs_opt_pol))
+    # instantiate the components of the algorithm.
+    # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
+    # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
+    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
+    # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
 
-    # ---- performance abstract policy ---
-    first_states_ep = [d[0][0] for d in determin_samples]
-    absJ = estimate_performance_abstract_policy(env, N_EPISODES, N_STEPS, abs_opt_pol, first_states_ep)
-    # ------------------------------------
+    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
+    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
 
-    fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param)
-    det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
-    j = env.computeJ(det_param, 0, N_EPISODES)
-    estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
+    title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
+    key = "{}_{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param, helper.SEED)
+    key = key.replace('.', ',')
+    key = key + ".jpg"
+    initJ = env.computeJ(det_param, 0, N_EPISODES)
+    visualizer = Lqg1dVisualizer(title, key, det_param, opt_par4vis, initJ, optJ4vis)
+    visualizer.clean_panels()
 
-    print("Updated deterministic policy parameter: {}".format(det_param))
-    print("Updated performance measure: {}".format(j))
-    print("Updated estimated performance measure: {}\n".format(estj))
-    visualizer.show_values(det_param, j, estj, absJ)
+    # PLOTTER INFO
+    stats = {}
+    stats['param'] = []
+    stats['j'] = []
+    stats['sampleJ'] = []
+    stats['abstractJ'] = []
+    stats['param'].append(det_param)
+    stats['j'].append(initJ)
+    # ------------
 
-visualizer.save_image()
+    for i in range(0, N_ITERATION):
+        determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
+        abstraction.divide_samples(determin_samples, problem)
+        abstraction.compute_abstract_tf(optA, ENV_NOISE)
+
+        # --- LOG ---
+        # min_action = [min(list(cont.keys())) for cont in abstraction.get_container()]
+        # max_action = [max(list(cont.keys())) for cont in abstraction.get_container()]
+        # logging.debug("Parameter: {}\n".format(det_param))
+        #
+        # for i in range(0, len(INTERVALS)):
+        #     logging.debug("Macrostate {} - min action: {}".format(i, min_action[i]))
+        #     logging.debug(abstraction.get_container()[i][min_action[i]]['abs_tf'])
+        #     logging.debug("\n")
+        #     logging.debug("Macrostate {} - max action: {}".format(i, max_action[i]))
+        #     logging.debug(abstraction.get_container()[i][max_action[i]]['abs_tf'])
+        #     logging.debug("\n")
+        # -----------
+
+        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
+        # logging.debug([min(a) for a in abstract_optimal_policy])
+        # logging.debug("\n")
+        logging.debug("Optimal policy: {}".format(abs_opt_pol))
+
+        # ---- performance abstract policy ---
+        first_states_ep = [d[0][0] for d in determin_samples]
+        absJ = estimate_performance_abstract_policy(env, N_EPISODES, N_STEPS, abs_opt_pol, first_states_ep)
+        # ------------------------------------
+
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param)
+        det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
+        j = env.computeJ(det_param, 0, N_EPISODES)
+        estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
+
+        print("Updated deterministic policy parameter: {}".format(det_param))
+        print("Updated performance measure: {}".format(j))
+        print("Updated estimated performance measure: {}\n".format(estj))
+        visualizer.show_values(det_param, j, estj, absJ)
+
+        # PLOTTER INFO
+        stats['param'].append(det_param)
+        stats['j'].append(j)
+        stats['sampleJ'].append(estj)
+        stats['abstractJ'].append(absJ)
+        # ------------
+
+    visualizer.save_image()
+    return stats, opt_par4vis, optJ4vis
 

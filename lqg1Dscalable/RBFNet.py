@@ -14,7 +14,7 @@ def rbf(x, c, s):
 class RBFNet(object):
     """Implementation of a Radial Basis Function Network"""
 
-    def __init__(self, centers, w, b, k=5, lr=0.01, epochs=100, rbf=rbf, inferStds=True):
+    def __init__(self, centers, w, b, k=5, lr=0.01, epochs=200, rbf=rbf, inferStds=True):
         self.k = k
         self.lr = lr
         self.epochs = epochs

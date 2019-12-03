@@ -1,19 +1,30 @@
 import random
 import numpy as np
 
-SEED = 42
-random.seed(SEED)
 
 MAX_SAMPLES_IN_MCRST = 60
 
+class Helper(object):
 
-def big_mcrst_correction(cont):
-    new_cont = {}
-    for i in range(0, MAX_SAMPLES_IN_MCRST):
-        rdm = random.randint(0, len(cont.keys()) - 1)
-        index = list(cont.keys())[rdm]
-        new_cont[index] = cont[index]
-    return new_cont
+    def __init__(self, seed=None):
+        super().__init__()
+        if seed is not None:
+            self.seed = seed
+        else:
+            self.seed = 42
+
+        random.seed(self.seed)
+
+    def big_mcrst_correction(self, cont):
+        new_cont = {}
+        for i in range(0, MAX_SAMPLES_IN_MCRST):
+            rdm = random.randint(0, len(cont.keys()) - 1)
+            index = list(cont.keys())[rdm]
+            new_cont[index] = cont[index]
+        return new_cont
+
+    def getSeed(self):
+        return self.seed
 
 
 def get_mcrst(state, intervals, sink):

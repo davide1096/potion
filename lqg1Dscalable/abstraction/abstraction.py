@@ -1,5 +1,6 @@
 import lqg1Dscalable.helper as helper
 import numpy as np
+from lqg1Dscalable.helper import Helper
 
 
 class Abstraction(object):
@@ -20,7 +21,7 @@ class Abstraction(object):
     def get_container(self):
         return self.container
 
-    def divide_samples(self, samples, problem, intervals=None):
+    def divide_samples(self, samples, problem, seed, intervals=None):
 
         if intervals is not None:
             self.intervals = intervals
@@ -39,7 +40,10 @@ class Abstraction(object):
                 self.container[mcrst][s[1]] = {'state': s[0], 'new_state': s[3]}
 
         # to avoid a slow computation.
-        self.container = [helper.big_mcrst_correction(cont) if len(cont.items()) > helper.MAX_SAMPLES_IN_MCRST else cont
+        # self.container = [helper.big_mcrst_correction(cont) if len(cont.items()) > helper.MAX_SAMPLES_IN_MCRST else cont
+        #                   for cont in self.container]
+        help = Helper(seed)
+        self.container = [help.big_mcrst_correction(cont) if len(cont.items()) > helper.MAX_SAMPLES_IN_MCRST else cont
                           for cont in self.container]
 
         # calculate the abstract reward for every sample.

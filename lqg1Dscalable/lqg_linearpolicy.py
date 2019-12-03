@@ -6,16 +6,17 @@ from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_dads import LipschitzFdad
 from lqg1Dscalable.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from lqg1Dscalable.updater_abstract.updater import AbsUpdater
 from lqg1Dscalable.updater_abstract.bounded_mdp.IVI import IVI
-import lqg1Dscalable.updater_deterministic.updater as det_upd
+from lqg1Dscalable.updater_deterministic.updater import Updater
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 from lqg1Dscalable.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
 import lqg1Dscalable.helper as helper
+from lqg1Dscalable.helper import Helper
 import logging
 
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -1
-ENV_NOISE = 0
+ENV_NOISE = 0.1
 A = 1
 B = 1
 GAMMA = 0.9
@@ -86,14 +87,17 @@ def estimate_performance_abstract_policy(env, n_episodes, n_steps, abstract_poli
     return acc / n_episodes
 
 
-def main():
+def main(seed=None):
+
+    help = Helper(seed)
+
     # load and configure the environment.
     env = gym.make('LQG1D-v0')
     env.sigma_noise = ENV_NOISE
     env.A = np.array([A]).reshape((1, 1))
     env.B = np.array([B]).reshape((1, 1))
     env.gamma = GAMMA
-    env.seed(helper.SEED)
+    env.seed(help.getSeed())
 
     # calculate the optimal values of the problem.
     opt_par4vis = round(env.computeOptimalK()[0][0], 3)
@@ -104,14 +108,15 @@ def main():
     # instantiate the components of the algorithm.
     # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
     # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
-    # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
+    # abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
+    abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
 
-    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
-    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
+    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
+    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
+    det_upd = Updater(help.getSeed())
 
     title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
-    key = "{}_{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param, helper.SEED)
+    key = "{}_{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param, help.getSeed())
     key = key.replace('.', ',')
     key = key + ".jpg"
     initJ = env.computeJ(det_param, 0, N_EPISODES)
@@ -130,7 +135,7 @@ def main():
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        abstraction.divide_samples(determin_samples, problem)
+        abstraction.divide_samples(determin_samples, problem, help.getSeed())
         abstraction.compute_abstract_tf(optA, ENV_NOISE)
 
         # --- LOG ---
@@ -176,4 +181,3 @@ def main():
 
     visualizer.save_image()
     return stats, opt_par4vis, optJ4vis
-

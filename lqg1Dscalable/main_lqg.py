@@ -1,5 +1,4 @@
-import lqg1Dscalable.lqg_main as lqg_main
-import lqg1Dscalable.helper as helper
+import lqg1Dscalable.lqg_linearpolicy as lqg_main
 import numpy as np
 from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 
@@ -14,8 +13,7 @@ stats['sampleJ'] = np.array([])
 stats['abstractJ'] = np.array([])
 
 for i in range(1, N_ITERATIONS):
-    helper.SEED = i
-    data, optP, optJ = lqg_main.main()
+    data, optP, optJ = lqg_main.main(i)
     if i == 1:
         stats['param'] = np.array([data['param']])
         stats['j'] = np.array([data['j']])

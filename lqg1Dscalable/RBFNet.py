@@ -1,9 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-import lqg1Dscalable.helper as helper
 
-random.seed(helper.SEED)
 BATCH_SIZE = 50
 
 
@@ -14,7 +12,7 @@ def rbf(x, c, s):
 class RBFNet(object):
     """Implementation of a Radial Basis Function Network"""
 
-    def __init__(self, centers, w, b, k=5, lr=0.01, epochs=200, rbf=rbf, inferStds=True):
+    def __init__(self, centers, w, b, seed, k=5, lr=0.01, epochs=200, rbf=rbf, inferStds=True):
         self.k = k
         self.lr = lr
         self.epochs = epochs
@@ -25,27 +23,16 @@ class RBFNet(object):
 
         self.w = w
         self.b = np.random.randn(1)
-        for i in range(len(self.b)):
-            self.b[i] = b
+        self.b[0] = b
+
+        if seed is not None:
+            self.seed = seed
+        else:
+            self.seed = 42
+
+        random.seed(self.seed)
 
     def fit(self, X, y):
-
-        # training
-        # for epoch in range(self.epochs):
-        #     for i in range(X.shape[0]):
-        #         # forward pass
-        #         a = np.array([self.rbf(X[i], c, s) for c, s, in zip(self.centers, self.stds)])
-        #         F = a.T.dot(self.w) + self.b
-        #
-        #         loss = (y[i] - F).flatten() ** 2
-        #         # print('Loss: {0:.2f}'.format(loss[0]))
-        #
-        #         # backward pass
-        #         error = -(y[i] - F).flatten()
-        #
-        #         # online update
-        #         self.w = self.w - self.lr * a * error
-        #         self.b = self.b - self.lr * error
 
         for epoch in range(self.epochs):
             w_accumulator = 0

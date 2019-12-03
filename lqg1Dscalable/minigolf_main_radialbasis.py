@@ -18,7 +18,7 @@ GAMMA = 0.99
 # Set optA = 0 to use the standard algorithm.
 optA = 1
 
-N_ITERATION = 5000
+N_ITERATION = 400
 N_EPISODES = 2000
 N_STEPS = 20
 

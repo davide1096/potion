@@ -37,8 +37,7 @@ std['j'] = np.std(stats['j'], axis=0)
 std['sampleJ'] = np.std(stats['sampleJ'], axis=0)
 std['abstractJ'] = np.std(stats['abstractJ'], axis=0)
 
-visualizer = Lqg1dVisualizer("average values", "number of iterations", "parameter", " performance", "stats.jpg",
-                             opt_par=optP, optJ=optJ)
+visualizer = Lqg1dVisualizer("average values", "stats.jpg", opt_par=optP, optJ=optJ)
 visualizer.clean_panels()
 visualizer.show_average(avg, std)
 visualizer.save_image()

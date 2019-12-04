@@ -18,6 +18,7 @@ class MGVisualizer(Visualizer):
         self.j = []
         self.title = title
         self.filename = filename
+        plt.figure(figsize=(12.8, 9.6))
 
     def show_values(self, w, b, j):
 
@@ -30,35 +31,42 @@ class MGVisualizer(Visualizer):
         self.j.append(j)
         plt.suptitle(self.title)
 
-        plt.subplots_adjust(hspace=0.2, wspace=0.2)
+        plt.subplots_adjust(hspace=0.6, wspace=0.4)
 
         plt.subplot(4, 2, 1)
         plt.title("W1")
         plt.plot(self.w1, label="W1")
+        plt.grid(b=True)
 
         plt.subplot(4, 2, 2)
         plt.title("W2")
         plt.plot(self.w2, label="W2")
+        plt.grid(b=True)
 
         plt.subplot(4, 2, 3)
         plt.title("W3")
         plt.plot(self.w3, label="W3")
+        plt.grid(b=True)
 
         plt.subplot(4, 2, 4)
         plt.title("W4")
         plt.plot(self.w4, label="W4")
+        plt.grid(b=True)
 
         plt.subplot(4, 2, 5)
         plt.title("W5")
         plt.plot(self.w5, label="W5")
+        plt.grid(b=True)
 
         plt.subplot(4, 2, 6)
         plt.title("b")
         plt.plot(self.b, label="b")
+        plt.grid(b=True)
 
         plt.subplot(4, 2, 7)
         plt.title("J")
         plt.plot(self.j, label="J")
+        plt.grid(b=True)
 
         plt.draw()
         plt.pause(0.001)
@@ -75,37 +83,58 @@ class MGVisualizer(Visualizer):
 
         plt.figure(figsize=(12.8, 9.6))
         plt.suptitle("Averages and confidence")
-        plt.subplots_adjust(hspace=0.4, wspace=0.2)
+        plt.subplots_adjust(hspace=0.6, wspace=0.4)
 
-        plt.subplot(2, 2, 1)
-        plt.title("Deterministic parameter")
-        std_resized = np.resize([2*s for s in std['param']], (len(std['param']), ))
-        plt.errorbar(range(0, len(avg['param'])), avg['param'], yerr=std_resized)
-        if self.opt_par is not None:
-            plt.hlines(self.opt_par, 0, len(avg['param']) - 1, colors='r', linestyles='dashed')
+        x = [n * 10 for n in range(0, len(avg['w1']))]
 
-        plt.subplot(2, 2, 3)
-        plt.title("Performance measures")
-        plt.plot(avg['j'], 'b', label="J")
-        plt.plot(range(1, len(avg['sampleJ']) + 1), avg['sampleJ'], 'g', label="J from samples - det policy")
-        plt.plot(range(1, len(avg['abstractJ']) + 1), avg['abstractJ'], 'tab:orange',
-                 label="J from samples - abs policy")
-        if self.optJ is not None:
-            plt.hlines(self.optJ, 0, len(avg['j']) - 1, colors='r', linestyles='dashed')
+        plt.subplot(4, 2, 1)
+        plt.title("W1")
+        plt.annotate(np.round(avg['w1'][-1], decimals=3), ((len(avg['w1']) - 1) * 10, avg['w1'][-1]))
+        std_resized = np.resize([2*s for s in std['w1']], (len(std['w1']), ))
+        plt.errorbar(x, avg['w1'], yerr=std_resized)
+        plt.grid(b=True)
 
-        handles, labels = plt.gca().get_legend_handles_labels()
-        by_label = OrderedDict(zip(labels, handles))
-        plt.legend(by_label.values(), by_label.keys())
+        plt.subplot(4, 2, 2)
+        plt.title("W2")
+        plt.annotate(np.round(avg['w2'][-1], decimals=3), ((len(avg['w2']) - 1) * 10, avg['w2'][-1]))
+        std_resized = np.resize([2 * s for s in std['w2']], (len(std['w2']),))
+        plt.errorbar(x, avg['w2'], yerr=std_resized)
+        plt.grid(b=True)
 
-        plt.subplot(2, 2, 2)
-        plt.title("Performance from samples - det policy")
-        std_resized = np.resize([2*s for s in std['sampleJ']], (len(std['sampleJ']),))
-        plt.errorbar(range(1, len(avg['sampleJ']) + 1), avg['sampleJ'], yerr=std_resized, color='green')
+        plt.subplot(4, 2, 3)
+        plt.title("W3")
+        plt.annotate(np.round(avg['w3'][-1], decimals=3), ((len(avg['w3']) - 1) * 10, avg['w3'][-1]))
+        std_resized = np.resize([2 * s for s in std['w3']], (len(std['w3']),))
+        plt.errorbar(x, avg['w3'], yerr=std_resized)
+        plt.grid(b=True)
 
-        plt.subplot(2, 2, 4)
-        plt.title("Performance from samples - abs policy")
-        std_resized = np.resize([2*s for s in std['abstractJ']], (len(std['abstractJ']),))
-        plt.errorbar(range(1, len(avg['abstractJ']) + 1), avg['abstractJ'], yerr=std_resized, color='orange')
+        plt.subplot(4, 2, 4)
+        plt.title("W4")
+        plt.annotate(np.round(avg['w4'][-1], decimals=3), ((len(avg['w4']) - 1) * 10, avg['w4'][-1]))
+        std_resized = np.resize([2 * s for s in std['w4']], (len(std['w4']),))
+        plt.errorbar(x, avg['w4'], yerr=std_resized)
+        plt.grid(b=True)
+
+        plt.subplot(4, 2, 5)
+        plt.title("W5")
+        plt.annotate(np.round(avg['w5'][-1], decimals=3), ((len(avg['w5']) - 1) * 10, avg['w5'][-1]))
+        std_resized = np.resize([2 * s for s in std['w5']], (len(std['w5']),))
+        plt.errorbar(x, avg['w5'], yerr=std_resized)
+        plt.grid(b=True)
+
+        plt.subplot(4, 2, 6)
+        plt.title("b")
+        plt.annotate(np.round(avg['b'][-1], decimals=3)[0], ((len(avg['b']) - 1) * 10, avg['b'][-1]))
+        std_resized = np.resize([2 * s for s in std['b']], (len(std['b']),))
+        plt.errorbar(x, avg['b'], yerr=std_resized)
+        plt.grid(b=True)
+
+        plt.subplot(4, 2, 7)
+        plt.title("J")
+        plt.annotate(np.round(avg['j'][-1], decimals=3), ((len(avg['j']) - 1) * 10, avg['j'][-1]))
+        std_resized = np.resize([2 * s for s in std['j']], (len(std['j']),))
+        plt.errorbar(x, avg['j'], yerr=std_resized)
+        plt.grid(b=True)
 
         plt.draw()
         plt.pause(0.001)

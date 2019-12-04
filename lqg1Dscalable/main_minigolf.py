@@ -1,6 +1,6 @@
 import lqg1Dscalable.minigolf_radialbasis as mini_main
 import numpy as np
-from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
+from lqg1Dscalable.visualizer.minigolf_visualizer import MGVisualizer
 
 N_ITERATIONS = 6
 
@@ -13,29 +13,41 @@ stats['sampleJ'] = np.array([])
 stats['abstractJ'] = np.array([])
 
 for i in range(1, N_ITERATIONS):
-    data, optP, optJ = lqg_main.main(i)
+    data = mini_main.main(i)
     if i == 1:
-        stats['param'] = np.array([data['param']])
+        stats['w1'] = np.array([data['w1']])
+        stats['w2'] = np.array([data['w2']])
+        stats['w3'] = np.array([data['w3']])
+        stats['w4'] = np.array([data['w4']])
+        stats['w5'] = np.array([data['w5']])
         stats['j'] = np.array([data['j']])
-        stats['sampleJ'] = np.array([data['sampleJ']])
-        stats['abstractJ'] = np.array([data['abstractJ']])
+        stats['b'] = np.array([data['b']])
     else:
-        stats['param'] = np.append(stats['param'], [data['param']], axis=0)
+        stats['w1'] = np.append(stats['w1'], [data['w1']], axis=0)
+        stats['w2'] = np.append(stats['w2'], [data['w2']], axis=0)
+        stats['w3'] = np.append(stats['w3'], [data['w3']], axis=0)
+        stats['w4'] = np.append(stats['w4'], [data['w4']], axis=0)
+        stats['w5'] = np.append(stats['w5'], [data['w5']], axis=0)
+        stats['b'] = np.append(stats['b'], [data['b']], axis=0)
         stats['j'] = np.append(stats['j'], [data['j']], axis=0)
-        stats['sampleJ'] = np.append(stats['sampleJ'], [data['sampleJ']], axis=0)
-        stats['abstractJ'] = np.append(stats['abstractJ'], [data['abstractJ']], axis=0)
 
-avg['param'] = np.average(stats['param'], axis=0)
+avg['w1'] = np.average(stats['w1'], axis=0)
+avg['w2'] = np.average(stats['w2'], axis=0)
+avg['w3'] = np.average(stats['w3'], axis=0)
+avg['w4'] = np.average(stats['w4'], axis=0)
+avg['w5'] = np.average(stats['w5'], axis=0)
+avg['b'] = np.average(stats['b'], axis=0)
 avg['j'] = np.average(stats['j'], axis=0)
-avg['sampleJ'] = np.average(stats['sampleJ'], axis=0)
-avg['abstractJ'] = np.average(stats['abstractJ'], axis=0)
 
-std['param'] = np.std(stats['param'], axis=0)
+std['w1'] = np.std(stats['w1'], axis=0)
+std['w2'] = np.std(stats['w2'], axis=0)
+std['w3'] = np.std(stats['w3'], axis=0)
+std['w4'] = np.std(stats['w4'], axis=0)
+std['w5'] = np.std(stats['w5'], axis=0)
+std['b'] = np.std(stats['b'], axis=0)
 std['j'] = np.std(stats['j'], axis=0)
-std['sampleJ'] = np.std(stats['sampleJ'], axis=0)
-std['abstractJ'] = np.std(stats['abstractJ'], axis=0)
 
-visualizer = Lqg1dVisualizer("average values", "stats.jpg", opt_par=optP, optJ=optJ)
+visualizer = MGVisualizer("average values", "stats.jpg")
 visualizer.clean_panels()
 visualizer.show_average(avg, std)
 visualizer.save_image()

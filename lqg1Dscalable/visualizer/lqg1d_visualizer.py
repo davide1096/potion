@@ -70,6 +70,7 @@ class Lqg1dVisualizer(Visualizer):
 
         plt.subplot(2, 2, 1)
         plt.title("Deterministic parameter")
+        plt.annotate(np.round(avg['param'][-1], decimals=3), (len(avg['param']) - 1, avg['param'][-1]))
         std_resized = np.resize([2*s for s in std['param']], (len(std['param']), ))
         plt.errorbar(range(0, len(avg['param'])), avg['param'], yerr=std_resized)
         if self.opt_par is not None:
@@ -77,6 +78,7 @@ class Lqg1dVisualizer(Visualizer):
 
         plt.subplot(2, 2, 3)
         plt.title("Performance measures")
+        plt.annotate(np.round(avg['j'][-1], decimals=3), (len(avg['j']) - 1, avg['j'][-1]))
         plt.plot(avg['j'], 'b', label="J")
         plt.plot(range(1, len(avg['sampleJ']) + 1), avg['sampleJ'], 'g', label="J from samples - det policy")
         plt.plot(range(1, len(avg['abstractJ']) + 1), avg['abstractJ'], 'tab:orange',
@@ -90,11 +92,13 @@ class Lqg1dVisualizer(Visualizer):
 
         plt.subplot(2, 2, 2)
         plt.title("Performance from samples - det policy")
+        plt.annotate(np.round(avg['sampleJ'][-1], decimals=3), (len(avg['sampleJ']), avg['sampleJ'][-1]))
         std_resized = np.resize([2*s for s in std['sampleJ']], (len(std['sampleJ']),))
         plt.errorbar(range(1, len(avg['sampleJ']) + 1), avg['sampleJ'], yerr=std_resized, color='green')
 
         plt.subplot(2, 2, 4)
         plt.title("Performance from samples - abs policy")
+        plt.annotate(np.round(avg['abstractJ'][-1], decimals=3), (len(avg['abstractJ']), avg['abstractJ'][-1]))
         std_resized = np.resize([2*s for s in std['abstractJ']], (len(std['abstractJ']),))
         plt.errorbar(range(1, len(avg['abstractJ']) + 1), avg['abstractJ'], yerr=std_resized, color='orange')
 

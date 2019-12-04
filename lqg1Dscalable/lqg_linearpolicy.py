@@ -15,7 +15,7 @@ import logging
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -1
+INIT_DETERMINISTIC_PARAM = -0.7
 ENV_NOISE = 0.1
 A = 1
 B = 1
@@ -27,7 +27,10 @@ LIPSCHITZ_CONST_STATE = A
 LIPSCHITZ_CONST_ACTION = B
 LIPSCHITZ_STOCH_ATF = B
 
-N_ITERATION = 40
+# ALFA regulates the update of the deterministic parameter
+ALFA = 0.5
+
+N_ITERATION = 60
 N_EPISODES = 2000
 N_STEPS = 20
 
@@ -163,7 +166,9 @@ def main(seed=None):
         # ------------------------------------
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param)
-        det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
+        new_det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
+        det_param = ALFA * det_param + (1 - ALFA) * new_det_param
+
         j = env.computeJ(det_param, 0, N_EPISODES)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 

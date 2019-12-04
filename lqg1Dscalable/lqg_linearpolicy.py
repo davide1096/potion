@@ -16,7 +16,7 @@ import logging
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = -0.7
-ENV_NOISE = 0.1
+ENV_NOISE = 0
 A = 1
 B = 1
 GAMMA = 0.9
@@ -111,11 +111,11 @@ def main(seed=None):
     # instantiate the components of the algorithm.
     # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
     # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-    # abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
-    abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
+    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
+    # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
 
-    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
-    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
+    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
+    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
     det_upd = Updater(help.getSeed())
 
     title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)

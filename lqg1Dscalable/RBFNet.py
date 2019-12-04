@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import random
 
 BATCH_SIZE = 50
+ALFA = 0.9
 
 
 def rbf(x, c, s):
@@ -34,6 +35,9 @@ class RBFNet(object):
 
     def fit(self, X, y):
 
+        new_w = self.w.copy()
+        new_b = self.b.copy()
+
         for epoch in range(self.epochs):
             w_accumulator = 0
             b_accumulator = 0
@@ -43,7 +47,7 @@ class RBFNet(object):
 
                 # forward pass
                 a = np.array([self.rbf(sample, c, s) for c, s, in zip(self.centers, self.stds)])
-                F = a.T.dot(self.w) + self.b
+                F = a.T.dot(new_w) + new_b
 
                 # backward pass
                 error = -(y[rand_num] - F).flatten()
@@ -52,8 +56,13 @@ class RBFNet(object):
                 w_accumulator += a * error
                 b_accumulator += error
 
-            self.w = self.w - self.lr * (w_accumulator / BATCH_SIZE)
-            self.b = self.b - self.lr * (b_accumulator / BATCH_SIZE)
+            new_w = new_w - self.lr * (w_accumulator / BATCH_SIZE)
+            new_b = new_b - self.lr * (b_accumulator / BATCH_SIZE)
+
+        print(new_w * 0.5)
+
+        self.w = [ALFA * w_old + (1 - ALFA) * w_new for w_old, w_new in zip(self.w, new_w)]
+        self.b = [ALFA * b_old + (1 - ALFA) * b_new for b_old, b_new in zip(self.b, new_b)]
 
     def predict(self, X):
         y_pred = []

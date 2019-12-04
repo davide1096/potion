@@ -22,6 +22,7 @@ class MGVisualizer(Visualizer):
 
     def show_values(self, w, b, j):
 
+        plt.clf()
         self.w1.append(w[0])
         self.w2.append(w[1])
         self.w3.append(w[2])
@@ -36,36 +37,43 @@ class MGVisualizer(Visualizer):
         plt.subplot(4, 2, 1)
         plt.title("W1")
         plt.plot(self.w1, label="W1")
+        plt.annotate(np.round(self.w1[-1], decimals=3), (len(self.w1) - 1, self.w1[-1]))
         plt.grid(b=True)
 
         plt.subplot(4, 2, 2)
         plt.title("W2")
         plt.plot(self.w2, label="W2")
+        plt.annotate(np.round(self.w2[-1], decimals=3), (len(self.w2) - 1, self.w2[-1]))
         plt.grid(b=True)
 
         plt.subplot(4, 2, 3)
         plt.title("W3")
         plt.plot(self.w3, label="W3")
+        plt.annotate(np.round(self.w3[-1], decimals=3), (len(self.w3) - 1, self.w3[-1]))
         plt.grid(b=True)
 
         plt.subplot(4, 2, 4)
         plt.title("W4")
         plt.plot(self.w4, label="W4")
+        plt.annotate(np.round(self.w4[-1], decimals=3), (len(self.w4) - 1, self.w4[-1]))
         plt.grid(b=True)
 
         plt.subplot(4, 2, 5)
         plt.title("W5")
         plt.plot(self.w5, label="W5")
+        plt.annotate(np.round(self.w5[-1], decimals=3), (len(self.w5) - 1, self.w5[-1]))
         plt.grid(b=True)
 
         plt.subplot(4, 2, 6)
         plt.title("b")
         plt.plot(self.b, label="b")
+        plt.annotate(np.round(self.b[-1], decimals=3)[0], (len(self.b) - 1, self.b[-1][0]))
         plt.grid(b=True)
 
         plt.subplot(4, 2, 7)
         plt.title("J")
         plt.plot(self.j, label="J")
+        plt.annotate(np.round(self.j[-1], decimals=3), (len(self.j) - 1, self.j[-1]))
         plt.grid(b=True)
 
         plt.draw()

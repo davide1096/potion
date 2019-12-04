@@ -24,6 +24,7 @@ class Lqg1dVisualizer(Visualizer):
 
     def show_values(self, new_par, newJ, new_estJ, new_est_absJ):
 
+        plt.clf()
         self.par.append(new_par)
         self.J.append(newJ)
         self.estJ.append(new_estJ)
@@ -33,6 +34,7 @@ class Lqg1dVisualizer(Visualizer):
         plt.subplot(2, 1, 1)
         plt.title("Deterministic parameter")
         plt.plot(self.par)
+        plt.annotate(np.round(self.par[-1], decimals=3), (len(self.par) - 1, self.par[-1]))
         if self.opt_par is not None:
             plt.hlines(self.opt_par, 0, len(self.par) - 1, colors='r', linestyles='dashed')
 
@@ -41,9 +43,12 @@ class Lqg1dVisualizer(Visualizer):
         plt.subplot(2, 1, 2)
         plt.title("Performance measures")
         plt.plot(self.J, 'b', label="J")
+        plt.annotate(np.round(self.J[-1], decimals=3), (len(self.J) - 1, self.J[-1]))
         if len(self.estAbsJ) > 1:
             plt.plot(range(1, len(self.estJ) + 1), self.estJ, 'g', label="J from samples - det policy")
+            plt.annotate(np.round(self.estJ[-1], decimals=3), (len(self.estJ), self.estJ[-1]))
             plt.plot(range(1, len(self.estAbsJ) + 1), self.estAbsJ, 'tab:orange', label="J from samples - abs policy")
+            plt.annotate(np.round(self.estAbsJ[-1], decimals=3), (len(self.estAbsJ), self.estAbsJ[-1]))
         if self.optJ is not None:
             plt.hlines(self.optJ, 0, len(self.J) - 1, colors='r', linestyles='dashed')
 

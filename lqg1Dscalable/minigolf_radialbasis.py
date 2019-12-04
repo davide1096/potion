@@ -19,7 +19,7 @@ GAMMA = 0.99
 # Set optA = 0 to use the standard algorithm.
 optA = 1
 
-N_ITERATION = 401
+N_ITERATION = 601
 N_EPISODES = 2000
 N_STEPS = 20
 
@@ -72,7 +72,7 @@ def main(seed=None):
     help = Helper(seed)
 
     # load and configure the environment.
-    env = gym.make('MiniGolf-v0')
+    env = gym.make('ComplexMiniGolf-v0')
     env.sigma_noise = ENV_NOISE
     env.gamma = GAMMA
     env.seed(help.getSeed())

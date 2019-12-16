@@ -1,4 +1,5 @@
 import gym
+import potion.envs
 import torch
 from lqg1Dscalable.mg_reinforce_rb.radial_basis_policy import RadialBasisPolicy
 from lqg1Dscalable.mg_reinforce_rb.reinforce2 import reinforce2

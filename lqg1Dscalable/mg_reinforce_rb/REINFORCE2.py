@@ -12,7 +12,7 @@ env.sigma_noise = 0
 
 state_dim = sum(env.observation_space.shape) #dimensionality of the state space
 action_dim = sum(env.action_space.shape) #dimensionality of the action space
-(state_dim, action_dim)
+print(state_dim, action_dim)
 horizon = 500 #maximum length of a trajectory
 gamma = 1.
 
@@ -24,29 +24,19 @@ def feature_function(s):
     res = [(1 - b) * np.exp(-1 / (2 * sigma ** 2) * (s - c) ** 2) + b for c, b in zip(centers, bias)]
     cat_dim = len(s.shape)
     res = torch.cat(res, cat_dim - 1)
-    # res.append(torch.tensor([1])) # bias term
     return res
-
-# f1 = lambda x : np.exp(-1 / (2 * 3 ** 2) * (x - 3) ** 2)
-# feature_functions = np.array(f1)
-# f2 = lambda x : np.exp(-1 / (2 * 3 ** 2) * (x - 6) ** 2)
-# feature_functions = np.append(feature_functions, f2)
-# f3 = lambda x : np.exp(-1 / (2 * 3 ** 2) * (x - 10) ** 2)
-# feature_functions = np.append(feature_functions, f3)
-# f4 = lambda x : np.exp(-1 / (2 * 3 ** 2) * (x - 14) ** 2)
-# feature_functions = np.append(feature_functions, f4)
-# f5 = lambda x : np.exp(-1 / (2 * 3 ** 2) * (x - 17) ** 2)
-# feature_functions = np.append(feature_functions, f5)
 
 
 mu_init = torch.tensor([0.5, 0.5, 0.5, 0.5, 0.5, 1])
+log_std_init = torch.tensor([0.])
 
 
 policy = RadialBasisPolicy(state_dim, #input size
                                action_dim, #output size
                                mu_init=mu_init, #initial mean parameters
                                feature_fun=feature_function,
-                               learn_std=False
+                               logstd_init=log_std_init,
+                               learn_std=True
                           )
 
 state = torch.ones(1)
@@ -63,7 +53,10 @@ logger = Logger(directory=log_dir, name = log_name)
 seed = 42
 env.seed(seed)
 
-policy.set_from_flat(mu_init) #Reset the policy (in case is run multiple times)
+init_par = [log_std_init, mu_init]
+init_ten = torch.cat(init_par, 0)
+
+policy.set_from_flat(init_ten) #Reset the policy (in case is run multiple times)
 
 reinforce2(env = env,
           policy = policy,
@@ -71,7 +64,7 @@ reinforce2(env = env,
           stepper = stepper,
           batchsize = batchsize,
           disc = gamma,
-          iterations = 75,
+          iterations = 750,
           seed = 42,
           logger = logger,
           save_params = 5, #Policy parameters will be saved on disk each 5 iterations

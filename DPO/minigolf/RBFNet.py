@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import random
 
 BATCH_SIZE = 50
-ALFA = 0.9
+ALFA = 0
 
 
 def rbf(x, c, s):

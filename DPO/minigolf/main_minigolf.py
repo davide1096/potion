@@ -1,6 +1,6 @@
-import lqg1Dscalable.minigolf_radialbasis as mini_main
+import DPO.minigolf.minigolf_radialbasis as mini_main
 import numpy as np
-from lqg1Dscalable.visualizer.minigolf_visualizer import MGVisualizer
+from DPO.visualizer.minigolf_visualizer import MGVisualizer
 
 N_ITERATIONS = 6
 

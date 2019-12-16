@@ -1,11 +1,11 @@
 import gym
 import potion.envs
 import numpy as np
-from lqg1Dscalable.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
-from lqg1Dscalable.updater_abstract.updater import AbsUpdater
-from lqg1Dscalable.updater_abstract.bounded_mdp.IVI import IVI
-import lqg1Dscalable.updater_deterministic.updater as det_upd
-import lqg1Dscalable.helper as helper
+from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
+from DPO.algorithm.updater_abstract.updater import AbsUpdater
+from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
+import DPO.algorithm.updater_deterministic.updater as det_upd
+import DPO.helper as helper
 import logging
 
 problem = 'minigolf'
@@ -33,7 +33,7 @@ env.seed(helper.SEED)
 # calculate the optimal values of the problem.
 det_param_a = INIT_DETERMINISTIC_PARAM_A
 det_param_b = INIT_DETERMINISTIC_PARAM_B
-logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(message)s')
+logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
 abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if optA else IVI(GAMMA, SINK, True, INTERVALS)

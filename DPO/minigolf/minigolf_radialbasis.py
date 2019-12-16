@@ -1,15 +1,14 @@
 import gym
 import potion.envs
 import numpy as np
-from lqg1Dscalable.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
-from lqg1Dscalable.updater_abstract.updater import AbsUpdater
-from lqg1Dscalable.updater_abstract.bounded_mdp.IVI import IVI
-from lqg1Dscalable.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
-from lqg1Dscalable.visualizer.minigolf_visualizer import MGVisualizer
-import lqg1Dscalable.helper as helper
-from lqg1Dscalable.helper import Helper
+from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
+from DPO.algorithm.updater_abstract.updater import AbsUpdater
+from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
+from DPO.visualizer.minigolf_visualizer import MGVisualizer
+import DPO.helper as helper
+from DPO.helper import Helper
 import logging
-from lqg1Dscalable.RBFNet import RBFNet
+from DPO.minigolf.RBFNet import RBFNet
 
 problem = 'minigolf'
 SINK = True
@@ -80,7 +79,7 @@ def main(seed=None):
     env.gamma = GAMMA
     env.seed(help.getSeed())
 
-    logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(message)s')
+    logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
     abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
     # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
@@ -106,8 +105,8 @@ def main(seed=None):
     for i in range(0, N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
-        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST, MIN_VAL, MAX_VAL)
-        # dyn_intervals = None
+        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST, MIN_VAL, MAX_VAL)
+        dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(optA, ENV_NOISE)
 

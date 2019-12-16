@@ -1,5 +1,5 @@
 import random
-import lqg1Dscalable.helper as helper
+import DPO.helper as helper
 import numpy as np
 
 LR_DET_POLICY = 0.1

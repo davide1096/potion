@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from lqg1Dscalable.visualizer.visualizer import Visualizer
+from DPO.visualizer.visualizer import Visualizer
 import numpy as np
 from collections import OrderedDict
 

@@ -1,5 +1,5 @@
 import numpy as np
-import lqg1Dscalable.helper as helper
+import DPO.helper as helper
 
 
 # given a pair (x, a) it returns an array representing min and max p(x'|x,a) for each x'

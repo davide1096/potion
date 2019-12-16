@@ -1,16 +1,13 @@
 import gym
 import potion.envs
 import numpy as np
-from lqg1Dscalable.abstraction.compute_atf.lqg_f_known import LqgFKnown
-from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_dads import LipschitzFdads
-from lqg1Dscalable.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
-from lqg1Dscalable.updater_abstract.updater import AbsUpdater
-from lqg1Dscalable.updater_abstract.bounded_mdp.IVI import IVI
-from lqg1Dscalable.updater_deterministic.updater import Updater
-from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
-from lqg1Dscalable.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
-import lqg1Dscalable.helper as helper
-from lqg1Dscalable.helper import Helper
+from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
+from DPO.algorithm.updater_abstract.updater import AbsUpdater
+from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
+from DPO.algorithm.updater_deterministic.updater import Updater
+from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
+import DPO.helper as helper
+from DPO.helper import Helper
 import logging
 
 problem = 'lqg1d'
@@ -106,7 +103,7 @@ def main(seed=None):
     opt_par4vis = round(env.computeOptimalK()[0][0], 3)
     det_param = INIT_DETERMINISTIC_PARAM
     optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
-    logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(message)s')
+    logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
     # instantiate the components of the algorithm.
     # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)

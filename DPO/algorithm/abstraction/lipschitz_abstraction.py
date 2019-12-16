@@ -1,5 +1,5 @@
 import numpy as np
-from lqg1Dscalable.abstraction.abstraction import Abstraction
+from DPO.algorithm.abstraction.abstraction import Abstraction
 
 
 class LipschitzAbstraction(Abstraction):

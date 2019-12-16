@@ -1,7 +1,7 @@
 import cvxpy as cp
 import numpy as np
-from lqg1Dscalable.abstraction.abstraction import Abstraction
-import lqg1Dscalable.helper as helper
+from DPO.algorithm.abstraction.abstraction import Abstraction
+import DPO.helper as helper
 
 
 class MaxLikelihoodAbstraction(Abstraction):

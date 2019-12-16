@@ -1,11 +1,10 @@
 import gym
-import potion.envs
 import numpy as np
-from lqg1Dscalable.abstraction.compute_atf.lipschitz_f_dads import LipschitzFdads
-from lqg1Dscalable.updater_abstract.updater import AbsUpdater
-import lqg1Dscalable.updater_deterministic.updater as det_upd
-from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
-import lqg1Dscalable.helper as helper
+from DPO.algorithm.abstraction.compute_atf.lipschitz_f_dads import LipschitzFdads
+from DPO.algorithm.updater_abstract.updater import AbsUpdater
+import DPO.algorithm.updater_deterministic.updater as det_upd
+from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
+import DPO.helper as helper
 
 problem = 'cartpole1d'
 SINK = True

@@ -1,6 +1,5 @@
-from lqg1Dscalable.abstraction.lipschitz_abstraction import LipschitzAbstraction
-import lqg1Dscalable.abstraction.compute_atf.abstract_tf.sample_distribution as sample_dist
-import numpy as np
+from DPO.algorithm.abstraction.lipschitz_abstraction import LipschitzAbstraction
+import DPO.algorithm.abstraction.compute_atf.abstract_tf.sample_distribution as sample_dist
 import logging
 
 

@@ -1,6 +1,6 @@
-import lqg1Dscalable.lqg_linearpolicy as lqg_main
+import DPO.lqg1D.lqg_linearpolicy as lqg_main
 import numpy as np
-from lqg1Dscalable.visualizer.lqg1d_visualizer import Lqg1dVisualizer
+from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 
 N_ITERATIONS = 6
 

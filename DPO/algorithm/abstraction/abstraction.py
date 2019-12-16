@@ -1,6 +1,6 @@
-import lqg1Dscalable.helper as helper
+import DPO.helper as helper
 import numpy as np
-from lqg1Dscalable.helper import Helper
+from DPO.helper import Helper
 
 
 class Abstraction(object):

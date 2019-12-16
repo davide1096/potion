@@ -1,5 +1,5 @@
 import numpy as np
-import lqg1Dscalable.helper as helper
+import DPO.helper as helper
 
 
 def abstract_tf(intervals, new_state_bounds, sink):

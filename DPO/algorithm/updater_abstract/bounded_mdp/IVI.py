@@ -1,5 +1,4 @@
-import numpy as np
-import lqg1Dscalable.updater_abstract.bounded_mdp.VI as VI
+import DPO.algorithm.updater_abstract.bounded_mdp.VI as VI
 
 # to avoid a slow computation.
 MAX_ITERATIONS = 50

@@ -26,6 +26,7 @@ class AbsUpdater(object):
     def solve_mdp(self, container, intervals=None):
 
         if intervals is not None:
+            self.intervals = intervals
             adder = 1 if self.sink else 0
             self.v_function = np.zeros(len(intervals) + adder)
             self.best_policy = [[] for i in range(0, len(intervals) + adder)]

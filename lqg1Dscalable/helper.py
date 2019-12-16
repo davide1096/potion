@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import math
 
 
 MAX_SAMPLES_IN_MCRST = 60
@@ -123,6 +124,26 @@ def interval_intersection(bounds):
     else:
         # return min(mins), max(maxs)
         return None, None
+
+
+def build_mcrst_from_samples(samples, n_mcrst, min_val, max_val):
+    samples = flat_listoflists(samples)
+    samples = sorted(samples)
+    mcrst_size = math.floor(len(samples) / n_mcrst)
+    INTERVALS = []
+
+    while len(samples) >= 2 * mcrst_size:
+        if len(INTERVALS) == 0:
+            INTERVALS.append([min_val, samples[mcrst_size - 1][0]])
+        else:
+            INTERVALS.append([INTERVALS[-1][1], samples[mcrst_size - 1][0]])
+        samples = samples[mcrst_size:]
+    if len(samples) > 0:
+        if len(INTERVALS) == 0:
+            INTERVALS.append([min_val, max_val])
+        else:
+            INTERVALS.append([INTERVALS[-1][1], max_val])
+    return INTERVALS
 
 # INTERVALS = [[-2, -1.95], [-1.95, -1.9], [-1.9, -1.85], [-1.85, -1.8], [-1.8, -1.75], [-1.75, -1.7], [-1.7, -1.65],
 #              [-1.65, -1.6], [-1.6, -1.55], [-1.55, -1.5], [-1.5, -1.45], [-1.45, -1.4], [-1.4, -1.35], [-1.35, -1.3],

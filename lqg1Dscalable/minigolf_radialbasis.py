@@ -19,10 +19,13 @@ GAMMA = 0.99
 # Set optA = 0 to use the standard algorithm.
 optA = 1
 
-N_ITERATION = 601
+N_ITERATION = 2001
 N_EPISODES = 2000
 N_STEPS = 20
 
+N_MCRST = 10
+MIN_VAL = 0
+MAX_VAL = 20
 INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
 # INTERVALS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12],
 #              [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20]]
@@ -72,7 +75,7 @@ def main(seed=None):
     help = Helper(seed)
 
     # load and configure the environment.
-    env = gym.make('ComplexMiniGolf-v0')
+    env = gym.make('MiniGolf-v0')
     env.sigma_noise = ENV_NOISE
     env.gamma = GAMMA
     env.seed(help.getSeed())
@@ -103,10 +106,12 @@ def main(seed=None):
     for i in range(0, N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
-        abstraction.divide_samples(determin_samples, problem, help.getSeed())
+        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST, MIN_VAL, MAX_VAL)
+        # dyn_intervals = None
+        abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(optA, ENV_NOISE)
 
-        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
+        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf)
         fictitious_samples = helper.flat_listoflists(fictitious_samples)

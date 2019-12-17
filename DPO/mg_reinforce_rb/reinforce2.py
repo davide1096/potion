@@ -110,7 +110,7 @@ def reinforce2(env, policy, horizon, *,
 
     # Learning loop
     it = 0
-    while (it < iterations):
+    while it < iterations:
         # Begin iteration
         start = time.time()
         if verbose:

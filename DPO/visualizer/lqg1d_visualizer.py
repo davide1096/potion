@@ -60,7 +60,7 @@ class Lqg1dVisualizer(Visualizer):
         plt.pause(0.001)
 
     def save_image(self):
-        filename = "./images/" + self.filename
+        filename = "../images/" + self.filename
         plt.savefig(filename, dpi=150, transparent=False)
         plt.close()
 

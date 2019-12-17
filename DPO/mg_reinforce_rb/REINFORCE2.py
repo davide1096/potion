@@ -7,28 +7,29 @@ from potion.meta.steppers import ConstantStepper
 from potion.common.logger import Logger
 import numpy as np
 
+gamma = 0.99
 env = gym.make('MiniGolf-v0')
 env.sigma_noise = 0
+env.gamma = gamma
 
 state_dim = sum(env.observation_space.shape) #dimensionality of the state space
 action_dim = sum(env.action_space.shape) #dimensionality of the action space
 print(state_dim, action_dim)
 horizon = 500 #maximum length of a trajectory
-gamma = 1.
+
 
 
 def feature_function(s):
     sigma = 3
-    centers = [3, 6, 10, 14, 17, 0]
-    bias = [0, 0, 0, 0, 0, 1]
-    res = [(1 - b) * np.exp(-1 / (2 * sigma ** 2) * (s - c) ** 2) + b for c, b in zip(centers, bias)]
+    centers = [3, 6, 10, 14, 17]
+    res = [np.exp(-1 / (2 * sigma ** 2) * (s - c) ** 2) for c in centers]
     cat_dim = len(s.shape)
     res = torch.cat(res, cat_dim - 1)
     return res
 
 
-mu_init = torch.tensor([0.5, 0.5, 0.5, 0.5, 0.5, 1])
-log_std_init = torch.tensor([0.])
+mu_init = torch.tensor([1., 1., 1., 1., 1.])
+log_std_init = torch.tensor([-4.])
 
 
 policy = RadialBasisPolicy(state_dim, #input size
@@ -43,12 +44,12 @@ state = torch.ones(1)
 policy.act(state)
 policy.get_flat()
 
-stepper = ConstantStepper(0.005)
+stepper = ConstantStepper(0.01)
 
-batchsize = 100
+batchsize = 200
 log_dir = '../../logs'
 log_name = 'REINFORCE'
-logger = Logger(directory=log_dir, name = log_name)
+logger = Logger(directory=log_dir, name=log_name)
 
 seed = 42
 env.seed(seed)
@@ -56,7 +57,8 @@ env.seed(seed)
 init_par = [log_std_init, mu_init]
 init_ten = torch.cat(init_par, 0)
 
-policy.set_from_flat(init_ten) #Reset the policy (in case is run multiple times)
+# Reset the policy (in case is run multiple times)
+policy.set_from_flat(init_ten)
 
 reinforce2(env = env,
           policy = policy,
@@ -64,7 +66,7 @@ reinforce2(env = env,
           stepper = stepper,
           batchsize = batchsize,
           disc = gamma,
-          iterations = 750,
+          iterations = 2001,
           seed = 42,
           logger = logger,
           save_params = 5, #Policy parameters will be saved on disk each 5 iterations

@@ -5,6 +5,7 @@ from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDelt
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 from DPO.visualizer.minigolf_visualizer import MGVisualizer
+from DPO.algorithm.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
 import DPO.helper as helper
 from DPO.helper import Helper
 import logging
@@ -22,7 +23,7 @@ N_ITERATION = 2001
 N_EPISODES = 2000
 N_STEPS = 20
 
-N_MCRST = 10
+N_MCRST = 20
 MIN_VAL = 0
 MAX_VAL = 20
 INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
@@ -52,14 +53,17 @@ def sampling_from_det_pol(env, n_episodes, n_steps, rbf):
     return samples_list
 
 
-def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf):
+def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, interv):
     fictitious_samples = []
     for sam in det_samples:
         single_sample = []
         for s in sam:
             prev_action = deterministic_action(np.reshape(s[0], (1, 1)), rbf)
             prev_action = prev_action[0]
-            mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
+            if interv is not None:
+                mcrst = helper.get_mcrst(s[0], interv, SINK)
+            else:
+                mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
             if prev_action in abs_opt_policy[mcrst]:
                 single_sample.append([s[0], prev_action])
             else:
@@ -85,9 +89,9 @@ def main(seed=None):
     # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
     abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if optA else IVI(GAMMA, SINK, True, INTERVALS)
     # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)
-    rbf = RBFNet([3, 6, 10, 14, 17], [0.5, 0.5, 0.5, 0.5, 0.5], 1, help.getSeed())
-    # rbf = RBFNet([3, 6, 10, 14, 17], [0.1, 0.3, 0.5, 0.7, 1], 1)
-    # rbf = RBFNet([3, 6, 10, 14, 17], [0.49, 0.63, 0.79, 0.95, 1.33], 2, help.getSeed())
+    rbf = RBFNet([3, 6, 10, 14, 17], [1, 1, 1, 1, 1], help.getSeed())
+    # rbf = RBFNet([3, 6, 10, 14, 17], [0.1, 0.3, 0.5, 0.7, 1])
+    # rbf = RBFNet([3, 6, 10, 14, 17], [0.49, 0.63, 0.79, 0.95, 1.33], help.getSeed())
     visualizer = MGVisualizer("MG visualizer", "test{}.jpg".format(help.getSeed()))
     visualizer.clean_panels()
 
@@ -98,21 +102,23 @@ def main(seed=None):
     stats['w3'] = []
     stats['w4'] = []
     stats['w5'] = []
-    stats['b'] = []
     stats['j'] = []
     # ------------
 
     for i in range(0, N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
-        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST, MIN_VAL, MAX_VAL)
-        dyn_intervals = None
+        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST, MIN_VAL, MAX_VAL)
+        # dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(optA, ENV_NOISE)
 
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
 
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf)
+        # logging.debug([a for a in abs_opt_pol])
+        # logging.debug("\n")
+
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf, dyn_intervals)
         fictitious_samples = helper.flat_listoflists(fictitious_samples)
         X = np.reshape([f[0] for f in fictitious_samples], (len(fictitious_samples),))
         y = np.reshape([f[1] for f in fictitious_samples], (len(fictitious_samples),))
@@ -121,15 +127,13 @@ def main(seed=None):
 
         print("Iteration n.{}".format(i))
         print("W: {}".format(rbf.w))
-        print("b: {}".format(rbf.b))
         print("Updated estimated performance measure: {}".format(estj))
         zeros, hundred, failing_states = helper.minigolf_reward_counter(determin_samples)
         print("Number of zeroes: {} - Number of big penalties: {}".format(zeros, hundred))
         print("Failing states: {}\n".format(failing_states))
 
         w = rbf.w
-        b = rbf.b
-        visualizer.show_values(w, b, estj)
+        visualizer.show_values(w, estj)
 
         # PLOTTER INFO
         if i % 10 == 0:
@@ -138,7 +142,6 @@ def main(seed=None):
             stats['w3'].append(w[2])
             stats['w4'].append(w[3])
             stats['w5'].append(w[4])
-            stats['b'].append(b)
             stats['j'].append(estj)
         # ------------
 

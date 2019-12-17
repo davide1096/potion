@@ -48,7 +48,7 @@ abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
 
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if optA else IVI(GAMMA, SINK, True, INTERVALS)
 # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-rbf = RBFNet([-1.32, -0.66, 0, 0.66, 1.32], [0.5, 0.2, 0.05, -0.2, -0.5], 0, lr=0.1, epochs=200)
+rbf = RBFNet([-1.32, -0.66, 0, 0.66, 1.32], [0.5, 0.2, 0.05, -0.2, -0.5], lr=0.1, epochs=200)
 
 
 def deterministic_action(state):

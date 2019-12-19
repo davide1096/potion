@@ -20,7 +20,7 @@ horizon = 500 #maximum length of a trajectory
 
 
 def feature_function(s):
-    sigma = 3
+    sigma = 4
     centers = [4, 8, 12, 16]
     res = [np.exp(-1 / (2 * sigma ** 2) * (s - c) ** 2) for c in centers]
     cat_dim = len(s.shape)
@@ -29,7 +29,7 @@ def feature_function(s):
 
 
 mu_init = torch.tensor([1., 1., 1., 1.])
-log_std_init = torch.tensor([-4.])
+log_std_init = torch.tensor([-5.])
 
 
 policy = RadialBasisPolicy(state_dim, #input size

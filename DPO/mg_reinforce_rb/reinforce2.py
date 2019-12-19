@@ -13,6 +13,7 @@ from potion.common.misc_utils import clip, seed_all_agent
 from potion.meta.steppers import ConstantStepper
 import torch
 import time
+import numpy as np
 
 
 def reinforce2(env, policy, horizon, *,
@@ -110,6 +111,7 @@ def reinforce2(env, policy, horizon, *,
 
     # Learning loop
     it = 0
+    cumulative_fail = 0
     while it < iterations:
         # Begin iteration
         start = time.time()
@@ -145,11 +147,20 @@ def reinforce2(env, policy, horizon, *,
                                seed=seed,
                                n_jobs=parallel,
                                key=info_key)
+
+        # ------------------- count fails -------------------
+        rewards = [b[2] for b in batch]
+        failures = [np.count_nonzero(r==-100) for r in rewards]
+        cumulative_fail += sum(failures)
+        # ---------------------------------------------------
+
         log_row['Perf'] = performance(batch, disc)
         log_row['Info'] = mean_sum_info(batch).item()
         log_row['UPerf'] = performance(batch, disc=1.)
         log_row['AvgHorizon'] = avg_horizon(batch)
         log_row['Exploration'] = policy.exploration().item()
+        log_row['IterationFails'] = sum(failures)
+        log_row['CumulativeFails'] = cumulative_fail
 
         # Estimate policy gradient
         if estimator == 'gpomdp':

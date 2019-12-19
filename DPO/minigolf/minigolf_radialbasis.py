@@ -19,16 +19,16 @@ GAMMA = 0.99
 # Set optA = 0 to use the standard algorithm.
 optA = 1
 
-N_ITERATION = 2001
-N_EPISODES = 2000
+N_ITERATION = 10001
+N_EPISODES = 500
 N_STEPS = 20
 
-N_MCRST = 20
+N_MCRST = 30
 MIN_VAL = 0
 MAX_VAL = 20
-INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
-# INTERVALS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12],
-#              [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20]]
+# INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
+INTERVALS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12],
+             [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20]]
 
 
 def deterministic_action(state, rbf):
@@ -84,12 +84,13 @@ def main(seed=None):
     env.seed(help.getSeed())
 
     logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
+    cumulative_fail = 0
 
     abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
     # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
     abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if optA else IVI(GAMMA, SINK, True, INTERVALS)
     # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)
-    rbf = RBFNet([3, 6, 10, 14, 17], [1, 1, 1, 1, 1], help.getSeed())
+    rbf = RBFNet([4, 8, 12, 16], 4, [1, 1, 1, 1], help.getSeed())
     # rbf = RBFNet([3, 6, 10, 14, 17], [0.1, 0.3, 0.5, 0.7, 1])
     # rbf = RBFNet([3, 6, 10, 14, 17], [0.49, 0.63, 0.79, 0.95, 1.33], help.getSeed())
     visualizer = MGVisualizer("MG visualizer", "test{}.jpg".format(help.getSeed()))
@@ -101,15 +102,14 @@ def main(seed=None):
     stats['w2'] = []
     stats['w3'] = []
     stats['w4'] = []
-    stats['w5'] = []
     stats['j'] = []
     # ------------
 
     for i in range(0, N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
-        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST, MIN_VAL, MAX_VAL)
-        # dyn_intervals = None
+        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST, MIN_VAL, MAX_VAL)
+        dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(optA, ENV_NOISE)
 
@@ -130,7 +130,16 @@ def main(seed=None):
         print("Updated estimated performance measure: {}".format(estj))
         zeros, hundred, failing_states = helper.minigolf_reward_counter(determin_samples)
         print("Number of zeroes: {} - Number of big penalties: {}".format(zeros, hundred))
-        print("Failing states: {}\n".format(failing_states))
+        print("Failing states: {}".format(failing_states))
+        cumulative_fail += hundred
+        print("Cumulative fails: {}\n".format(cumulative_fail))
+
+        actions = [m.keys() for m in abstraction.get_container()]
+        action_range = [max(a) - min(a) if len(a) > 0 else 0 for a in actions]
+        intervals = dyn_intervals if dyn_intervals is not None else INTERVALS
+        [print("Mcrst = {}, diameter = {}, action range = {}".format(dyn, dyn[1] - dyn[0], ran)) for dyn, ran in
+            zip(intervals, action_range)]
+        print("\n")
 
         w = rbf.w
         visualizer.show_values(w, estj)
@@ -141,7 +150,6 @@ def main(seed=None):
             stats['w2'].append(w[1])
             stats['w3'].append(w[2])
             stats['w4'].append(w[3])
-            stats['w5'].append(w[4])
             stats['j'].append(estj)
         # ------------
 

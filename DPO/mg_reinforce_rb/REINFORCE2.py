@@ -21,14 +21,14 @@ horizon = 500 #maximum length of a trajectory
 
 def feature_function(s):
     sigma = 3
-    centers = [3, 6, 10, 14, 17]
+    centers = [4, 8, 12, 16]
     res = [np.exp(-1 / (2 * sigma ** 2) * (s - c) ** 2) for c in centers]
     cat_dim = len(s.shape)
     res = torch.cat(res, cat_dim - 1)
     return res
 
 
-mu_init = torch.tensor([1., 1., 1., 1., 1.])
+mu_init = torch.tensor([1., 1., 1., 1.])
 log_std_init = torch.tensor([-4.])
 
 
@@ -46,7 +46,7 @@ policy.get_flat()
 
 stepper = ConstantStepper(0.01)
 
-batchsize = 200
+batchsize = 500
 log_dir = '../../logs'
 log_name = 'REINFORCE'
 logger = Logger(directory=log_dir, name=log_name)

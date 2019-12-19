@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import random
 
 BATCH_SIZE = 50
-LAMBDA = 0.001
+LAMBDA = 0.01
 
 
 def rbf(x, c, s):
@@ -13,14 +13,14 @@ def rbf(x, c, s):
 class RBFNet(object):
     """Implementation of a Radial Basis Function Network"""
 
-    def __init__(self, centers, w, seed, k=5, lr=0.01, epochs=200, rbf=rbf, inferStds=True):
+    def __init__(self, centers, sigma, w, seed, k=5, lr=0.01, epochs=200, rbf=rbf, inferStds=True):
         self.k = k
         self.lr = lr
         self.epochs = epochs
         self.rbf = rbf
         self.inferStds = inferStds
         self.centers = centers
-        self.stds = np.repeat(3, k)
+        self.stds = np.repeat(sigma, k)
         self.w = w
 
         if seed is not None:
@@ -52,7 +52,8 @@ class RBFNet(object):
                 # online update
                 w_accumulator += a * error
 
-            reg = np.sign([neww - oldw for neww, oldw in zip(new_w, old_w)])
+            reg = np.sign([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L1-norm
+            # reg = np.array([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L2-norm
             new_w = new_w - self.lr * (w_accumulator / BATCH_SIZE + LAMBDA * reg)
 
         # self.w = [ALFA * w_old + (1 - ALFA) * w_new for w_old, w_new in zip(self.w, new_w)]

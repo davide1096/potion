@@ -13,7 +13,6 @@ class MGVisualizer(Visualizer):
         self.w2 = []
         self.w3 = []
         self.w4 = []
-        self.w5 = []
         self.j = []
         self.title = title
         self.filename = filename
@@ -26,7 +25,6 @@ class MGVisualizer(Visualizer):
         self.w2.append(w[1])
         self.w3.append(w[2])
         self.w4.append(w[3])
-        self.w5.append(w[4])
         self.j.append(j)
         plt.suptitle(self.title)
 
@@ -54,12 +52,6 @@ class MGVisualizer(Visualizer):
         plt.title("W4")
         plt.plot(self.w4, label="W4")
         plt.annotate(np.round(self.w4[-1], decimals=3), (len(self.w4) - 1, self.w4[-1]))
-        plt.grid(b=True)
-
-        plt.subplot(3, 2, 5)
-        plt.title("W5")
-        plt.plot(self.w5, label="W5")
-        plt.annotate(np.round(self.w5[-1], decimals=3), (len(self.w5) - 1, self.w5[-1]))
         plt.grid(b=True)
 
         plt.subplot(3, 2, 6)
@@ -113,13 +105,6 @@ class MGVisualizer(Visualizer):
         plt.annotate(np.round(avg['w4'][-1], decimals=3), ((len(avg['w4']) - 1) * 10, avg['w4'][-1]))
         std_resized = np.resize([2 * s for s in std['w4']], (len(std['w4']),))
         plt.errorbar(x, avg['w4'], yerr=std_resized)
-        plt.grid(b=True)
-
-        plt.subplot(3, 2, 5)
-        plt.title("W5")
-        plt.annotate(np.round(avg['w5'][-1], decimals=3), ((len(avg['w5']) - 1) * 10, avg['w5'][-1]))
-        std_resized = np.resize([2 * s for s in std['w5']], (len(std['w5']),))
-        plt.errorbar(x, avg['w5'], yerr=std_resized)
         plt.grid(b=True)
 
         plt.subplot(3, 2, 6)

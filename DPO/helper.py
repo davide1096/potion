@@ -75,6 +75,7 @@ def calc_abs_reward_cartpole(cont, action):
 
 
 def calc_abs_reward_minigolf(cont, action):
+    action = np.clip(action, 0, 5)
     rew = 0
     for act in cont.keys():
         if action < np.sqrt(1.836 * cont[act]['state']):

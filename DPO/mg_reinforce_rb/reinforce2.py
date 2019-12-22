@@ -14,6 +14,7 @@ from potion.meta.steppers import ConstantStepper
 import torch
 import time
 import numpy as np
+from DPO.visualizer.minigolf_visualizer import MGVisualizer
 
 
 def reinforce2(env, policy, horizon, *,
@@ -71,6 +72,10 @@ def reinforce2(env, policy, horizon, *,
         on a sample trajectory. If False, no rendering happens
     verbose: level of verbosity (0: only logs; 1: normal; 2: maximum)
     """
+
+    visualizer = MGVisualizer("MG visualizer", "testREINFORCE{}.jpg".format(0))
+    visualizer.clean_panels()
+
     # Defaults
     if action_filter is None:
         action_filter = clip(env)
@@ -154,7 +159,8 @@ def reinforce2(env, policy, horizon, *,
         cumulative_fail += sum(failures)
         # ---------------------------------------------------
 
-        log_row['Perf'] = performance(batch, disc)
+        perf = performance(batch, disc)
+        log_row['Perf'] = perf
         log_row['Info'] = mean_sum_info(batch).item()
         log_row['UPerf'] = performance(batch, disc=1.)
         log_row['AvgHorizon'] = avg_horizon(batch)
@@ -200,6 +206,8 @@ def reinforce2(env, policy, horizon, *,
             logger.save_params(params, it)
 
         print(new_params)
+        params = new_params.numpy()[1:]
+        visualizer.show_values(params, perf, cumulative_fail)
 
         # Next iteration
         it += 1
@@ -208,5 +216,6 @@ def reinforce2(env, policy, horizon, *,
     if save_params:
         logger.save_params(params, it)
 
+    visualizer.save_image()
     # Cleanup
     logger.close()

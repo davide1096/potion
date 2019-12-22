@@ -28,7 +28,7 @@ def feature_function(s):
 
 
 mu_init = torch.tensor([1., 1., 1., 1.])
-log_std_init = torch.tensor([-5.])
+log_std_init = torch.tensor([-4.])
 
 
 policy = RadialBasisPolicy(state_dim, #input size

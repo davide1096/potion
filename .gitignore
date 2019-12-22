@@ -112,5 +112,6 @@ venv.bak/
 
 # images
 images/
+csv/
 *test.py
 lipschitz_estimator/

@@ -23,7 +23,7 @@ N_ITERATION = 10001
 N_EPISODES = 500
 N_STEPS = 20
 
-N_MCRST = 20
+N_MCRST = 30
 MIN_VAL = 0
 MAX_VAL = 20
 # INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]

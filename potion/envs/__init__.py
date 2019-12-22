@@ -30,6 +30,11 @@ register(
 )
 
 register(
+    id='mass-v0',
+    entry_point='potion.envs.mass:mass'
+)
+
+register(
     id='MiniGolf-v0',
     entry_point='potion.envs.minigolf:MiniGolf'
 )

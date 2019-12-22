@@ -2,17 +2,13 @@ import DPO.minigolf.minigolf_radialbasis as mini_main
 import numpy as np
 from DPO.visualizer.minigolf_visualizer import MGVisualizer
 
-N_ITERATIONS = 6
+N_ITERATIONS = 5
 
 stats = {}
 avg = {}
 std = {}
-stats['param'] = np.array([])
-stats['j'] = np.array([])
-stats['sampleJ'] = np.array([])
-stats['abstractJ'] = np.array([])
 
-for i in range(1, N_ITERATIONS):
+for i in range(1, N_ITERATIONS + 1):
     data = mini_main.main(i)
     if i == 1:
         stats['w1'] = np.array([data['w1']])

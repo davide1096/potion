@@ -112,6 +112,7 @@ def main(seed=None):
     stats['w3'] = []
     stats['w4'] = []
     stats['j'] = []
+    stats['fail'] = []
     # ------------
 
     for i in range(0, N_ITERATION):
@@ -148,7 +149,7 @@ def main(seed=None):
         print("\n")
 
         w = rbf.w
-        visualizer.show_values(w, estj)
+        visualizer.show_values(w, estj, cumulative_fail)
 
         # PLOTTER INFO
         if i % 10 == 0:
@@ -157,6 +158,7 @@ def main(seed=None):
             stats['w3'].append(w[2])
             stats['w4'].append(w[3])
             stats['j'].append(estj)
+            stats['fail'].append(cumulative_fail)
         # ------------
 
     visualizer.save_image()

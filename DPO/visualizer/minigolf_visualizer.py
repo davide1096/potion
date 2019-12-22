@@ -14,11 +14,12 @@ class MGVisualizer(Visualizer):
         self.w3 = []
         self.w4 = []
         self.j = []
+        self.fail = []
         self.title = title
         self.filename = filename
         plt.figure(figsize=(12.8, 9.6))
 
-    def show_values(self, w, j):
+    def show_values(self, w, j, fail):
 
         plt.clf()
         self.w1.append(w[0])
@@ -26,6 +27,7 @@ class MGVisualizer(Visualizer):
         self.w3.append(w[2])
         self.w4.append(w[3])
         self.j.append(j)
+        self.fail.append(fail)
         plt.suptitle(self.title)
 
         plt.subplots_adjust(hspace=0.6, wspace=0.4)
@@ -52,6 +54,12 @@ class MGVisualizer(Visualizer):
         plt.title("W4")
         plt.plot(self.w4, label="W4")
         plt.annotate(np.round(self.w4[-1], decimals=3), (len(self.w4) - 1, self.w4[-1]))
+        plt.grid(b=True)
+
+        plt.subplot(3, 2, 5)
+        plt.title("Failures")
+        plt.plot(self.fail, label="Failures")
+        plt.annotate(np.round(self.fail[-1], decimals=3), (len(self.fail) - 1, self.fail[-1]))
         plt.grid(b=True)
 
         plt.subplot(3, 2, 6)
@@ -105,6 +113,13 @@ class MGVisualizer(Visualizer):
         plt.annotate(np.round(avg['w4'][-1], decimals=3), ((len(avg['w4']) - 1) * 10, avg['w4'][-1]))
         std_resized = np.resize([2 * s for s in std['w4']], (len(std['w4']),))
         plt.errorbar(x, avg['w4'], yerr=std_resized)
+        plt.grid(b=True)
+
+        plt.subplot(3, 2, 5)
+        plt.title("Failures")
+        plt.annotate(np.round(avg['fail'][-1], decimals=3), ((len(avg['fail']) - 1) * 10, avg['fail'][-1]))
+        std_resized = np.resize([2 * s for s in std['fail']], (len(std['fail']),))
+        plt.errorbar(x, avg['fail'], yerr=std_resized)
         plt.grid(b=True)
 
         plt.subplot(3, 2, 6)

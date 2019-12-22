@@ -12,11 +12,10 @@ env = gym.make('MiniGolf-v0')
 env.sigma_noise = 0
 env.gamma = gamma
 
-state_dim = sum(env.observation_space.shape) #dimensionality of the state space
-action_dim = sum(env.action_space.shape) #dimensionality of the action space
+state_dim = sum(env.observation_space.shape)  # dimensionality of the state space
+action_dim = sum(env.action_space.shape)  # dimensionality of the action space
 print(state_dim, action_dim)
-horizon = 500 #maximum length of a trajectory
-
+horizon = 500  # maximum length of a trajectory
 
 
 def feature_function(s):
@@ -39,10 +38,6 @@ policy = RadialBasisPolicy(state_dim, #input size
                                logstd_init=log_std_init,
                                learn_std=True
                           )
-
-state = torch.ones(1)
-policy.act(state)
-policy.get_flat()
 
 stepper = ConstantStepper(0.01)
 

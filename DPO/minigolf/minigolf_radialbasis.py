@@ -10,6 +10,8 @@ import DPO.helper as helper
 from DPO.helper import Helper
 import logging
 from DPO.minigolf.RBFNet import RBFNet
+import csv
+
 
 problem = 'minigolf'
 SINK = True
@@ -39,6 +41,7 @@ INTERVALS = [[0, 0.67], [0.67, 1.34], [1.34, 2.01], [2.01, 2.68], [2.68, 3.35], 
 CENTERS = [4, 8, 12, 16]
 STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
+
 
 def deterministic_action(state, rbf):
     return rbf.predict(state)[0]
@@ -95,6 +98,10 @@ def main(seed=None):
     logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
     cumulative_fail = 0
 
+    filename = "../csv/data{}.csv".format(help.getSeed())
+    data_file = open(filename, mode='w')
+    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
     abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
     # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
     abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
@@ -150,6 +157,7 @@ def main(seed=None):
 
         w = rbf.w
         visualizer.show_values(w, estj, cumulative_fail)
+        file_writer.writerow([w[0], w[1], w[2], w[3], cumulative_fail, estj])
 
         # PLOTTER INFO
         if i % 10 == 0:

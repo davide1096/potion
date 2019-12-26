@@ -1,4 +1,5 @@
 import numpy as np
+import DPO.helper as helper
 
 # to avoid a slow computation.
 MAX_ITERATIONS = 500
@@ -17,21 +18,31 @@ class AbsUpdater(object):
         self.sink_val = sink_val
 
         if intervals is not None:
-            adder = 1 if self.sink else 0
-            self.v_function = np.zeros(len(intervals) + adder)
-            self.best_policy = [[] for i in range(0, len(intervals) + adder)]
-            if self.sink:
-                self.v_function[-1] = self.sink_val
+            adder = 1 if sink else 0
+            shape = [len(i) + adder for i in self.intervals]
+
+            self.v_function = np.zeros(tuple(shape))
+            self.best_policy = []
+            num = 1
+            for s in shape:
+                num *= s - adder
+            for i in range(num):
+                self.best_policy.append([])
 
     def solve_mdp(self, container, intervals=None):
 
         if intervals is not None:
             self.intervals = intervals
             adder = 1 if self.sink else 0
-            self.v_function = np.zeros(len(intervals) + adder)
-            self.best_policy = [[] for i in range(0, len(intervals) + adder)]
-            if self.sink:
-                self.v_function[-1] = self.sink_val
+            shape = [len(i) + adder for i in intervals]
+
+            self.v_function = np.zeros(tuple(shape))
+            self.best_policy = []
+            num = 1
+            for s in shape:
+                num *= s - adder
+            for i in range(num):
+                self.best_policy.append([])
 
         new_vf = self.single_step_update(container)
         n_iterations = 0
@@ -45,15 +56,14 @@ class AbsUpdater(object):
         return self.best_policy
 
     def solved(self, new):
-        for n, o in zip(new, self.v_function):
-            if abs(o - n) > EPSILON:
-                return False
-        return True
+        diff = abs(self.v_function - new)
+        # True if there is no diff between prev and new value greater than EPSILON.
+        return not np.any(diff > EPSILON)
 
     def single_step_update(self, container):
 
-        new_v_function = np.empty(len(self.v_function))
-        for i in range(0, len(self.v_function)):
+        new_v_function = np.empty_like(self.v_function)
+        for i in range(len(container)):
             possible_actions = {}
 
             for a in container[i].keys():
@@ -62,10 +72,11 @@ class AbsUpdater(object):
                 if 'abs_tf' in container[i][a]:
                     abs_tf = container[i][a]['abs_tf']
                     # x is the sum of the v_functions of new_mcrst, weighted according to the abs_tf.
-                    x = sum([new_mcrst_prob * v_fun for new_mcrst_prob, v_fun in zip(abs_tf, self.v_function)])
+                    x = np.sum(abs_tf * self.v_function)
                     possible_actions[a] = abs_reward + self.gamma * x
 
-            self.best_policy[i], new_v_function[i] = self.best_actions(possible_actions, i)
+            mcrst = helper.get_mcrst_from_index(i, self.intervals)
+            self.best_policy[i], new_v_function[tuple(mcrst)] = self.best_actions(possible_actions, i)
 
         return new_v_function
 
@@ -79,4 +90,3 @@ class AbsUpdater(object):
 
         else:
             return None, self.v_function[i]
-

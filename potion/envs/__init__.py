@@ -100,11 +100,6 @@ register(
 )
 
 register(
-    id='Mass-v0',
-    entry_point='potion.envs.mass:Mass'
-)
-
-register(
     id='Robot-v0',
     entry_point='potion.envs.robot:Robot'
 )

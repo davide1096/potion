@@ -5,21 +5,25 @@ def update(bounded_v, ordered_v, action, cont, gamma):
 
     rew = cont[action]['abs_reward']
     bound_tf = cont[action]['abs_tf']
+    split = np.split(bound_tf, 2, axis=0)
 
-    new_tf = [b[0] for b in bound_tf]
-    remaining = 1 - sum(new_tf)
+    new_tf = split[0]
+    remaining = 1 - np.sum(new_tf)
 
     for el in ordered_v:
+        if remaining == 0:
+            break
+
         # I get the upper bound of the tf probability related to a state ordered among the first ones.
-        ub = bound_tf[el][1]
-        diff = ub - new_tf[el]
+        ub = split[1][tuple(el)]
+        diff = ub - new_tf[tuple(el)]
 
         # I compute the TF related to the MDP that I'm searching for.
         if diff <= remaining:
-            new_tf[el] = ub
+            new_tf[tuple(el)] = ub
         else:
-            new_tf[el] += remaining
+            new_tf[tuple(el)] += remaining
 
         remaining = max(0, remaining - diff)
 
-    return rew + gamma * np.dot(new_tf, bounded_v)
+    return rew + gamma * np.sum(new_tf * bounded_v)

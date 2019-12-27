@@ -35,20 +35,20 @@ def get_mcrst(state, intervals, sink):
     for dim in range(len(intervals)):
         dim_int = intervals[dim]
 
-        if sink and state < dim_int[0][0]:
+        if sink and state[dim] < dim_int[0][0]:
             mcrst.append(-1)
-        elif sink and state > dim_int[-1][1]:
+        elif sink and state[dim] > dim_int[-1][1]:
             mcrst.append(len(dim_int))
 
-        elif state >= dim_int[-1][1]:   # above the upper bound of the state space
+        elif state[dim] >= dim_int[-1][1]:   # above the upper bound of the state space
             mcrst.append(len(dim_int) - 1)
-        elif state <= dim_int[0][0]:    # below the lower bound of the state space
+        elif state[dim] <= dim_int[0][0]:    # below the lower bound of the state space
             mcrst.append(0)
 
         else:
             index = 0                       # inside the state space
             for inter in dim_int:
-                if inter[0] <= state < inter[1]:
+                if inter[0] <= state[dim] < inter[1]:
                     mcrst.append(index)
                     break
                 else:
@@ -172,7 +172,7 @@ def interval_intersection(bounds):
         max_mins = np.maximum(max_mins, m)  # I obtain the max value of mins for each dimension
     for m in maxs:
         min_maxs = np.minimum(min_maxs, m)  # I obtain the min value of maxs for each dimension
-    if np.minimum(max_mins, min_maxs) == max_mins:
+    if np.all(np.minimum(max_mins, min_maxs) == max_mins):
         return max_mins, min_maxs
     else:
         return None, None  # void intersection

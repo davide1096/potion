@@ -12,7 +12,7 @@ import logging
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = np.array([-0.17694332])
+INIT_DETERMINISTIC_PARAM = np.array([-0.7])
 ENV_NOISE = 0
 A = np.array([1])
 B = np.array([1])
@@ -53,7 +53,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
         single_sample = []
         for j in range(0, n_steps):
             state = env.get_state()
-            action = deterministic_action(det_par, state)
+            action = deterministic_action(det_par, state)[0]
             new_state, r, _, _ = env.step(action)
             single_sample.append([state, action, r, new_state])
         samples_list.append(single_sample)
@@ -114,12 +114,12 @@ def main(seed=None):
 
     # calculate the optimal values of the problem.
     opt_par = env.computeOptimalK()
-    det_param = INIT_DETERMINISTIC_PARAM
+    det_param = INIT_DETERMINISTIC_PARAM.reshape(opt_par.shape)
     optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
     logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
     # instantiate the components of the algorithm.
-    lip_s_deltas = A - np.eye(len(det_param))
+    lip_s_deltas = A - np.eye(det_param.size)
     lip_a_deltas = B
     abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, lip_s_deltas, lip_a_deltas, env.Q, env.R)
     # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
@@ -128,7 +128,7 @@ def main(seed=None):
     # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
     det_upd = Updater(help.getSeed())
 
-    opt_par4vis = round(opt_par.item(), 3)
+    opt_par4vis = np.round(opt_par, 3)
     title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A.item(), B.item(), opt_par4vis,
                                                                         optJ4vis, ENV_NOISE)
     key = "{}_{}_{}_{}_{}".format(A.item(), B.item(), ENV_NOISE, det_param.item(), help.getSeed())

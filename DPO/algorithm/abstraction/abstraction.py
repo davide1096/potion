@@ -43,6 +43,7 @@ class Abstraction(object):
                 # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
                 mcrst = helper.get_mcrst(s[0], self.intervals, self.sink)
                 for m, i in zip(mcrst, self.intervals):
+                    # to ensure that no samples are wrongly placed into the container.
                     assert (0 <= m <= len(i) - 1)
                 mcrst_index = helper.get_multidim_mcrst(mcrst, self.intervals)
                 self.container[mcrst_index][s[1]] = {'state': s[0], 'new_state': s[3]}
@@ -53,7 +54,7 @@ class Abstraction(object):
                           for cont in self.container]
 
         # calculate the abstract reward for every sample.
-        if problem == 'lqg1d':
+        if problem == 'lqg1d' or problem == 'mass':
             reward_func = helper.calc_abs_reward_lqg
         # elif problem == 'cartpole1d':
         #     reward_func = helper.calc_abs_reward_cartpole

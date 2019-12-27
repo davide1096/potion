@@ -12,7 +12,7 @@ import logging
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = np.array([-0.1])
+INIT_DETERMINISTIC_PARAM = np.array([-0.17694332])
 ENV_NOISE = 0
 A = np.array([1])
 B = np.array([1])
@@ -150,8 +150,8 @@ def main(seed=None):
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
-        dyn_intervals = None
+        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
+        # dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, ENV_NOISE)
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
@@ -163,7 +163,6 @@ def main(seed=None):
         # ------------------------------------
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals)
-        # TODO
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
 
         j = env.computeJ(det_param, 0, N_EPISODES)
@@ -172,7 +171,7 @@ def main(seed=None):
         print("Updated deterministic policy parameter: {}".format(det_param))
         print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}\n".format(estj))
-        visualizer.show_values(det_param, j, estj, absJ)
+        visualizer.show_values(det_param.item(), j, estj, absJ)
 
         # PLOTTER INFO
         stats['param'].append(det_param)

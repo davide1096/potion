@@ -12,10 +12,14 @@ import logging
 
 problem = 'mass'
 SINK = False
+# INIT_DETERMINISTIC_PARAM = np.array([-1.8, -1.])
 INIT_DETERMINISTIC_PARAM = np.array([-0.5, -0.1])
-ENV_NOISE = 0
+# optimal param values: [-1.376, -0.822]
+ENV_NOISE = 0 * np.eye(INIT_DETERMINISTIC_PARAM.size)
 TAO = 0.1
 MASS = 0.1
+# A = np.array([[1., 0.3], [0.5, 1.]])
+# B = np.array([[0.5], [TAO / MASS]])
 A = np.array([[1., TAO], [0., 1.]])
 B = np.array([[0.], [TAO / MASS]])
 GAMMA = 0.95
@@ -25,13 +29,23 @@ GAMMA = 0.95
 ds0 = 0
 
 N_ITERATION = 1000
-N_EPISODES = 500
+N_EPISODES = 500  # 2000
 N_STEPS = 20
+
+# INTERVALS = np.array([[[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.15], [-0.15, -0.05], [-0.05, 0.05],
+#                        [0.05, 0.15], [0.15, 0.3], [0.3, 0.5], [0.5, 0.7], [0.7, 1]],
+#                       [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.9], [-0.9, -0.7], [-0.7, -0.55], [-0.55, -0.45],
+#                        [-0.45, -0.35], [-0.35, -0.25], [-0.25, -0.15], [-0.15, -0.05], [-0.05, 0.05], [0.05, 0.15],
+#                        [0.15, 0.25], [0.25, 0.35], [0.35, 0.45], [0.45, 0.55], [0.55, 0.7], [0.7, 0.9], [0.9, 1.2],
+#                        [1.2, 1.6], [1.6, 2]]])
 
 INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.25], [-0.25, -0.1], [-0.1, 0.1], [0.1, 0.25],
              [0.25, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]],
              [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.25], [-0.25, -0.1], [-0.1, 0.1],
               [0.1, 0.25], [0.25, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]])
+
+# INTERVALS = np.array([[[-1, -0.6], [-0.6, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3], [0.3, 0.6], [0.6, 1]],
+#                       [[-2, -1], [-1, -0.3], [-0.3, 0.3], [0.3, 1], [1, 2]]])
 
 N_MCRST_DYN = np.array([11, 13])
 MIN_SPACE_VAL = np.array([-1, -2])
@@ -110,8 +124,10 @@ def main(seed=None):
 
     # calculate the optimal values of the problem.
     opt_par = env.computeOptimalK()
+    # print("OptK: {}\n".format(opt_par))
     det_param = INIT_DETERMINISTIC_PARAM.reshape(opt_par.shape)
-    optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
+    optJ4vis = round(env.computeJ(env.computeOptimalK(), 0), 3)
+    # print("OptJ: {}\n".format(optJ4vis))
     logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
     # instantiate the components of the algorithm.
@@ -130,7 +146,7 @@ def main(seed=None):
     # key = "{}_{}_{}_{}_{}".format(A.item(), B.item(), ENV_NOISE, det_param.item(), help.getSeed())
     # key = key.replace('.', ',')
     # key = key + ".jpg"
-    initJ = env.computeJ(det_param, 0, N_EPISODES)
+    initJ = env.computeJ(det_param, 0)
     # visualizer = Lqg1dVisualizer(title, key, det_param, opt_par4vis, initJ, optJ4vis)
     # visualizer.clean_panels()
 
@@ -153,28 +169,28 @@ def main(seed=None):
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
 
         # ---- performance abstract policy ---
-        first_states_ep = [d[0][0] for d in determin_samples]
-        absJ = estimate_performance_abstract_policy(env, N_EPISODES, N_STEPS, abs_opt_pol, first_states_ep,
-                                                    dyn_intervals)
+        # first_states_ep = [d[0][0] for d in determin_samples]
+        # absJ = estimate_performance_abstract_policy(env, N_EPISODES, N_STEPS, abs_opt_pol, first_states_ep,
+        #                                             dyn_intervals)
         # ------------------------------------
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals)
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
 
-        j = env.computeJ(det_param, 0, N_EPISODES)
+        j = env.computeJ(det_param, 0)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
         print("Updated deterministic policy parameter: {}".format(det_param))
         print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}".format(estj))
-        print("Updated estimated abstract performance measure: {}\n".format(absJ))
+        # print("Updated estimated abstract performance measure: {}\n".format(absJ))
         # visualizer.show_values(det_param.item(), j, estj, absJ)
 
         # PLOTTER INFO
         stats['param'].append(det_param)
         stats['j'].append(j)
         stats['sampleJ'].append(estj)
-        stats['abstractJ'].append(absJ)
+        # stats['abstractJ'].append(absJ)
         # ------------
 
     # visualizer.save_image()

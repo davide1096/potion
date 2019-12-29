@@ -58,6 +58,7 @@ class IVI(object):
             prev_vf_ub = self.v_function_ub.copy()
 
             self.single_step_update(container)
+            self.v_function_correction(container)
 
             if n_iterations >= MAX_ITERATIONS:
                 break
@@ -66,6 +67,17 @@ class IVI(object):
                 break
 
         return self.best_policy
+
+    # in empty macrostate it prevents no update on value function.
+    # The update is pessimistic: the lowest vf seen.
+    def v_function_correction(self, container):
+        min_vf_lb = np.min(self.v_function_lb)
+        min_vf_ub = np.min(self.v_function_ub)
+        for i, cont in enumerate(container):
+            if len(cont.keys()) == 0:  # empty macrostate
+                mcrst = helper.get_mcrst_from_index(i, self.intervals)
+                self.v_function_lb[tuple(mcrst)] = min_vf_lb
+                self.v_function_ub[tuple(mcrst)] = min_vf_ub
 
     def solved(self, prev_vf_lb, prev_vf_ub):
         diff_lb = abs(self.v_function_lb - prev_vf_lb)

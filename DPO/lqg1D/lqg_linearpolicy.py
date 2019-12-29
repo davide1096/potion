@@ -13,7 +13,7 @@ import logging
 problem = 'lqg1d'
 SINK = False
 INIT_DETERMINISTIC_PARAM = np.array([-0.7])
-ENV_NOISE = 0
+ENV_NOISE = 0 * np.eye(INIT_DETERMINISTIC_PARAM.size)
 A = np.array([1])
 B = np.array([1])
 GAMMA = 0.9

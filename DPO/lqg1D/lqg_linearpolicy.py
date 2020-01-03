@@ -9,6 +9,7 @@ from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 import DPO.helper as helper
 from DPO.helper import Helper
 import logging
+import csv
 
 problem = 'lqg1d'
 SINK = False
@@ -26,7 +27,7 @@ ds0 = 0
 # LIPSCHITZ_CONST_ACTION = B
 # LIPSCHITZ_STOCH_ATF = B
 
-N_ITERATION = 1000
+N_ITERATION = 3
 N_EPISODES = 500
 N_STEPS = 20
 
@@ -148,6 +149,10 @@ def main(seed=None):
     stats['j'].append(initJ)
     # ------------
 
+    filename = "../csv/lqg1d_data{}.csv".format(help.getSeed())
+    data_file = open(filename, mode='w')
+    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
         dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
@@ -172,6 +177,7 @@ def main(seed=None):
         print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}\n".format(estj))
         visualizer.show_values(det_param.item(), j, estj, absJ)
+        file_writer.writerow([det_param, j, estj, absJ])
 
         # PLOTTER INFO
         stats['param'].append(det_param)

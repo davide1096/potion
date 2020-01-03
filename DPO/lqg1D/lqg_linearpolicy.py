@@ -188,6 +188,3 @@ def main(seed=None):
 
     visualizer.save_image()
     return stats, opt_par4vis, optJ4vis
-
-
-main(0)

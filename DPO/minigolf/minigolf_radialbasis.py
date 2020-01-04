@@ -98,7 +98,7 @@ def main(seed=None):
     logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
     cumulative_fail = 0
 
-    filename = "../csv/data{}.csv".format(help.getSeed())
+    filename = "../csv/minigolf/DPO/data{}.csv".format(help.getSeed())
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
@@ -109,7 +109,7 @@ def main(seed=None):
     rbf = RBFNet(CENTERS, STD_DEV, INIT_W, help.getSeed())
     # rbf = RBFNet([3, 6, 10, 14, 17], [0.1, 0.3, 0.5, 0.7, 1])
     # rbf = RBFNet([3, 6, 10, 14, 17], [0.49, 0.63, 0.79, 0.95, 1.33], help.getSeed())
-    visualizer = MGVisualizer("MG visualizer", "test{}.jpg".format(help.getSeed()))
+    visualizer = MGVisualizer("MG visualizer", "/minigolf/DPO/test{}.jpg".format(help.getSeed()))
     visualizer.clean_panels()
 
     # PLOTTER INFO
@@ -148,12 +148,12 @@ def main(seed=None):
         cumulative_fail += hundred
         print("Cumulative fails: {}\n".format(cumulative_fail))
 
-        actions = [m.keys() for m in abstraction.get_container()]
-        action_range = [max(a) - min(a) if len(a) > 0 else 0 for a in actions]
-        intervals = dyn_intervals if dyn_intervals is not None else INTERVALS
-        [print("Mcrst = {}, diameter = {}, action range = {}".format(dyn, dyn[1] - dyn[0], ran)) for dyn, ran in
-            zip(intervals, action_range)]
-        print("\n")
+        # actions = [m.keys() for m in abstraction.get_container()]
+        # action_range = [max(a) - min(a) if len(a) > 0 else 0 for a in actions]
+        # intervals = dyn_intervals if dyn_intervals is not None else INTERVALS
+        # [print("Mcrst = {}, diameter = {}, action range = {}".format(dyn, dyn[1] - dyn[0], ran)) for dyn, ran in
+        #     zip(intervals, action_range)]
+        # print("\n")
 
         w = rbf.w
         visualizer.show_values(w, estj, cumulative_fail)

@@ -39,7 +39,7 @@ std['w4'] = np.std(stats['w4'], axis=0)
 std['j'] = np.std(stats['j'], axis=0)
 std['fail'] = np.std(stats['fail'], axis=0)
 
-visualizer = MGVisualizer("average values", "stats.jpg")
+visualizer = MGVisualizer("average values", "/minigolf/DPO/stats.jpg")
 visualizer.clean_panels()
 visualizer.show_average(avg, std)
 visualizer.save_image()

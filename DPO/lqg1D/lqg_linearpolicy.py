@@ -9,6 +9,7 @@ from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 import DPO.helper as helper
 from DPO.helper import Helper
 import logging
+import csv
 
 problem = 'lqg1d'
 SINK = False
@@ -114,6 +115,10 @@ def main(seed=None):
     optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
     logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
+    filename = "../csv/lqg1d/DPO/data{}.csv".format(help.getSeed())
+    data_file = open(filename, mode='w')
+    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
     # instantiate the components of the algorithm.
     # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
     # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
@@ -184,6 +189,8 @@ def main(seed=None):
         print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}\n".format(estj))
         visualizer.show_values(det_param, j, estj, absJ)
+
+        file_writer.writerow([det_param, j, estj, absJ])
 
         # PLOTTER INFO
         stats['param'].append(det_param)

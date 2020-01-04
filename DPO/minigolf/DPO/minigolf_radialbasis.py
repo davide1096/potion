@@ -1,15 +1,13 @@
 import gym
-import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 from DPO.visualizer.minigolf_visualizer import MGVisualizer
-from DPO.algorithm.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
 import DPO.helper as helper
 from DPO.helper import Helper
 import logging
-from DPO.minigolf.RBFNet import RBFNet
+from DPO.minigolf.DPO.RBFNet import RBFNet
 import csv
 
 
@@ -95,7 +93,7 @@ def main(seed=None):
     env.gamma = GAMMA
     env.seed(help.getSeed())
 
-    logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
+    logging.basicConfig(level=logging.DEBUG, filename='../../test.log', filemode='w', format='%(message)s')
     cumulative_fail = 0
 
     filename = "../csv/minigolf/DPO/data{}.csv".format(help.getSeed())

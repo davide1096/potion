@@ -33,7 +33,7 @@ env.seed(helper.SEED)
 # calculate the optimal values of the problem.
 det_param_a = INIT_DETERMINISTIC_PARAM_A
 det_param_b = INIT_DETERMINISTIC_PARAM_B
-logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
+logging.basicConfig(level=logging.DEBUG, filename='../../test.log', filemode='w', format='%(message)s')
 
 abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
 abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if optA else IVI(GAMMA, SINK, True, INTERVALS)

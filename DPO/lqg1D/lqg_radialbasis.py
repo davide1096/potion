@@ -1,12 +1,11 @@
 import gym
-import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 import DPO.helper as helper
 import logging
-from DPO.minigolf.RBFNet import RBFNet
+from DPO.minigolf.DPO.RBFNet import RBFNet
 
 problem = 'lqg1d'
 SINK = False

@@ -51,12 +51,12 @@ class LipschitzFdads(LipschitzAbstraction):
             new_state_bounds.append([min_val, max_val])
 
         # --- LOG ---
-        if mcrst == 0 and act == min(list(self.container[0].keys())):
-            logging.debug("Bounds related to min action in mcrst 0: ")
-            logging.debug(new_state_bounds)
-        if mcrst == 0 and act == max(list(self.container[0].keys())):
-            logging.debug("Bounds related to max action in mcrst 0: ")
-            logging.debug(new_state_bounds)
+        # if mcrst == 0 and act == min(list(self.container[0].keys())):
+        #     logging.debug("Bounds related to min action in mcrst 0: ")
+        #     logging.debug(new_state_bounds)
+        # if mcrst == 0 and act == max(list(self.container[0].keys())):
+        #     logging.debug("Bounds related to max action in mcrst 0: ")
+        #     logging.debug(new_state_bounds)
         # -----------
 
         # --- matplot ---

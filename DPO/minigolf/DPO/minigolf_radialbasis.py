@@ -94,7 +94,7 @@ def main(seed=None):
     env.gamma = GAMMA
     env.seed(help.getSeed())
 
-    logging.basicConfig(level=logging.DEBUG, filename='../../test.log', filemode='w', format='%(message)s')
+    # logging.basicConfig(level=logging.DEBUG, filename='../../test.log', filemode='w', format='%(message)s')
     cumulative_fail = 0
 
     filename = "../csv/minigolf/DPO/data{}.csv".format(help.getSeed())

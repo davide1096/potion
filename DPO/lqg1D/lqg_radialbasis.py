@@ -40,7 +40,7 @@ env.seed(helper.SEED)
 # calculate the optimal values of the problem.
 opt_par4vis = round(env.computeOptimalK()[0][0], 3)
 optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
-logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
+# logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
 # instantiate the components of the algorithm.
 abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
@@ -94,7 +94,7 @@ for i in range(0, N_ITERATION):
     abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
     # logging.debug([min(a) for a in abstract_optimal_policy])
     # logging.debug("\n")
-    logging.debug("Optimal policy: {}".format(abs_opt_pol))
+    # logging.debug("Optimal policy: {}".format(abs_opt_pol))
 
     fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples)
     fictitious_samples = helper.flat_listoflists(fictitious_samples)

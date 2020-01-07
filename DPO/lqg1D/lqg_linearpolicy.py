@@ -113,7 +113,7 @@ def main(seed=None):
     opt_par4vis = round(env.computeOptimalK()[0][0], 3)
     det_param = INIT_DETERMINISTIC_PARAM
     optJ4vis = round(env.computeJ(env.computeOptimalK(), 0, N_EPISODES), 3)
-    logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
+    # logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
     filename = "../csv/lqg1d/DPO/data{}.csv".format(help.getSeed())
     data_file = open(filename, mode='w')
@@ -171,7 +171,7 @@ def main(seed=None):
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
         # logging.debug([min(a) for a in abstract_optimal_policy])
         # logging.debug("\n")
-        logging.debug("Optimal policy: {}".format(abs_opt_pol))
+        # logging.debug("Optimal policy: {}".format(abs_opt_pol))
 
         # ---- performance abstract policy ---
         first_states_ep = [d[0][0] for d in determin_samples]

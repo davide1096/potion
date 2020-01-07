@@ -1,4 +1,5 @@
 import gym
+import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from DPO.algorithm.updater_abstract.updater import AbsUpdater

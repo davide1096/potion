@@ -124,10 +124,10 @@ def main(seed=None):
 
     # calculate the optimal values of the problem.
     opt_par = env.computeOptimalK()
-    # print("OptK: {}\n".format(opt_par))
+    print("OptK: {}\n".format(opt_par))
     det_param = INIT_DETERMINISTIC_PARAM.reshape(opt_par.shape)
     optJ4vis = round(env.computeJ(env.computeOptimalK(), 0), 3)
-    # print("OptJ: {}\n".format(optJ4vis))
+    print("OptJ: {}\n".format(optJ4vis))
     logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
     # instantiate the components of the algorithm.

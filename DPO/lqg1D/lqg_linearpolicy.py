@@ -10,6 +10,8 @@ import DPO.helper as helper
 from DPO.helper import Helper
 import logging
 import csv
+from tensorboardX import SummaryWriter
+
 
 problem = 'lqg1d'
 SINK = False
@@ -147,31 +149,23 @@ def main(seed=None):
     stats['j'].append(initJ)
     # ------------
 
+    writer = SummaryWriter()
+
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
-        # dyn_intervals = None
+        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
+        dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, ENV_NOISE)
 
-        # --- LOG ---
-        # min_action = [min(list(cont.keys())) for cont in abstraction.get_container()]
-        # max_action = [max(list(cont.keys())) for cont in abstraction.get_container()]
-        # logging.debug("Parameter: {}\n".format(det_param))
-        #
-        # for i in range(0, len(INTERVALS)):
-        #     logging.debug("Macrostate {} - min action: {}".format(i, min_action[i]))
-        #     logging.debug(abstraction.get_container()[i][min_action[i]]['abs_tf'])
-        #     logging.debug("\n")
-        #     logging.debug("Macrostate {} - max action: {}".format(i, max_action[i]))
-        #     logging.debug(abstraction.get_container()[i][max_action[i]]['abs_tf'])
-        #     logging.debug("\n")
-        # -----------
-
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
-        # logging.debug([min(a) for a in abstract_optimal_policy])
-        # logging.debug("\n")
-        # logging.debug("Optimal policy: {}".format(abs_opt_pol))
+
+        # tensorboard
+        for mcrst, ap in enumerate(abs_opt_pol):
+            writer.add_scalar('data{}/opt'.format(mcrst), ap, i)
+        for mcrst, cont in enumerate(abstraction.get_container()):
+            writer.add_scalar('data{}/min'.format(mcrst), min(cont.keys()), i)
+            writer.add_scalar('data{}/max'.format(mcrst), max(cont.keys()), i)
 
         # ---- performance abstract policy ---
         first_states_ep = [d[0][0] for d in determin_samples]
@@ -200,4 +194,5 @@ def main(seed=None):
         # ------------
 
     visualizer.save_image()
+    writer.close()
     return stats, opt_par4vis, optJ4vis

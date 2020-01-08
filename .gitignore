@@ -115,3 +115,4 @@ images/
 csv/
 *test.py
 lipschitz_estimator/
+runs/

@@ -12,7 +12,7 @@ import logging
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = np.array([-0.7])
+INIT_DETERMINISTIC_PARAM = np.array([-0.1])
 ENV_NOISE = 0 * np.eye(INIT_DETERMINISTIC_PARAM.size)
 A = np.array([1])
 B = np.array([1])
@@ -182,6 +182,3 @@ def main(seed=None):
 
     visualizer.save_image()
     return stats, opt_par4vis, optJ4vis
-
-
-main(0)

@@ -32,7 +32,7 @@ N_ITERATION = 1000
 N_EPISODES = 500  # 2000
 N_STEPS = 20
 
-# INTERVALS = np.array([[[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.15], [-0.15, -0.05], [-0.05, 0.05],
+# INTERVALS = np.array([[[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.15], [-0.15, -0git .05], [-0.05, 0.05],
 #                        [0.05, 0.15], [0.15, 0.3], [0.3, 0.5], [0.5, 0.7], [0.7, 1]],
 #                       [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.9], [-0.9, -0.7], [-0.7, -0.55], [-0.55, -0.45],
 #                        [-0.45, -0.35], [-0.35, -0.25], [-0.25, -0.15], [-0.15, -0.05], [-0.05, 0.05], [0.05, 0.15],
@@ -162,8 +162,8 @@ def main(seed=None):
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
-        # dyn_intervals = None
+        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
+        dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, ENV_NOISE)
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)

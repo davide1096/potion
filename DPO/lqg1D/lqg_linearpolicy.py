@@ -149,7 +149,9 @@ def main(seed=None):
     stats['j'].append(initJ)
     # ------------
 
-    writer = SummaryWriter()
+    writer_min = SummaryWriter('runs/min')
+    writer_max = SummaryWriter('runs/max')
+    writer_opt = SummaryWriter('runs/opt')
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
@@ -164,10 +166,10 @@ def main(seed=None):
         for mcrst, ap in enumerate(abs_opt_pol):
             if len(ap) > 1:
                 ap = ap[0]
-            writer.add_scalar('data{}/opt'.format(mcrst), ap, i)
+            writer_opt.add_scalar('mcrst{}'.format(mcrst), ap, i)
         for mcrst, cont in enumerate(abstraction.get_container()):
-            writer.add_scalar('data{}/min'.format(mcrst), min(cont.keys()), i)
-            writer.add_scalar('data{}/max'.format(mcrst), max(cont.keys()), i)
+            writer_min.add_scalar('mcrst{}'.format(mcrst), min(cont.keys()), i)
+            writer_max.add_scalar('mcrst{}'.format(mcrst), max(cont.keys()), i)
 
         # ---- performance abstract policy ---
         first_states_ep = [d[0][0] for d in determin_samples]
@@ -196,5 +198,7 @@ def main(seed=None):
         # ------------
 
     visualizer.save_image()
-    writer.close()
+    writer_min.close()
+    writer_max.close()
+    writer_opt.close()
     return stats, opt_par4vis, optJ4vis

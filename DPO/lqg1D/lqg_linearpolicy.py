@@ -15,7 +15,7 @@ from tensorboardX import SummaryWriter
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.1
+INIT_DETERMINISTIC_PARAM = -0.9
 ENV_NOISE = 0
 A = 1
 B = 1
@@ -162,6 +162,8 @@ def main(seed=None):
 
         # tensorboard
         for mcrst, ap in enumerate(abs_opt_pol):
+            if len(ap) > 1:
+                ap = ap[0]
             writer.add_scalar('data{}/opt'.format(mcrst), ap, i)
         for mcrst, cont in enumerate(abstraction.get_container()):
             writer.add_scalar('data{}/min'.format(mcrst), min(cont.keys()), i)

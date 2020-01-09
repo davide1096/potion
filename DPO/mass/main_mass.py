@@ -5,7 +5,7 @@ from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDelt
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 from DPO.algorithm.updater_deterministic.updater import Updater
-from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
+from DPO.visualizer.mass_visualizer import MassVisualizer
 import DPO.helper as helper
 from DPO.helper import Helper
 import logging
@@ -124,7 +124,7 @@ def main(seed=None):
 
     # calculate the optimal values of the problem.
     opt_par = env.computeOptimalK()
-    print("OptK: {}\n".format(opt_par))
+    print("OptK: {}".format(opt_par))
     det_param = INIT_DETERMINISTIC_PARAM.reshape(opt_par.shape)
     optJ4vis = round(env.computeJ(env.computeOptimalK(), 0), 3)
     print("OptJ: {}\n".format(optJ4vis))
@@ -141,14 +141,11 @@ def main(seed=None):
     det_upd = Updater(help.getSeed())
 
     opt_par4vis = np.round(opt_par, 3)
-    # title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A.item(), B.item(), opt_par4vis,
-    #                                                                     optJ4vis, ENV_NOISE)
-    # key = "{}_{}_{}_{}_{}".format(A.item(), B.item(), ENV_NOISE, det_param.item(), help.getSeed())
-    # key = key.replace('.', ',')
-    # key = key + ".jpg"
+    title = "mass"
+    key = "mass{}.jpg".format(help.getSeed())
     initJ = env.computeJ(det_param, 0)
-    # visualizer = Lqg1dVisualizer(title, key, det_param, opt_par4vis, initJ, optJ4vis)
-    # visualizer.clean_panels()
+    visualizer = MassVisualizer(title, key, det_param, opt_par4vis, initJ, optJ4vis)
+    visualizer.clean_panels()
 
     # PLOTTER INFO
     stats = {}
@@ -184,7 +181,7 @@ def main(seed=None):
         print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}".format(estj))
         # print("Updated estimated abstract performance measure: {}\n".format(absJ))
-        # visualizer.show_values(det_param.item(), j, estj, absJ)
+        visualizer.show_values(det_param, j, estj)
 
         # PLOTTER INFO
         stats['param'].append(det_param)
@@ -193,7 +190,7 @@ def main(seed=None):
         # stats['abstractJ'].append(absJ)
         # ------------
 
-    # visualizer.save_image()
+    visualizer.save_image()
     return stats, opt_par4vis, optJ4vis
 
 

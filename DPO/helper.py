@@ -105,8 +105,9 @@ def flat_listoflists(list):
 # function used in abstract reward calculation
 
 
-def calc_abs_reward_lqg(cont, action, Q, R):
+def calc_abs_reward_lqg(cont, action, Q, R, maxa_env):
     rew = 0
+    action = np.clip(action, -maxa_env, maxa_env)
     for act in cont.keys():
         rew += np.dot(cont[act]['state'], np.dot(Q, cont[act]['state'])) + np.dot(action, np.dot(R, action))
     rew = rew.item()

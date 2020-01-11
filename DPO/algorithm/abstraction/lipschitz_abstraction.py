@@ -4,8 +4,8 @@ from DPO.algorithm.abstraction.abstraction import Abstraction
 
 class LipschitzAbstraction(Abstraction):
 
-    def __init__(self, gamma, sink, intervals=None, Q=None, R=None):
-        super().__init__(gamma, sink, intervals, Q, R)
+    def __init__(self, gamma, sink, intervals=None, Q=None, R=None, maxa_env=1):
+        super().__init__(gamma, sink, intervals, Q, R, maxa_env)
 
     def compute_abstract_tf(self, optA, mins_env, maxs_env, maxa_env, std=0):
         for i in range(len(self.container)):

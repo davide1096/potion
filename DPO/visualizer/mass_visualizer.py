@@ -23,6 +23,7 @@ class MassVisualizer(Visualizer):
 
     def show_values(self, new_par, newJ, new_estJ):
 
+        f = plt.figure(1)
         plt.clf()
         self.par.append(new_par)
         self.J.append(newJ)
@@ -55,6 +56,7 @@ class MassVisualizer(Visualizer):
 
         plt.draw()
         plt.pause(0.001)
+        f.show()
 
     def save_image(self):
         filename = "../images/mass/" + self.filename

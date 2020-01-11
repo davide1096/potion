@@ -33,18 +33,20 @@ N_ITERATION = 1000
 N_EPISODES = 500  # 2000
 N_STEPS = 20
 
-# INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.25], [-0.25, -0.1], [-0.1, 0.1], [0.1, 0.25],
-#              [0.25, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]],
-#              [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.25], [-0.25, -0.1], [-0.1, 0.1],
-#               [0.1, 0.25], [0.25, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]])
+INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05], [0.05, 0.2],
+             [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]],
+             [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.2], [-0.2, -0.05], [-0.05, 0.05],
+              [0.05, 0.2], [0.2, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]])
 
-INTERVALS = np.array([[[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3], [0.3, 0.5],
-                       [0.5, 0.7], [0.7, 1]],
-                      [[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3],
-                       [0.3, 0.5], [0.5, 0.7], [0.7, 1]]])
+# INTERVALS = np.array([[[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3], [0.3, 0.5],
+#                        [0.5, 0.7], [0.7, 1]],
+#                       [[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3],
+#                        [0.3, 0.5], [0.5, 0.7], [0.7, 1]]])
 
-# INTERVALS = np.array([[[-1, -0.6], [-0.6, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3], [0.3, 0.6], [0.6, 1]],
-#                       [[-2, -1], [-1, -0.3], [-0.3, 0.3], [0.3, 1], [1, 2]]])
+# INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05],
+#                        [0.05, 0.2], [-0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]],
+#                       [[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05],
+#                        [0.05, 0.2], [-0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]]])
 
 N_MCRST_DYN = np.array([11, 13])
 MIN_SPACE_VAL = np.array([-1, -2])
@@ -133,7 +135,7 @@ def main(seed=None):
     # instantiate the components of the algorithm.
     lip_s_deltas = A - np.eye(det_param.size)
     lip_a_deltas = B
-    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, lip_s_deltas, lip_a_deltas, env.Q, env.R)
+    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, lip_s_deltas, lip_a_deltas, env.Q, env.R, MAX_ACTION_VAL)
     # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
 
     abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
@@ -176,7 +178,7 @@ def main(seed=None):
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals)
         old_par = det_param
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
-        # helper_vis.plot_abstract_policy(INTERVALS, abs_opt_pol, old_par, det_param, opt_par)
+        helper_vis.plot_abstract_policy(INTERVALS, abs_opt_pol, old_par, det_param, opt_par, i % 3)
 
         j = env.computeJ(det_param, 0)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)

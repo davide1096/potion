@@ -20,15 +20,16 @@ def plot_samples(samples, intervals, title, minsp, maxsp):
     # plt.pause(1)
 
 
-def plot_abstract_policy(intervals, abs_opt, theta, theta_1, theta_opt):
-    fig = plt.figure()
+def plot_abstract_policy(intervals, abs_opt, theta, theta_1, theta_opt, fign):
+    fig = plt.figure(fign)
+    plt.clf()
     ax = plt.axes(projection="3d")
 
     x_pos = [i[0] for i in intervals[0] for l in range(len(intervals[1]))]
     y_pos = [i[0] for l in range(len(intervals[0])) for i in intervals[1]]
     z_pos = [0] * (len(intervals[0]) * len(intervals[1]))
-    x_size = [i[1] - i[0] - 0.1 for i in intervals[0] for l in range(len(intervals[1]))]
-    y_size = [i[1] - i[0] - 0.1 for l in range(len(intervals[0])) for i in intervals[1]]
+    x_size = [i[1] - i[0] - 0.001 for i in intervals[0] for l in range(len(intervals[1]))]
+    y_size = [i[1] - i[0] - 0.001 for l in range(len(intervals[0])) for i in intervals[1]]
     for x in range(len(abs_opt)):
         if abs_opt[x] is None:
             abs_opt[x] = [0]
@@ -38,21 +39,22 @@ def plot_abstract_policy(intervals, abs_opt, theta, theta_1, theta_opt):
     plot_plane([-1, 1], [-1, 1], theta_1, ax, 'blue')
     # plot_plane([-1, 1], [-1, 1], theta_opt, ax, 'red')
 
-
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
 
     ax.bar3d(x_pos, y_pos, z_pos, x_size, y_size, z_size, color='aqua')
-    plt.show()
+    plt.draw()
+    plt.pause(0.001)
+    fig.show()
 
 
 def plot_plane(x, y, param, ax, color):
     X, Y = np.meshgrid(x, y)
-    a = param[0][0]
-    b = param[0][1]
     Z = X * param[0][0] + Y * param[0][1]
     ax.plot_wireframe(X, Y, Z, color=color)
+    ax.plot_surface(X, Y, Z, rstride=1, cstride=1,
+                    color=color)
 
 
 # --- lqg1d ---

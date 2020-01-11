@@ -5,7 +5,7 @@ from DPO.helper import Helper
 
 class Abstraction(object):
 
-    def __init__(self, gamma, sink, intervals=None, Q=None, R=None):
+    def __init__(self, gamma, sink, intervals=None, Q=None, R=None, maxa_env=1):
         super().__init__()
         self.intervals = intervals
         self.container = []
@@ -13,6 +13,7 @@ class Abstraction(object):
         self.sink = sink
         self.Q = Q
         self.R = R
+        self.maxa_env = maxa_env
 
     def init_container(self):
         shape = [len(i) for i in self.intervals]
@@ -62,7 +63,7 @@ class Abstraction(object):
             reward_func = helper.calc_abs_reward_minigolf
         for cont in self.container:
             for act in cont.keys():
-                cont[act]['abs_reward'] = reward_func(cont, act, self.Q, self.R)
+                cont[act]['abs_reward'] = reward_func(cont, act, self.Q, self.R, self.maxa_env)
 
     def compute_abstract_tf(self):
         pass

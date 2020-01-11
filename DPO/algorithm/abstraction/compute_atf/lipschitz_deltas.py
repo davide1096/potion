@@ -9,8 +9,8 @@ import logging
 
 class LipschitzDeltaS(LipschitzAbstraction):
 
-    def __init__(self, gamma, sink, intervals=None, ls=None, la=None, Q=None, R=None):
-        super().__init__(gamma, sink, intervals, Q, R)
+    def __init__(self, gamma, sink, intervals=None, ls=None, la=None, Q=None, R=None, maxa_env=1):
+        super().__init__(gamma, sink, intervals, Q, R, maxa_env)
         if ls is not None:
             self.LIPSCHITZ_CONST_S = ls
         if la is not None:

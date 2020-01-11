@@ -1,7 +1,7 @@
 import random
 import numpy as np
 import math
-
+from scipy.stats import mode
 
 MAX_SAMPLES_IN_MCRST = 60
 
@@ -175,7 +175,9 @@ def interval_intersection(bounds):
     if np.all(np.minimum(max_mins, min_maxs) == max_mins):
         return max_mins, min_maxs
     else:
-        return None, None  # void intersection
+        # return None, None  # void intersection
+        clip_min, clip_max = manage_clip_error(bounds)
+        return clip_min, clip_max
 
 
 def build_mcrst_from_samples(samples, n_mcrst, min_val, max_val):
@@ -202,6 +204,15 @@ def build_mcrst_from_samples(samples, n_mcrst, min_val, max_val):
         INTERVALS.append(dim_int)
 
     return INTERVALS
+
+
+def manage_clip_error(bounds):
+    b = flat_listoflists(bounds)
+    coord = b[0].reshape((-1, 1))
+    for c in b[1:]:
+        coord = np.append(coord, c.reshape((-1, 1)), axis=1)
+    sol = [mode(c)[0][0] for c in coord]
+    return np.array(sol), np.array(sol)
 
 # INTERVALS = [[-2, -1.95], [-1.95, -1.9], [-1.9, -1.85], [-1.85, -1.8], [-1.8, -1.75], [-1.75, -1.7], [-1.7, -1.65],
 #              [-1.65, -1.6], [-1.6, -1.55], [-1.55, -1.5], [-1.5, -1.45], [-1.45, -1.4], [-1.4, -1.35], [-1.35, -1.3],

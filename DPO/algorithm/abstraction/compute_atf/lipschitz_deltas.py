@@ -18,32 +18,38 @@ class LipschitzDeltaS(LipschitzAbstraction):
 
     # ds0 is True when the hypothesis of deltaS = 0 is valid.
     # It means that taking the same action in different states will produce the same delta s (deltas = s' - s).
-    def calculate_single_atf(self, mcrst, act, ds0, std=0):
+    def calculate_single_atf(self, mcrst, act, ds0, mins_env, maxs_env, maxa_env, std=0):
 
         cont = self.container[mcrst]
         new_state_bounds = []
         delta_s = cont[act]['new_state'] - cont[act]['state']
+        act_clip = np.clip(act, -maxa_env, maxa_env)
 
         for action in cont.keys():
 
+            action_clip = np.clip(action, -maxa_env, maxa_env)
             dist_s_shat = abs(cont[act]['state'] - cont[action]['state'])
             # I calculate the difference I can have taking act in a diff state according to the Lipschitz hyp on deltas.
             bound1 = abs(np.dot(self.LIPSCHITZ_CONST_S, dist_s_shat))
             min_val1 = cont[action]['state'] + delta_s - bound1
             max_val1 = cont[action]['state'] + delta_s + bound1
+            min_val1 = np.clip(min_val1, mins_env, maxs_env)
+            max_val1 = np.clip(max_val1, mins_env, maxs_env)
 
             bounds = [[np.round(min_val1, 3), np.round(max_val1, 3)]]
 
             # if not ds0 the bound computed above is not a single point.
             if not ds0:
                 # I compute a bound according to the distance between two diff actions.
-                dist_a_ahat = np.array([abs(action - act)])
+                dist_a_ahat = np.array([abs(action_clip - act_clip)])
                 delta_s2 = cont[action]['new_state'] - cont[action]['state']
                 # the bound is the difference I can have when I take act instead of action
                 # according to the Lipschitz hypothesis on delta s.
                 bound2 = abs(np.dot(self.LIPSCHITZ_CONST_A, dist_a_ahat))
                 min_val2 = cont[action]['state'] + delta_s2 - bound2
                 max_val2 = cont[action]['state'] + delta_s2 + bound2
+                min_val2 = np.clip(min_val2, mins_env, maxs_env)
+                max_val2 = np.clip(max_val2, mins_env, maxs_env)
 
                 bounds.append([np.round(min_val2, 3), np.round(max_val2, 3)])
 

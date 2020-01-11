@@ -9,10 +9,11 @@ from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 import DPO.helper as helper
 from DPO.helper import Helper
 import logging
+import DPO.visualizer.helper_visualizer as help_vis
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = np.array([-0.1])
+INIT_DETERMINISTIC_PARAM = np.array([-0.6])
 ENV_NOISE = 0 * np.eye(INIT_DETERMINISTIC_PARAM.size)
 A = np.array([1])
 B = np.array([1])
@@ -150,8 +151,8 @@ def main(seed=None):
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
-        # dyn_intervals = None
+        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
+        dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, ENV_NOISE)
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
@@ -163,7 +164,10 @@ def main(seed=None):
         # ------------------------------------
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals)
+        old_par = det_param
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
+
+        # help_vis.plot_lqg_abs_pol(INTERVALS, abs_opt_pol, old_par, det_param, opt_par)
 
         j = env.computeJ(det_param, 0, N_EPISODES)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)

@@ -2,7 +2,7 @@ import random
 import DPO.helper as helper
 import numpy as np
 
-LR_DET_POLICY = 0.01
+LR_DET_POLICY = 0.1
 N_ITERATIONS_BATCH_GRAD = 200
 BATCH_SIZE = 50
 LAMBDA = 0.005
@@ -29,3 +29,12 @@ class Updater(object):
                 accumulator += (np.dot(det_param, s[0]) - s[1]) * s[0]
             det_param = det_param - LR_DET_POLICY * (accumulator / BATCH_SIZE + LAMBDA * np.sign(det_param - init_par))
         return det_param
+
+    # def calculate_error(self, det_param, samples):
+    #     err = 0
+    #     for s in samples:
+    #         a = np.dot(det_param, s[0]) - s[1]
+    #         b = a ** 2
+    #         c = 0.5 * b
+    #         err += 0.5 * (np.dot(det_param, s[0]) - s[1]) ** 2
+    #     return err

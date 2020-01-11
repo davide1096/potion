@@ -23,7 +23,7 @@ class MassVisualizer(Visualizer):
 
     def show_values(self, new_par, newJ, new_estJ):
 
-        f = plt.figure(1)
+        f = plt.figure(0)
         plt.clf()
         self.par.append(new_par)
         self.J.append(newJ)

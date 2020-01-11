@@ -21,7 +21,7 @@ def plot_samples(samples, intervals, title, minsp, maxsp):
 
 
 def plot_abstract_policy(intervals, abs_opt, theta, theta_1, theta_opt, fign):
-    fig = plt.figure(fign)
+    fig = plt.figure(fign + 1)
     plt.clf()
     ax = plt.axes(projection="3d")
 

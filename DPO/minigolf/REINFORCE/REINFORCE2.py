@@ -30,7 +30,7 @@ def main(seed=None):
     horizon = 20  # maximum length of a trajectory
 
     mu_init = torch.tensor([1., 1., 1., 1.])
-    log_std_init = torch.tensor([-4.])
+    log_std_init = torch.tensor([-3.])
 
     policy = RadialBasisPolicy(state_dim, #input size
                                    action_dim, #output size
@@ -64,7 +64,7 @@ def main(seed=None):
               stepper = stepper,
               batchsize = batchsize,
               disc = gamma,
-              iterations = 2001,
+              iterations = 501,
               seed = seed,
               logger = logger,
               save_params = 5, #Policy parameters will be saved on disk each 5 iterations

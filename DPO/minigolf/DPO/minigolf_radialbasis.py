@@ -20,7 +20,7 @@ GAMMA = 0.99
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
-N_ITERATION = 10001
+N_ITERATION = 501
 N_EPISODES = 500
 N_STEPS = 20
 
@@ -30,11 +30,12 @@ MAX_SPACE_VAL = 20
 # INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
 # INTERVALS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12],
 #              [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20]]
-INTERVALS = [[0, 0.67], [0.67, 1.34], [1.34, 2.01], [2.01, 2.68], [2.68, 3.35], [3.35, 4.02], [4.02, 4.69],
-             [4.69, 5.36], [5.36, 6.03], [6.03, 6.7], [6.7, 7.37], [7.37, 8.04], [8.04, 8.71], [8.71, 9.38],
-             [9.38, 10.05], [10.05, 10.72], [10.72, 11.39], [11.39, 12.06], [12.06, 12.73], [12.73, 13.4],
-             [13.4, 14.07], [14.07, 14.74], [14.74, 15.41], [15.41, 16.08], [16.08, 16.75], [16.75, 17.42],
-             [17.42, 18.09], [18.09, 18.76], [18.76, 19.43], [19.43, 20]]
+# INTERVALS = [[0, 0.67], [0.67, 1.34], [1.34, 2.01], [2.01, 2.68], [2.68, 3.35], [3.35, 4.02], [4.02, 4.69],
+#              [4.69, 5.36], [5.36, 6.03], [6.03, 6.7], [6.7, 7.37], [7.37, 8.04], [8.04, 8.71], [8.71, 9.38],
+#              [9.38, 10.05], [10.05, 10.72], [10.72, 11.39], [11.39, 12.06], [12.06, 12.73], [12.73, 13.4],
+#              [13.4, 14.07], [14.07, 14.74], [14.74, 15.41], [15.41, 16.08], [16.08, 16.75], [16.75, 17.42],
+#              [17.42, 18.09], [18.09, 18.76], [18.76, 19.43], [19.43, 20]]
+INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16], [16, 20]]
 
 # radial bases configuration
 CENTERS = [4, 8, 12, 16]
@@ -124,8 +125,8 @@ def main(seed=None):
     for i in range(0, N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
-        dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
-        # dyn_intervals = None
+        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
+        dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, ENV_NOISE)
 

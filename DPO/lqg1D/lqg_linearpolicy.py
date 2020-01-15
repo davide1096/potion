@@ -37,10 +37,11 @@ N_STEPS = 20
 #              [-0.4, -0.2], [-0.2, -0.1], [-0.1, -0.025], [-0.025, 0.025], [0.025, 0.1], [0.1, 0.2], [0.2, 0.4],
 #              [0.4, 0.6], [0.6, 0.8], [0.8, 1], [1, 1.2], [1.2, 1.4], [1.4, 1.6], [1.6, 1.8], [1.8, 2]]
 
-INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1],
-             [0.1, 0.3], [0.3, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]
+# actually used (!)
+# INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1],
+#              [0.1, 0.3], [0.3, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]
 
-N_MCRST_DYN = 30
+N_MCRST_DYN = 17
 MIN_SPACE_VAL = -2
 MAX_SPACE_VAL = 2
 
@@ -63,7 +64,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
     return samples_list
 
 
-def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
+def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv, INTERVALS):
     fictitious_samples = []
     for sam in det_samples:
         single_sample = []
@@ -82,7 +83,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     return fictitious_samples
 
 
-def estimate_performance_abstract_policy(env, n_episodes, n_steps, abstract_policy, init_states, interv):
+def estimate_performance_abstract_policy(env, n_episodes, n_steps, abstract_policy, init_states, interv, INTERVALS):
     acc = 0
     for i in range(0, n_episodes):
         env.reset(init_states[i])
@@ -110,6 +111,9 @@ def main(seed=None):
     env.B = np.array([B]).reshape((1, 1))
     env.gamma = GAMMA
     env.seed(help.getSeed())
+
+    INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
+    print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
 
     # calculate the optimal values of the problem.
     opt_par4vis = round(env.computeOptimalK()[0][0], 3)
@@ -174,16 +178,17 @@ def main(seed=None):
         # ---- performance abstract policy ---
         first_states_ep = [d[0][0] for d in determin_samples]
         absJ = estimate_performance_abstract_policy(env, N_EPISODES, N_STEPS, abs_opt_pol, first_states_ep,
-                                                    dyn_intervals)
+                                                    dyn_intervals, INTERVALS)
         # ------------------------------------
 
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals)
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals,
+                                                           INTERVALS)
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
 
         j = env.computeJ(det_param, 0, N_EPISODES)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
-        print("Updated deterministic policy parameter: {}".format(det_param))
+        print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
         print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}\n".format(estj))
         visualizer.show_values(det_param, j, estj, absJ)

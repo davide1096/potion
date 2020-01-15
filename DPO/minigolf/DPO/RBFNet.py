@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import random
 
 BATCH_SIZE = 50
-LAMBDA = 0.005
+LAMBDA = 0.001
 
 
 def rbf(x, c, s):
@@ -33,30 +33,47 @@ class RBFNet(object):
     def fit(self, X, y):
 
         old_w = self.w.copy()
-
         new_w = self.w.copy()
+        to_shuffle = [[x, y_] for x, y_ in zip(X, y)]
+        Xy = random.sample(to_shuffle, len(to_shuffle))
+        X = [xy[0] for xy in Xy]
+        y = [xy[1] for xy in Xy]
 
-        for epoch in range(self.epochs):
-            w_accumulator = 0
-            for i in range(0, BATCH_SIZE):
-                rand_num = random.randint(0, len(X) - 1)
-                sample = X[rand_num]
+        # for epoch in range(self.epochs):
+        #     w_accumulator = 0
+        #     for i in range(0, BATCH_SIZE):
+        #         rand_num = random.randint(0, len(X) - 1)
+        #         sample = X[rand_num]
+        #
+        #         # forward pass
+        #         a = np.array([self.rbf(sample, c, s) for c, s, in zip(self.centers, self.stds)])
+        #         F = a.T.dot(new_w)
+        #
+        #         # backward pass
+        #         error = -(y[rand_num] - F).flatten()
+        #
+        #         # online update
+        #         w_accumulator += a * error
+        #
+        #     reg = np.sign([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L1-norm
+        #     # reg = np.array([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L2-norm
+        #     new_w = new_w - self.lr * (w_accumulator / BATCH_SIZE + LAMBDA * reg)
 
-                # forward pass
-                a = np.array([self.rbf(sample, c, s) for c, s, in zip(self.centers, self.stds)])
-                F = a.T.dot(new_w)
+        for x, y_ in zip(X, y):
+            # forward pass
+            a = np.array([self.rbf(x, c, s) for c, s, in zip(self.centers, self.stds)])
+            F = a.T.dot(new_w)
 
-                # backward pass
-                error = -(y[rand_num] - F).flatten()
+            # backward pass
+            error = -(y_ - F).flatten()
 
-                # online update
-                w_accumulator += a * error
+            # online update
+            grad = a * error
 
             reg = np.sign([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L1-norm
             # reg = np.array([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L2-norm
-            new_w = new_w - self.lr * (w_accumulator / BATCH_SIZE + LAMBDA * reg)
+            new_w = new_w - self.lr * (grad + LAMBDA * reg)
 
-        # self.w = [ALFA * w_old + (1 - ALFA) * w_new for w_old, w_new in zip(self.w, new_w)]
         self.w = new_w
 
     def predict(self, X):

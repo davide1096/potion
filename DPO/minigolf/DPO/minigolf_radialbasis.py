@@ -134,8 +134,10 @@ def main(seed=None):
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf, dyn_intervals)
         fictitious_samples = helper.flat_listoflists(fictitious_samples)
-        X = np.reshape([f[0] for f in fictitious_samples], (len(fictitious_samples),))
-        y = np.reshape([f[1] for f in fictitious_samples], (len(fictitious_samples),))
+        X = [f[0] for f in fictitious_samples]
+        y = [f[1] for f in fictitious_samples]
+        # X = np.reshape([f[0] for f in fictitious_samples], (len(fictitious_samples),))
+        # y = np.reshape([f[1] for f in fictitious_samples], (len(fictitious_samples),))
         rbf.fit(X, y)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 

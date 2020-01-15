@@ -89,4 +89,5 @@ class AbsUpdater(object):
             return best_acts, target
 
         else:
-            return None, self.v_function[i]
+            mcrst = helper.get_mcrst_from_index(i, self.intervals)
+            return None, self.v_function[tuple(mcrst)]

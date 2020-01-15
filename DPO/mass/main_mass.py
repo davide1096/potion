@@ -9,20 +9,22 @@ from DPO.visualizer.mass_visualizer import MassVisualizer
 import DPO.helper as helper
 from DPO.helper import Helper
 import logging
-import DPO.visualizer.helper_visualizer as helper_vis
+# import DPO.visualizer.helper_visualizer as helper_vis
 
 problem = 'mass'
 SINK = False
 # INIT_DETERMINISTIC_PARAM = np.array([-1.8, -1.])
-INIT_DETERMINISTIC_PARAM = np.array([-0.5, -0.1])
+INIT_DETERMINISTIC_PARAM = np.array([-0.2, -0.2])
 # optimal param values: [-1.376, -0.822]
 ENV_NOISE = 0 * np.eye(INIT_DETERMINISTIC_PARAM.size)
 TAO = 0.1
 MASS = 0.1
 # A = np.array([[1., 0.3], [0.5, 1.]])
 # B = np.array([[0.5], [TAO / MASS]])
-A = np.array([[1., TAO], [0., 1.]])
-B = np.array([[0.], [TAO / MASS]])
+A = np.array([[1., 1.], [0., 1.]])
+B = np.array([[0.], [1.]])
+Q = np.diag([1., 0.])
+R = 0.1 * np.eye(1)
 GAMMA = 0.95
 
 # ds0 = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
@@ -33,25 +35,34 @@ N_ITERATION = 1000
 N_EPISODES = 500  # 2000
 N_STEPS = 20
 
-INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05], [0.05, 0.2],
-             [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]],
-             [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.2], [-0.2, -0.05], [-0.05, 0.05],
-              [0.05, 0.2], [0.2, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]])
-
-# INTERVALS = np.array([[[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3], [0.3, 0.5],
-#                        [0.5, 0.7], [0.7, 1]],
-#                       [[-1, -0.7], [-0.7, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1], [0.1, 0.3],
-#                        [0.3, 0.5], [0.5, 0.7], [0.7, 1]]])
-
-# INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05],
-#                        [0.05, 0.2], [-0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]],
-#                       [[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05],
-#                        [0.05, 0.2], [-0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]]])
-
-N_MCRST_DYN = np.array([11, 13])
+N_MCRST_DYN = np.array([9, 13])
 MIN_SPACE_VAL = np.array([-1, -2])
 MAX_SPACE_VAL = np.array([1, 2])
 MAX_ACTION_VAL = 1
+
+# INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.6], [-0.6, -0.4], [-0.4, -0.2], [-0.2, -0.05], [-0.05, 0.05], [0.05, 0.2],
+#              [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1]],
+#              [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.2], [-0.2, -0.05], [-0.05, 0.05],
+#               [0.05, 0.2], [0.2, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]])
+
+# from sample distribution
+# INTERVALS = np.array([[[-1, -0.7], [-0.7, -0.4], [-0.4, -0.2], [-0.2, -0.066], [-0.066, 0.066], [0.066, 0.2], [0.2, 0.4],
+#              [0.4, 0.7], [0.7, 1]],
+#              [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.2], [-0.2, -0.05], [-0.05, 0.05],
+#               [0.05, 0.2], [0.2, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]])
+
+# constant diameter (!)
+# INTERVALS = np.array([[[-1, -0.77], [-0.77, -0.55], [-0.55, -0.33], [-0.33, -0.11], [-0.11, 0.11], [0.11, 0.33],
+#                        [0.33, 0.55], [0.55, 0.77], [0.77, 1]],
+#                       [[-2, -1.65], [-1.65, -1.35], [-1.35, -1.05], [-1.05, -0.75], [-0.75, -0.45], [-0.45, -0.15],
+#                        [-0.15, 0.15], [0.15, 0.45], [0.45, 0.75], [0.75, 1.05], [1.05, 1.35], [1.35, 1.65], [1.65, 2]]])
+
+# mix
+# INTERVALS = np.array([[[-1, -0.8], [-0.8, -0.7], [-0.7, -0.6], [-0.6, -0.5], [-0.5, -0.4], [-0.4, -0.3], [-0.3, -0.2],
+#                        [-0.2, -0.1], [-0.1, -0.25], [-0.25, 0.25], [0.25, 0.1], [0.1, 0.2], [0.2, 0.3], [0.3, 0.4],
+#                        [0.4, 0.5], [0.5, 0.6], [0.6, 0.7], [0.7, 0.8], [0.8, 1]],
+#                        [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.2], [-0.2, -0.05], [-0.05, 0.05],
+#                        [0.05, 0.2], [0.2, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]])
 
 
 def deterministic_action(det_par, state):
@@ -72,7 +83,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
     return samples_list
 
 
-def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
+def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv, INTERVALS):
     fictitious_samples = []
     for sam in det_samples:
         single_sample = []
@@ -84,32 +95,33 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
             else:
                 mcrst_provv = helper.get_mcrst(s[0], INTERVALS, SINK)
                 mcrst = helper.get_multidim_mcrst(mcrst_provv, INTERVALS)
-            if prev_action in abs_opt_policy[mcrst]:
-                single_sample.append([s[0], prev_action])
-            else:
-                index = np.argmin([abs(act - prev_action) for act in abs_opt_policy[mcrst]])
-                single_sample.append([s[0], abs_opt_policy[mcrst][index]])
+            if abs_opt_policy[mcrst] is not None:
+                if prev_action in abs_opt_policy[mcrst]:
+                    single_sample.append([s[0], prev_action])
+                else:
+                    index = np.argmin([abs(act - prev_action) for act in abs_opt_policy[mcrst]])
+                    single_sample.append([s[0], abs_opt_policy[mcrst][index]])
         fictitious_samples.append(single_sample)
     return fictitious_samples
 
 
-def estimate_performance_abstract_policy(env, n_episodes, n_steps, abstract_policy, init_states, interv):
-    acc = 0
-    for i in range(0, n_episodes):
-        env.reset(init_states[i])
-        g = 1
-        for j in range(0, n_steps):
-            state = env.get_state()
-            if interv is not None:
-                mcrst = helper.get_mcrst(state, interv, SINK)
-                action = abstract_policy[helper.get_multidim_mcrst(mcrst, interv)][0]
-            else:
-                mcrst = helper.get_mcrst(state, INTERVALS, SINK)
-                action = abstract_policy[helper.get_multidim_mcrst(mcrst, INTERVALS)][0]
-            new_state, r, _, _ = env.step(action)
-            acc += g * r
-            g *= GAMMA
-    return acc / n_episodes
+# def estimate_performance_abstract_policy(env, n_episodes, n_steps, abstract_policy, init_states, interv):
+#     acc = 0
+#     for i in range(0, n_episodes):
+#         env.reset(init_states[i])
+#         g = 1
+#         for j in range(0, n_steps):
+#             state = env.get_state()
+#             if interv is not None:
+#                 mcrst = helper.get_mcrst(state, interv, SINK)
+#                 action = abstract_policy[helper.get_multidim_mcrst(mcrst, interv)][0]
+#             else:
+#                 mcrst = helper.get_mcrst(state, INTERVALS, SINK)
+#                 action = abstract_policy[helper.get_multidim_mcrst(mcrst, INTERVALS)][0]
+#             new_state, r, _, _ = env.step(action)
+#             acc += g * r
+#             g *= GAMMA
+#     return acc / n_episodes
 
 
 def main(seed=None):
@@ -121,8 +133,13 @@ def main(seed=None):
     env.sigma_noise = ENV_NOISE
     env.A = A
     env.B = B
+    env.Q = Q
+    env.R = R
     env.gamma = GAMMA
     env.seed(help.getSeed())
+
+    INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
+    print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
 
     # calculate the optimal values of the problem.
     opt_par = env.computeOptimalK()
@@ -130,7 +147,7 @@ def main(seed=None):
     det_param = INIT_DETERMINISTIC_PARAM.reshape(opt_par.shape)
     optJ4vis = round(env.computeJ(env.computeOptimalK(), 0), 3)
     print("OptJ: {}\n".format(optJ4vis))
-    logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
+    # logging.basicConfig(level=logging.DEBUG, filename='../test.log', filemode='w', format='%(message)s')
 
     # instantiate the components of the algorithm.
     lip_s_deltas = A - np.eye(det_param.size)
@@ -175,15 +192,16 @@ def main(seed=None):
         #                                             dyn_intervals)
         # ------------------------------------
 
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals)
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals,
+                                                           INTERVALS)
         old_par = det_param
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
-        helper_vis.plot_abstract_policy(INTERVALS, abs_opt_pol, old_par, det_param, opt_par, i % 3)
+        # helper_vis.plot_abstract_policy(INTERVALS, abs_opt_pol, old_par, det_param, opt_par, i % 3)
 
         j = env.computeJ(det_param, 0)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
-        print("Updated deterministic policy parameter: {}".format(det_param))
+        print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
         print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}".format(estj))
         # print("Updated estimated abstract performance measure: {}\n".format(absJ))

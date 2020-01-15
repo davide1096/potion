@@ -35,8 +35,8 @@ def plot_abstract_policy(intervals, abs_opt, theta, theta_1, theta_opt, fign):
             abs_opt[x] = [0]
     z_size = [a[0] for a in abs_opt]
 
-    plot_plane([-1, 1], [-1, 1], theta, ax, 'green')
-    plot_plane([-1, 1], [-1, 1], theta_1, ax, 'blue')
+    plot_plane([-1, 1], [-2, 2], theta, ax, 'green')
+    plot_plane([-1, 1], [-2, 2], theta_1, ax, 'blue')
     # plot_plane([-1, 1], [-1, 1], theta_opt, ax, 'red')
 
     ax.set_xlabel('x')
@@ -44,9 +44,25 @@ def plot_abstract_policy(intervals, abs_opt, theta, theta_1, theta_opt, fign):
     ax.set_zlabel('z')
 
     ax.bar3d(x_pos, y_pos, z_pos, x_size, y_size, z_size, color='aqua')
+    # supposed_to_be_best_policy(ax, intervals, abs_opt, theta, theta_1, theta_opt, fign)
+
     plt.draw()
     plt.pause(0.001)
     fig.show()
+
+
+# def supposed_to_be_best_policy(ax, intervals, abs_opt, theta, theta_1, theta_opt, fign):
+#     # ax = plt.axes(projection="3d")
+#
+#     x_pos = [i[0] for i in intervals[0] for l in range(len(intervals[1]))]
+#     y_pos = [i[0] for l in range(len(intervals[0])) for i in intervals[1]]
+#     z = [np.array(x).mean() * (-1.38) + np.array(y).mean() * (-0.82) for x in intervals[0] for y in intervals[1]]
+#     z_pos = [0] * (len(intervals[0]) * len(intervals[1]))
+#     x_size = [i[1] - i[0] - 0.001 for i in intervals[0] for l in range(len(intervals[1]))]
+#     y_size = [i[1] - i[0] - 0.001 for l in range(len(intervals[0])) for i in intervals[1]]
+#     z_size = z
+#
+#     ax.bar3d(x_pos, y_pos, z_pos, x_size, y_size, z_size, color='red')
 
 
 def plot_plane(x, y, param, ax, color):

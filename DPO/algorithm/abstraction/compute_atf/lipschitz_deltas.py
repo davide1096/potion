@@ -5,6 +5,8 @@ import DPO.helper as helper
 import numpy as np
 import logging
 # import DPO.visualizer.bounds_visualizer as bvis
+import gym
+import potion.envs
 
 
 class LipschitzDeltaS(LipschitzAbstraction):
@@ -19,6 +21,18 @@ class LipschitzDeltaS(LipschitzAbstraction):
     # ds0 is True when the hypothesis of deltaS = 0 is valid.
     # It means that taking the same action in different states will produce the same delta s (deltas = s' - s).
     def calculate_single_atf(self, mcrst, act, ds0, mins_env, maxs_env, maxa_env, std=0):
+
+        # Used to check the correct new state-estimate for unvisited (s, a) pairs.
+        # ENV_NOISE = 0 * np.eye(2)
+        # A = np.array([[1., 1.], [0., 1.]])
+        # B = np.array([[0.], [1.]])
+        # GAMMA = 0.95
+        # env = gym.make('mass-v0')
+        # env.sigma_noise = ENV_NOISE
+        # env.A = A
+        # env.B = B
+        # env.gamma = GAMMA
+        # env.seed(0)
 
         cont = self.container[mcrst]
         new_state_bounds = []
@@ -57,6 +71,13 @@ class LipschitzDeltaS(LipschitzAbstraction):
             # in case of void intersections, None values are returned.
             if min_val is not None and max_val is not None:
                 new_state_bounds.append([min_val, max_val])
+
+            # Used to check the correct new state-estimate for unvisited (s, a) pairs.
+            # env.reset(cont[action]['state'])
+            # ns, _, _, _ = env.step(act)
+            # if np.any(np.round(min_val, 2) - np.round(ns, 2) > 0.02) or np.any(np.round(ns, 2) - np.round(max_val, 2) > 0.02):
+            #     print("here")
+
             # use it only when you need to plot bounds
             # else:
             #     new_state_bounds.append([0, 0])

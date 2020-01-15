@@ -2,6 +2,7 @@ import gym
 import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
+from DPO.algorithm.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 from DPO.algorithm.updater_deterministic.updater import Updater
@@ -15,8 +16,7 @@ from tensorboardX import SummaryWriter
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.9
-ENV_NOISE = 0
+INIT_DETERMINISTIC_PARAM = -0.65
 A = 1
 B = 1
 GAMMA = 0.9
@@ -30,7 +30,7 @@ LIPSCHITZ_CONST_ACTION = B
 LIPSCHITZ_STOCH_ATF = B
 
 N_ITERATION = 1000
-N_EPISODES = 500
+N_EPISODES = 5000
 N_STEPS = 20
 
 # INTERVALS = [[-2, -1.8], [-1.8, -1.6], [-1.6, -1.4], [-1.4, -1.2], [-1.2, -1], [-1, -0.8], [-0.8, -0.6], [-0.6, -0.4],
@@ -41,7 +41,12 @@ N_STEPS = 20
 # INTERVALS = [[-2, -1.6], [-1.6, -1.2], [-1.2, -0.8], [-0.8, -0.5], [-0.5, -0.3], [-0.3, -0.1], [-0.1, 0.1],
 #              [0.1, 0.3], [0.3, 0.5], [0.5, 0.8], [0.8, 1.2], [1.2, 1.6], [1.6, 2]]
 
-N_MCRST_DYN = 17
+STOCH = 1
+ENV_NOISE = 0.1 if STOCH else 0.
+UPD_LAM = 0.005 if not STOCH else 0.01  # Regularization parameter in the policy re-projection.
+STOCH_L_MULTIPLIER = 3
+
+N_MCRST_DYN = 13
 MIN_SPACE_VAL = -2
 MAX_SPACE_VAL = 2
 
@@ -126,14 +131,16 @@ def main(seed=None):
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     # instantiate the components of the algorithm.
-    # abstraction = LipschitzFdads(LIPSCHITZ_CONST_STATE, LIPSCHITZ_CONST_ACTION, GAMMA, SINK, A, B, INTERVALS)
     # abstraction = LqgFKnown(A, B, GAMMA, SINK, INTERVALS)
-    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B)
-    # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
+    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, A, B) if not STOCH else \
+        MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B * STOCH_L_MULTIPLIER)
 
-    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
-    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-    det_upd = Updater(help.getSeed())
+    abs_updater = None
+    if not STOCH:
+        abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
+    else:
+        abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
+    det_upd = Updater(help.getSeed(), UPD_LAM)
 
     title = "A={}, B={}, Opt par={}, Opt J={}, Noise std dev={}".format(A, B, opt_par4vis, optJ4vis, ENV_NOISE)
     key = "{}_{}_{}_{}_{}".format(A, B, ENV_NOISE, det_param, help.getSeed())

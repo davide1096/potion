@@ -16,7 +16,7 @@ from tensorboardX import SummaryWriter
 
 problem = 'lqg1d'
 SINK = False
-INIT_DETERMINISTIC_PARAM = -0.65
+INIT_DETERMINISTIC_PARAM = -0.7
 A = 1
 B = 1
 GAMMA = 0.9
@@ -43,10 +43,10 @@ N_STEPS = 20
 
 STOCH = 1
 ENV_NOISE = 0.1 if STOCH else 0.
-UPD_LAM = 0.005 if not STOCH else 0.01  # Regularization parameter in the policy re-projection.
-STOCH_L_MULTIPLIER = 3
+UPD_LAM = 0.005  # Regularization parameter in the policy re-projection.
+STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = 13
+N_MCRST_DYN = 23 if STOCH else 13
 MIN_SPACE_VAL = -2
 MAX_SPACE_VAL = 2
 

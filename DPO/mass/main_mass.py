@@ -2,6 +2,7 @@ import gym
 import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
+from DPO.algorithm.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 from DPO.algorithm.updater_deterministic.updater import Updater
@@ -16,7 +17,6 @@ SINK = False
 # INIT_DETERMINISTIC_PARAM = np.array([-1.8, -1.])
 INIT_DETERMINISTIC_PARAM = np.array([-0.2, -0.2])
 # optimal param values: [-1.376, -0.822]
-ENV_NOISE = 0 * np.eye(INIT_DETERMINISTIC_PARAM.size)
 TAO = 0.1
 MASS = 0.1
 # A = np.array([[1., 0.3], [0.5, 1.]])
@@ -35,7 +35,12 @@ N_ITERATION = 1000
 N_EPISODES = 500  # 2000
 N_STEPS = 20
 
-N_MCRST_DYN = np.array([9, 13])
+STOCH = 1
+ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
+# UPD_LAM = 0.0001  # Regularization parameter in the policy re-projection.
+STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
+
+N_MCRST_DYN = np.array([9, 13]) if STOCH else np.array([9, 13])
 MIN_SPACE_VAL = np.array([-1, -2])
 MAX_SPACE_VAL = np.array([1, 2])
 MAX_ACTION_VAL = 1
@@ -152,11 +157,15 @@ def main(seed=None):
     # instantiate the components of the algorithm.
     lip_s_deltas = A - np.eye(det_param.size)
     lip_a_deltas = B
-    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, lip_s_deltas, lip_a_deltas, env.Q, env.R, MAX_ACTION_VAL)
-    # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, B)
+    lip_a_tf = B
+    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS, lip_s_deltas, lip_a_deltas, env.Q, env.R, MAX_ACTION_VAL) if \
+        not STOCH else MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, lip_a_tf * STOCH_L_MULTIPLIER, env.Q, env.R)
 
-    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
-    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
+    abs_updater = None
+    if not STOCH:
+        abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
+    else:
+        abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
     det_upd = Updater(help.getSeed())
 
     opt_par4vis = np.round(opt_par, 3)

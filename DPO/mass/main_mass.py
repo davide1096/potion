@@ -15,7 +15,7 @@ import logging
 problem = 'mass'
 SINK = False
 # INIT_DETERMINISTIC_PARAM = np.array([-1.8, -1.])
-INIT_DETERMINISTIC_PARAM = np.array([-0.3, -0.3])
+INIT_DETERMINISTIC_PARAM = np.array([-0.6, -0.6])
 # optimal param values: [-1.376, -0.822]
 TAO = 0.1
 MASS = 0.1
@@ -40,7 +40,7 @@ ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
 UPD_LAM = 0.01 if STOCH else 0.0001  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = np.array([6, 7]) if STOCH else np.array([9, 13])
+N_MCRST_DYN = np.array([5, 5]) if STOCH else np.array([9, 13])
 MIN_SPACE_VAL = np.array([-1, -2])
 MAX_SPACE_VAL = np.array([1, 2])
 MAX_ACTION_VAL = 1
@@ -207,24 +207,24 @@ def main(seed=None):
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
         # helper_vis.plot_abstract_policy(INTERVALS, abs_opt_pol, old_par, det_param, opt_par, i % 3)
 
-        # j = env.computeJ(det_param, 0)
+        j = env.computeJ(det_param, 0)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
-        # print("Updated performance measure: {}".format(j))
+        print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}".format(estj))
         # print("Updated estimated abstract performance measure: {}\n".format(absJ))
         # TODO fix the plot of J
-        visualizer.show_values(det_param, estj, estj)
+        visualizer.show_values(det_param, j, estj)
 
         # PLOTTER INFO
         stats['param'].append(det_param)
-        # stats['j'].append(j)
+        stats['j'].append(j)
         stats['sampleJ'].append(estj)
         # stats['abstractJ'].append(absJ)
         # ------------
 
-    # visualizer.save_image()
+    visualizer.save_image()
     return stats, opt_par4vis, optJ4vis
 
 

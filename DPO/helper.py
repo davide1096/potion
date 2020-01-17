@@ -255,7 +255,7 @@ def get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):
         intervals = []
         counter = round(mins + dim + math.floor(remaining/2 * 100)/100.0, 2)
         intervals.append([mins, counter])
-        while counter < round(maxs - 2 * dim, 2):
+        while counter <= round(maxs - 2 * dim, 2):
             intervals.append([counter, round(counter + dim, 2)])
             counter = round(counter + dim, 2)
         intervals.append([counter, maxs])

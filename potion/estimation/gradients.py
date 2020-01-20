@@ -18,7 +18,7 @@ def gpomdp_estimator(batch, disc, policy, baselinekind='avg', result='mean',
        
     batch: list of N trajectories. Each trajectory is a tuple 
         (states, actions, rewards, mask). Each element of the tuple is a 
-        tensor where the first dimension is time.
+        tensor where the REINFORCE dimension is time.
     disc: discount factor
     policy: the one used to collect the data
     baselinekind: kind of baseline to employ in the estimator. 
@@ -72,7 +72,7 @@ def reinforce_estimator(batch, disc, policy, baselinekind='avg',
        
     batch: list of N trajectories. Each trajectory is a tuple 
         (states, actions, rewards, mask). Each element of the tuple is a 
-        tensor where the first dimension is time.
+        tensor where the REINFORCE dimension is time.
     disc: discount factor
     policy: the one used to collect the data
     baselinekind: kind of baseline to employ in the estimator. 

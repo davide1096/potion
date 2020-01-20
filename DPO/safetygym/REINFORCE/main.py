@@ -1,8 +1,8 @@
 import gym, safety_gym
 import potion.envs
 import torch
-from DPO.safetygym.first.reinforce import reinforce
-from DPO.safetygym.first.cont_policies import ShallowGaussianPolicy
+from DPO.safetygym.REINFORCE.reinforce import reinforce
+from DPO.safetygym.REINFORCE.cont_policies import ShallowGaussianPolicy
 from potion.meta.steppers import ConstantStepper
 from potion.common.logger import Logger
 import numpy as np

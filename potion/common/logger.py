@@ -65,7 +65,7 @@ class Logger():
         
     def write_row(self, row, iteration):
         if not self.ready:
-            warnings.warn('You must open the logger first!')
+            warnings.warn('You must open the logger REINFORCE!')
             return
         
         if 'human' in self.modes:
@@ -101,7 +101,7 @@ class Logger():
         
     def close(self):
         if not self.ready:
-            warnings.warn('You must open the logger first!')
+            warnings.warn('You must open the logger REINFORCE!')
             return
         
         try:

@@ -9,8 +9,8 @@ class LipschitzAbstraction(Abstraction):
 
     def compute_abstract_tf(self, optA, mins_env, maxs_env, maxa_env, std=0):
         for i in range(len(self.container)):
-            for act in self.container[i].keys():
-                self.container[i][act]['abs_tf'] = self.calculate_single_atf(i, act, optA, mins_env, maxs_env, maxa_env,                                                                             std)
+            for k in self.container[i].keys():
+                self.container[i][k]['abs_tf'] = self.calculate_single_atf(i, k, optA, mins_env, maxs_env, maxa_env)
 
     def calculate_single_atf(self, cont, act, optA):
         pass

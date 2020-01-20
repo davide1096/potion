@@ -1,6 +1,6 @@
 from safety_gym.envs.engine import Engine
 import safety_gym.random_agent as rdm_ag
-from DPO.safetygym.first.main import main
+from DPO.safetygym.REINFORCE.main import main
 
 config_dict = {# 'observation_flatten': False,
                'robot_base': 'xmls/point.xml',

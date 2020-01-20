@@ -8,7 +8,7 @@ def plot_samples(samples, intervals, title, minsp, maxsp):
     plt.title(title)
     [plt.plot(s[0], s[1], 'r.') for s in samples]
 
-    # first dimension
+    # REINFORCE dimension
     for i in intervals[0]:
         plt.plot((i[1], i[1]), (minsp[1], maxsp[1]))
 

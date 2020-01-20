@@ -66,26 +66,27 @@ class AbsUpdater(object):
         for i in range(len(container)):
             possible_actions = {}
 
-            for a in container[i].keys():
-                abs_reward = container[i][a]['abs_reward']
+            for k in container[i].keys():
+                abs_reward = container[i][k]['abs_reward']
 
-                if 'abs_tf' in container[i][a]:
-                    abs_tf = container[i][a]['abs_tf']
+                if 'abs_tf' in container[i][k]:
+                    abs_tf = container[i][k]['abs_tf']
                     # x is the sum of the v_functions of new_mcrst, weighted according to the abs_tf.
                     x = np.sum(abs_tf * self.v_function)
-                    possible_actions[a] = abs_reward + self.gamma * x
+                    possible_actions[k] = abs_reward + self.gamma * x
 
             mcrst = helper.get_mcrst_from_index(i, self.intervals)
-            self.best_policy[i], new_v_function[tuple(mcrst)] = self.best_actions(possible_actions, i)
+            self.best_policy[i], new_v_function[tuple(mcrst)] = self.best_actions(possible_actions, i, container)
 
         return new_v_function
 
-    def best_actions(self, possibilities, i):
+    def best_actions(self, possibilities, i, container):
 
         if len(possibilities.items()) > 0:
             # target is the value of the v_function of the macrostate at this iteration.
             target = max(possibilities.values())
-            best_acts = [k for k in possibilities.keys() if possibilities[k] == target]
+            keys = [k for k in possibilities.keys() if possibilities[k] == target]
+            best_acts = [container[i][k]['action'] for k in keys]
             return best_acts, target
 
         else:

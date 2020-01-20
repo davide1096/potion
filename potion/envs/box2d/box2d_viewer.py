@@ -241,7 +241,7 @@ class Box2DViewer(b2ContactListener):
     def CheckKeys(self):
         """
         Check the keys that are evaluated on every main loop iteration.
-        I.e., they aren't just evaluated when first pressed down
+        I.e., they aren't just evaluated when REINFORCE pressed down
         """
 
         pygame.event.pump()

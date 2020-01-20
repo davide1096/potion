@@ -39,15 +39,12 @@ class Abstraction(object):
         # The second dict has 'state', 'new_state', 'abs_reward', 'abs_tf' as keys.
         self.container = self.init_container()
 
-        for sam in samples:
-            for i, s in enumerate(sam):
-                # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
-                mcrst = helper.get_mcrst(s[0], self.intervals, self.sink)
-                for m, i in zip(mcrst, self.intervals):
-                    # to ensure that no samples are wrongly placed into the container.
-                    assert (0 <= m <= len(i) - 1)
-                mcrst_index = helper.get_multidim_mcrst(mcrst, self.intervals)
-                self.container[mcrst_index][s[1]] = {'state': s[0], 'new_state': s[3]}
+        for s in samples:
+            # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
+            mcrst = helper.get_mcrst(s[0], self.intervals, self.sink)
+            mcrst_index = helper.get_multidim_mcrst(mcrst, self.intervals)
+            key = len(self.container[mcrst_index].items())
+            self.container[mcrst_index][key] = {'state': s[0], 'action': s[1], 'new_state': s[3]}
 
         # to avoid a slow computation.
         help = Helper(seed)
@@ -61,9 +58,12 @@ class Abstraction(object):
         #     reward_func = helper.calc_abs_reward_cartpole
         elif problem == 'minigolf':
             reward_func = helper.calc_abs_reward_minigolf
+        elif problem == 'safety':
+            pass  # TODO abstract reward function (also change the line below)
         for cont in self.container:
-            for act in cont.keys():
-                cont[act]['abs_reward'] = reward_func(cont, act, self.Q, self.R, self.maxa_env)
+            for _, v in cont.items():
+                # v['abs_reward'] = reward_func(cont, v['action'], self.Q, self.R, self.maxa_env)
+                v['abs_reward'] = 0
 
     def compute_abstract_tf(self):
         pass

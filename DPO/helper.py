@@ -58,6 +58,7 @@ def get_mcrst(state, intervals, sink):
 
 # --> helper function to compute the index in container related to the exact macrostate <---
 
+# it returns the index from a multidim mcrst.
 def get_multidim_mcrst(multi_mcrst, intervals):
     mcrst = 0
     for i in range(len(multi_mcrst)):
@@ -258,7 +259,8 @@ def get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):
         while counter <= round(maxs - 2 * dim, 2):
             intervals.append([counter, round(counter + dim, 2)])
             counter = round(counter + dim, 2)
-        intervals.append([counter, maxs])
+        if counter < maxs:
+            intervals.append([counter, maxs])
         mcrst.append(intervals)
     return mcrst
 

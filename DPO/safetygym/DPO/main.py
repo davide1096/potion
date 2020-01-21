@@ -17,8 +17,8 @@ ACCEPTED_STATES = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1]
 ds0 = 1
 
 N_ITERATION = 1000
-N_EPISODES = 50
-N_STEPS = 20
+N_EPISODES = 5
+N_STEPS = 200
 
 
 def deterministic_action(det_par, state):
@@ -63,19 +63,14 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     fictitious_samples = []
     for s in det_samples:
         prev_action = deterministic_action(param, s[0])
-        if interv is not None:
-            mcrst_provv = helper.get_mcrst(s[0], interv, SINK)
-            mcrst = helper.get_multidim_mcrst(mcrst_provv, interv)
-        else:
-            mcrst_provv = helper.get_mcrst(s[0], INTERVALS, SINK)
-            mcrst = helper.get_multidim_mcrst(mcrst_provv, INTERVALS)
-        if abs_opt_policy[mcrst] is not None:
-            if prev_action in abs_opt_policy[mcrst]:
-                single_sample.append([s[0], prev_action])
+        mcrst_provv = helper.get_mcrst(s[0], interv, SINK)
+        index_mcrst = helper.get_multidim_mcrst(mcrst_provv, interv)
+        if abs_opt_policy[index_mcrst] is not None:
+            if helper.array_in(prev_action, abs_opt_policy[index_mcrst]):
+                fictitious_samples.append([s[0], prev_action])
             else:
-                index = np.argmin([abs(act - prev_action) for act in abs_opt_policy[mcrst]])
-                single_sample.append([s[0], abs_opt_policy[mcrst][index]])
-        fictitious_samples.append(single_sample)
+                index = np.argmin([helper.sq_distance(act, prev_action) for act in abs_opt_policy[index_mcrst]])
+                fictitious_samples.append([s[0], abs_opt_policy[index_mcrst][index]])
     return fictitious_samples
 
 
@@ -96,7 +91,12 @@ def main(seed=42):
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
     print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
 
-    INIT_DETERMINISTIC_PARAM = np.full((action_dim, state_dim), 0.1)
+    # INIT_DETERMINISTIC_PARAM = np.array([np.full((state_dim, ), 0.1), np.full((state_dim, ), 0.2)])
+    p = np.array([0.1, 0.2, 0.3])
+    p = np.append(p, p)
+    p = np.append(p, p)
+    p = np.append(p, np.array([0.1, 0.2]))
+    INIT_DETERMINISTIC_PARAM = p.reshape((action_dim, state_dim))
     det_param = INIT_DETERMINISTIC_PARAM
 
     # instantiate the components of the algorithm.
@@ -106,19 +106,19 @@ def main(seed=42):
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        normalized_samples = normalize_samples(determin_samples)
-        abstraction.divide_samples(normalized_samples, problem, help.getSeed())
+        samples = helper.flat_listoflists(determin_samples)
+        # normalized_samples = normalize_samples(determin_samples)
+        abstraction.divide_samples(samples, problem, help.getSeed())
         abstraction.compute_abstract_tf(ds0, MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL)
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
 
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, normalized_samples, det_param, INTERVALS)
-        old_par = det_param
-        det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, samples, det_param, INTERVALS)
+        det_param = det_upd.gradient_update(det_param, fictitious_samples)
 
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
-        print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}".format(estj))
 
 main(0)
+

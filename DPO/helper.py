@@ -264,3 +264,16 @@ def get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):
         mcrst.append(intervals)
     return mcrst
 
+
+def array_in(arr, arr_list):
+    for a in arr_list:
+        if np.all(arr == a):
+            return True
+    return False
+
+
+def sq_distance(arr1, arr2):
+    d = 0
+    for d1, d2 in zip(arr1, arr2):
+        d += (d1 - d2) ** 2
+    return d

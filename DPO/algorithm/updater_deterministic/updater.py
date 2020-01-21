@@ -19,21 +19,17 @@ class Updater(object):
 
         random.seed(self.seed)
 
-    def batch_gradient_update(self, det_param, samples):
+    def gradient_update(self, det_param, samples):
         init_par = det_param
-        samples = helper.flat_listoflists(samples)
         samples = random.sample(samples, len(samples))
-
-        # Batch gradient update (previous implementation).
-        # for e in range(0, N_ITERATIONS_BATCH_GRAD):
-        #     accumulator = np.zeros_like(det_param)
-        #     for b in range(0, BATCH_SIZE):
-        #         s = samples[random.randint(0, len(samples) - 1)]
-        #         accumulator += (np.dot(det_param, s[0]) - s[1]) * s[0]
-        #     det_param = det_param - LR_DET_POLICY * (accumulator / BATCH_SIZE + LAMBDA * np.sign(det_param - init_par))
-
+        der_base = np.zeros((len(det_param),))
         for s in samples:
-            grad = (np.dot(det_param, s[0]) - s[1]) * s[0]
+            grad = np.empty_like(det_param)
+            for i in range(len(det_param)):
+                for j in range(len(det_param[i])):
+                    der = der_base
+                    der[i] = s[0][j]
+                    grad[i][j] = np.dot((np.dot(det_param, s[0]) - s[1]), der)
             det_param = det_param - LR_DET_POLICY * (grad + LAMBDA * np.sign(det_param - init_par))
         return det_param
 

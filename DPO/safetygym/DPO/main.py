@@ -17,8 +17,8 @@ ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 ds0 = 1
 
 N_ITERATION = 1000
-N_EPISODES = 10
-N_STEPS = 20
+N_EPISODES = 50
+N_STEPS = 200
 
 
 def deterministic_action(det_par, state):
@@ -65,8 +65,8 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     for s in det_samples:
         prev_action = deterministic_action(param, s[0])
         mcrst_provv = helper.get_mcrst(s[0], interv, SINK)
-        index_mcrst = helper.get_multidim_mcrst(mcrst_provv, interv)
-        if abs_opt_policy[index_mcrst] is not None:
+        index_mcrst = helper.get_index_from_mcrst(mcrst_provv, interv)
+        if index_mcrst in abs_opt_policy.keys():
             if helper.array_in(prev_action, abs_opt_policy[index_mcrst]):
                 fictitious_samples.append([s[0], prev_action])
             else:
@@ -110,7 +110,7 @@ def main(seed=42):
             det_upd = Updater(help.getSeed())
 
         abstraction.divide_samples(samples, problem, help.getSeed())
-        abstraction.compute_abstract_tf(ds0)
+        abstraction.compute_abstract_tf()
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, samples, det_param, INTERVALS)

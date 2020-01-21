@@ -59,7 +59,7 @@ def get_mcrst(state, intervals, sink):
 # --> helper function to compute the index in container related to the exact macrostate <---
 
 # it returns the index from a multidim mcrst.
-def get_multidim_mcrst(multi_mcrst, intervals):
+def get_index_from_mcrst(multi_mcrst, intervals):
     mcrst = 0
     for i in range(len(multi_mcrst)):
         mcrst += multi_mcrst[len(multi_mcrst) - i - 1] * product_prev_sizes(i, intervals)
@@ -97,6 +97,15 @@ def count_actions(container):
 def normalize_array(array):
     den = np.sum(array)
     return array/den
+
+
+def normalize_dict(dic):
+    den = 0
+    for k, v in dic.items():
+        den += v
+    for k in dic.keys():
+        dic[k] = dic[k]/den
+    return dic
 
 
 def flat_listoflists(list):

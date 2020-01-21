@@ -54,7 +54,7 @@ class MaxLikelihoodAbstraction(Abstraction):
             for act, single_sample in cont.items():
                 new_mcrst = helper.get_mcrst(single_sample['new_state'], self.intervals, self.sink)
                 # I assume that all the actions are different.
-                matrix_i[self.get_id_from_action(act)][helper.get_multidim_mcrst(new_mcrst, self.intervals)] += 1
+                matrix_i[self.get_id_from_action(act)][helper.get_index_from_mcrst(new_mcrst, self.intervals)] += 1
 
             # contribution of the fictitious samples.
             for act in self.arriving_mcrst_helper.keys():
@@ -79,7 +79,7 @@ class MaxLikelihoodAbstraction(Abstraction):
                     if act != act2:
                         new_state = cont[act2]['state'] + delta_s
                         new_state_mcrst = helper.get_mcrst(new_state, self.intervals, self.sink)
-                        index = helper.get_multidim_mcrst(new_state_mcrst, self.intervals)
+                        index = helper.get_index_from_mcrst(new_state_mcrst, self.intervals)
 
                         if index in self.arriving_mcrst_helper[act].keys():
                             self.arriving_mcrst_helper[act][index] += 1

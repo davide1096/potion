@@ -11,16 +11,16 @@ import potion.envs
 
 class LipschitzDeltaS(LipschitzAbstraction):
 
-    def __init__(self, gamma, sink, intervals=None, ls=None, la=None, Q=None, R=None, maxa_env=1):
-        super().__init__(gamma, sink, intervals, Q, R, maxa_env)
+    def __init__(self, gamma, sink, intervals=None):
+        super().__init__(gamma, sink, intervals)
 
     # ds0 is True when the hypothesis of deltaS = 0 is valid.
     # It means that taking the same action in different states will produce the same delta s (deltas = s' - s).
-    def calculate_single_atf(self, mcrst, key, ds0):
+    def calculate_single_atf(self, k1, k2):
 
-        cont = self.container[mcrst]
+        cont = self.container[k1]
         new_states = []
-        delta_s = cont[key]['new_state'] - cont[key]['state']
+        delta_s = cont[k2]['new_state'] - cont[k2]['state']
 
         for k, v in cont.items():
 

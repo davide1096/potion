@@ -35,8 +35,8 @@ def compute_lipschitz_constraints(container, intervals, sink, arriving_mcrst_hel
                     c1 = 0
                     c2 = 0
                     for m in mcrst_list:
-                        c1 += theta[action_index1][helper.get_multidim_mcrst(m, intervals)]
-                        c2 += theta[action_index2][helper.get_multidim_mcrst(m, intervals)]
+                        c1 += theta[action_index1][helper.get_index_from_mcrst(m, intervals)]
+                        c2 += theta[action_index2][helper.get_index_from_mcrst(m, intervals)]
                     constraints.append(c1 - c2 <= L[d][0] * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
                     constraints.append(c1 - c2 >= -L[d][0] * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
 

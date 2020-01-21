@@ -13,36 +13,17 @@ class AbsUpdater(object):
         self.intervals = intervals
         self.gamma = gamma
         self.sink = sink
-        self.v_function = []
-        self.best_policy = []
+        self.v_function = {}
+        self.best_policy = {}
         self.sink_val = sink_val
-
-        if intervals is not None:
-            adder = 1 if sink else 0
-            shape = [len(i) + adder for i in self.intervals]
-
-            self.v_function = np.zeros(tuple(shape))
-            self.best_policy = []
-            num = 1
-            for s in shape:
-                num *= s - adder
-            for i in range(num):
-                self.best_policy.append([])
 
     def solve_mdp(self, container, intervals=None):
 
-        if intervals is not None:
-            self.intervals = intervals
-            adder = 1 if self.sink else 0
-            shape = [len(i) + adder for i in intervals]
-
-            self.v_function = np.zeros(tuple(shape))
-            self.best_policy = []
-            num = 1
-            for s in shape:
-                num *= s - adder
-            for i in range(num):
-                self.best_policy.append([])
+        self.v_function = {}
+        self.best_policy = {}
+        for k in container.keys():
+            self.v_function[k] = 0
+            self.best_policy[k] = []
 
         new_vf = self.single_step_update(container)
         n_iterations = 0
@@ -56,32 +37,43 @@ class AbsUpdater(object):
         return self.best_policy
 
     def solved(self, new):
-        diff = abs(self.v_function - new)
-        # True if there is no diff between prev and new value greater than EPSILON.
-        return not np.any(diff > EPSILON)
+        for k in new.keys():
+            if abs(new[k] - self.v_function[k]) > EPSILON:
+                return False
+        return True
 
     def single_step_update(self, container):
 
-        new_v_function = np.empty_like(self.v_function)
-        for i in range(len(container)):
+        new_v_function = {}
+        for k in container.keys():
+            new_v_function[k] = 0
+
+        # k1 --> mcrst index
+        for k1, v1 in container.items():
             possible_actions = {}
 
-            for k in container[i].keys():
-                abs_reward = container[i][k]['abs_reward']
+            # k2 --> id of the sample into the mcrst
+            for k2, v2 in v1.items():
+                abs_reward = v2['abs_reward']
 
-                if 'abs_tf' in container[i][k]:
-                    abs_tf = container[i][k]['abs_tf']
+                if 'abs_tf' in v2:
+                    abs_tf = v2['abs_tf']
 
                     # result = np.where(abs_tf.reshape((-1)) > 0)
                     # for r in result[0]:
                     #     if len(container[r].items()) == 0:
                     #         print("here")
                     # x is the sum of the v_functions of new_mcrst, weighted according to the abs_tf.
-                    x = np.sum(abs_tf * self.v_function)
-                    possible_actions[k] = abs_reward + self.gamma * x
+                    x = 0
+                    
+                    # k3 --> mcrst index
+                    for k3, v3 in abs_tf.items():
+                        if k3 in self.v_function.keys():
+                            x += v3 * self.v_function[k3]
+                        # TODO else
+                    possible_actions[k2] = abs_reward + self.gamma * x
 
-            mcrst = helper.get_mcrst_from_index(i, self.intervals)
-            self.best_policy[i], new_v_function[tuple(mcrst)] = self.best_actions(possible_actions, i, container)
+            self.best_policy[k1], new_v_function[k1] = self.best_actions(possible_actions, k1, container)
 
         return new_v_function
 
@@ -95,5 +87,4 @@ class AbsUpdater(object):
             return best_acts, target
 
         else:
-            mcrst = helper.get_mcrst_from_index(i, self.intervals)
-            return None, self.v_function[tuple(mcrst)]
+            return None, self.v_function[i]

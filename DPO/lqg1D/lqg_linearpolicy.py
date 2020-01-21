@@ -69,10 +69,10 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
             prev_action = deterministic_action(param, s[0])
             if interv is not None:
                 mcrst_provv = helper.get_mcrst(s[0], interv, SINK)
-                mcrst = helper.get_multidim_mcrst(mcrst_provv, interv)
+                mcrst = helper.get_index_from_mcrst(mcrst_provv, interv)
             else:
                 mcrst_provv = helper.get_mcrst(s[0], INTERVALS, SINK)
-                mcrst = helper.get_multidim_mcrst(mcrst_provv, INTERVALS)
+                mcrst = helper.get_index_from_mcrst(mcrst_provv, INTERVALS)
             if prev_action in abs_opt_policy[mcrst]:
                 single_sample.append([s[0], prev_action])
             else:
@@ -91,10 +91,10 @@ def estimate_performance_abstract_policy(env, n_episodes, n_steps, abstract_poli
             state = env.get_state()
             if interv is not None:
                 mcrst = helper.get_mcrst(state, interv, SINK)
-                action = abstract_policy[helper.get_multidim_mcrst(mcrst, interv)][0]
+                action = abstract_policy[helper.get_index_from_mcrst(mcrst, interv)][0]
             else:
                 mcrst = helper.get_mcrst(state, INTERVALS, SINK)
-                action = abstract_policy[helper.get_multidim_mcrst(mcrst, INTERVALS)][0]
+                action = abstract_policy[helper.get_index_from_mcrst(mcrst, INTERVALS)][0]
             new_state, r, _, _ = env.step(action)
             acc += g * r
             g *= GAMMA

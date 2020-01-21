@@ -96,10 +96,10 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv, IN
             prev_action = deterministic_action(param, s[0])
             if interv is not None:
                 mcrst_provv = helper.get_mcrst(s[0], interv, SINK)
-                mcrst = helper.get_multidim_mcrst(mcrst_provv, interv)
+                mcrst = helper.get_index_from_mcrst(mcrst_provv, interv)
             else:
                 mcrst_provv = helper.get_mcrst(s[0], INTERVALS, SINK)
-                mcrst = helper.get_multidim_mcrst(mcrst_provv, INTERVALS)
+                mcrst = helper.get_index_from_mcrst(mcrst_provv, INTERVALS)
             if abs_opt_policy[mcrst] is not None:
                 if prev_action in abs_opt_policy[mcrst]:
                     single_sample.append([s[0], prev_action])

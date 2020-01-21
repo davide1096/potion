@@ -10,37 +10,38 @@ from DPO.helper import Helper
 
 problem = 'safety'
 SINK = False
-ACCEPTED_STATES = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1]
+ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 
 # ds0 = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
 N_ITERATION = 1000
-N_EPISODES = 5
-N_STEPS = 200
+N_EPISODES = 10
+N_STEPS = 20
 
 
 def deterministic_action(det_par, state):
     return np.dot(det_par, state)
 
 
-def normalize_samples(samples):
+def compute_state_bounds(samples):
     samples = helper.flat_listoflists(samples)
     min_values = np.minimum(samples[0][0], samples[0][3])
     max_values = np.maximum(samples[0][0], samples[0][3])
     for sam in samples[1:]:
         min_values = np.minimum(min_values, sam[3])
         max_values = np.maximum(max_values, sam[3])
-    normalized_samples = []
-    den = (max_values - min_values)
-    den = np.array([d if d != 0 else 1 for d in den])
-    for i in range(len(samples)):
-        sam = samples[i]
-        norm_s = (sam[0] - min_values) / den
-        norm_ns = (sam[3] - min_values) / den
-        normalized_samples.append([norm_s, sam[1], sam[2], norm_ns])
-    return normalized_samples
+    # normalized_samples = []
+    # den = (max_values - min_values)
+    # den = np.array([d if d != 0 else 1 for d in den])
+    # for i in range(len(samples)):
+    #     sam = samples[i]
+    #     norm_s = (sam[0] - min_values) / den
+    #     norm_ns = (sam[3] - min_values) / den
+    #     normalized_samples.append([norm_s, sam[1], sam[2], norm_ns])
+    # return normalized_samples
+    return min_values, max_values
 
 
 def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
@@ -77,39 +78,39 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
 def main(seed=42):
 
     help = Helper(seed)
-    GAMMA = 1
+    GAMMA = 0.95
 
     # load and configure the environment.
     env = base_env.create_env(seed)
 
-    state_dim = 7
+    state_dim = 9
     action_dim = 2
-    MIN_SPACE_VAL = np.full((state_dim, ), 0)
-    MAX_SPACE_VAL = np.full((state_dim, ), 1)
-    MAX_ACTION_VAL = np.full((action_dim, ), 1)
-    N_MCRST_DYN = np.array([2, 2, 2, 2, 2, 2, 2])
-    INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
-    print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
+    N_MCRST_DYN = np.full((state_dim, ), 5)
 
     # INIT_DETERMINISTIC_PARAM = np.array([np.full((state_dim, ), 0.1), np.full((state_dim, ), 0.2)])
-    p = np.array([0.1, 0.2, 0.3])
+    p = np.array([0.1, 0.2, 0.3, 0.4])
     p = np.append(p, p)
     p = np.append(p, p)
     p = np.append(p, np.array([0.1, 0.2]))
     INIT_DETERMINISTIC_PARAM = p.reshape((action_dim, state_dim))
     det_param = INIT_DETERMINISTIC_PARAM
 
-    # instantiate the components of the algorithm.
-    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
-    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-    det_upd = Updater(help.getSeed())
-
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
         samples = helper.flat_listoflists(determin_samples)
-        # normalized_samples = normalize_samples(determin_samples)
+
+        # instantiate the components of the algorithm.
+        if i == 0:
+            MIN_SPACE_VAL, MAX_SPACE_VAL = compute_state_bounds(determin_samples)
+            INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
+            print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
+
+            abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
+            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
+            det_upd = Updater(help.getSeed())
+
         abstraction.divide_samples(samples, problem, help.getSeed())
-        abstraction.compute_abstract_tf(ds0, MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL)
+        abstraction.compute_abstract_tf(ds0)
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, samples, det_param, INTERVALS)
@@ -121,4 +122,5 @@ def main(seed=42):
         print("Updated estimated performance measure: {}".format(estj))
 
 main(0)
+
 

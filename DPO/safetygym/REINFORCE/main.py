@@ -34,7 +34,7 @@ def main(env=None):
 
     stepper = ConstantStepper(0.01)
 
-    batchsize = 500
+    batchsize = 50
     log_dir = '../../logs'
     log_name = 'REINFORCE'
     logger = Logger(directory=log_dir, name=log_name)

@@ -16,7 +16,7 @@ class LipschitzDeltaS(LipschitzAbstraction):
 
     # ds0 is True when the hypothesis of deltaS = 0 is valid.
     # It means that taking the same action in different states will produce the same delta s (deltas = s' - s).
-    def calculate_single_atf(self, mcrst, key, ds0, mins_env, maxs_env, maxa_env, std=0):
+    def calculate_single_atf(self, mcrst, key, ds0):
 
         cont = self.container[mcrst]
         new_states = []
@@ -25,7 +25,6 @@ class LipschitzDeltaS(LipschitzAbstraction):
         for k, v in cont.items():
 
             ns = cont[k]['state'] + delta_s
-            ns = np.clip(ns, mins_env, maxs_env)
             new_states.append(ns)
 
         return sample_dist.abstract_tf(self.intervals, new_states, self.sink)

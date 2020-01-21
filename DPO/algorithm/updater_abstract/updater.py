@@ -71,6 +71,11 @@ class AbsUpdater(object):
 
                 if 'abs_tf' in container[i][k]:
                     abs_tf = container[i][k]['abs_tf']
+
+                    # result = np.where(abs_tf.reshape((-1)) > 0)
+                    # for r in result[0]:
+                    #     if len(container[r].items()) == 0:
+                    #         print("here")
                     # x is the sum of the v_functions of new_mcrst, weighted according to the abs_tf.
                     x = np.sum(abs_tf * self.v_function)
                     possible_actions[k] = abs_reward + self.gamma * x

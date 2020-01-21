@@ -2,6 +2,7 @@ import gym, safety_gym
 import potion.envs
 import torch
 from DPO.safetygym.REINFORCE.reinforce import reinforce
+from DPO.safetygym.DPO.base_env import create_env
 from DPO.safetygym.REINFORCE.cont_policies import ShallowGaussianPolicy
 from potion.meta.steppers import ConstantStepper
 from potion.common.logger import Logger
@@ -12,9 +13,9 @@ import safety_gym.random_agent as rdm_ag
 def main(env=None):
 
     if env is None:
-        env = gym.make('Safexp-PointGoal0-v0')
+        env = create_env()
 
-    gamma = 1  # TODO verify it!
+    gamma = 0.95  # TODO verify it!
 
     state_dim = sum(env.observation_space.shape)  # dimensionality of the state space
     action_dim = sum(env.action_space.shape)  # dimensionality of the action space

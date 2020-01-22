@@ -105,7 +105,7 @@ class MaxLikelihoodAbstraction(Abstraction):
             print("")
             # initial_solution = self.build_initial_solution(i)
             # p.variables()[0] = initial_solution
-            problem.solve(solver=cp.SCS, max_iters=1000, verbose=True)
+            problem.solve(solver=cp.SCS, max_iters=200, verbose=True)
             theta = problem.variables()[0].value
             return theta
         else:
@@ -131,9 +131,6 @@ class MaxLikelihoodAbstraction(Abstraction):
         pool = mp.Pool(mp.cpu_count())
         # Step 2: `pool.apply` the function
         solution = [pool.apply(self.compute_parallel_solution, args=(i, p)) for i, p in enumerate(problems)]
-        # Step 3: Don't forget to close
-        pool.close()
-        # solution = self.compute_parallel_solution(problems)
 
         shape = [len(i) for i in self.intervals]
         for mcrst in range(0, len(self.container)):
@@ -147,3 +144,6 @@ class MaxLikelihoodAbstraction(Abstraction):
             sink_tf[-1] = 1
             for act in self.container[-1].keys():
                 self.container[-1][act]['abs_tf'] = sink_tf
+
+        # Step 3: Don't forget to close
+        pool.close()

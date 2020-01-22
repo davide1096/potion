@@ -19,7 +19,7 @@ class mass(LQ):
         self.horizon = 20
         self.gamma = 0.95
         self.sigma_controller = 0.1 * np.ones(self.da)
-        self.max_pos = np.array([1., 2.])
+        self.max_pos = np.array([1., 1.])
         self.max_action = 1.0 * np.ones(self.da)
         self.sigma_noise = 0 * np.eye(self.ds)
         self.tau = 0.1

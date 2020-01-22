@@ -15,7 +15,7 @@ import logging
 problem = 'mass'
 SINK = False
 # INIT_DETERMINISTIC_PARAM = np.array([-1.8, -1.])
-INIT_DETERMINISTIC_PARAM = np.array([-0.5, -1.2])
+INIT_DETERMINISTIC_PARAM = np.array([-0.5, -1.3])
 # optimal param values: [-1.376, -0.822]
 TAO = 0.1
 MASS = 0.1
@@ -35,10 +35,10 @@ N_ITERATION = 1000
 N_EPISODES = 500  # 2000
 N_STEPS = 20
 
-STOCH = 0
+STOCH = 1
 ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
-UPD_LAM = 0.01 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
-STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
+UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
+STOCH_L_MULTIPLIER = 3  # Increase the L constant in stochastic environments.
 
 N_MCRST_DYN = np.array([12, 12]) if STOCH else np.array([9, 9])
 MIN_SPACE_VAL = np.array([-1, -1])
@@ -129,8 +129,8 @@ def main(seed=None):
     title = "mass"
     key = "mass{}.jpg".format(help.getSeed())
     initJ = env.computeJ(det_param, 0)
-    visualizer = MassVisualizer(title, key, det_param, opt_par4vis, initJ, optJ4vis)
-    visualizer.clean_panels()
+    # visualizer = MassVisualizer(title, key, det_param, opt_par4vis, initJ, optJ4vis)
+    # visualizer.clean_panels()
 
     # PLOTTER INFO
     stats = {}
@@ -172,7 +172,7 @@ def main(seed=None):
         print("Updated estimated performance measure: {}".format(estj))
         # print("Updated estimated abstract performance measure: {}\n".format(absJ))
         # TODO fix the plot of J
-        visualizer.show_values(det_param, j, estj)
+        # visualizer.show_values(det_param, j, estj)
 
         # PLOTTER INFO
         stats['param'].append(det_param)
@@ -181,7 +181,7 @@ def main(seed=None):
         # stats['abstractJ'].append(absJ)
         # ------------
 
-    visualizer.save_image()
+    # visualizer.save_image()
     return stats, opt_par4vis, optJ4vis
 
 

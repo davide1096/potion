@@ -105,7 +105,11 @@ class MaxLikelihoodAbstraction(Abstraction):
         if problem is not None:
             # initial_solution = self.build_initial_solution(i)
             # p.variables()[0] = initial_solution
-            problem.solve(solver=cp.SCS, max_iters=200, verbose=True)
+            try:
+                problem.solve(solver=cp.ECOS, max_iters=200)
+            except cp.SolverError:
+                problem.solve(solver=cp.SCS, max_iters=200)
+            # problem.solve(solver=cp.ECOS, max_iters=200, verbose=True)
             theta = problem.variables()[0].value
             return theta
         else:

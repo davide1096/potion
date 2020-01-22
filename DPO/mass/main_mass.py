@@ -32,15 +32,15 @@ GAMMA = 0.95
 ds0 = 0
 
 N_ITERATION = 1000
-N_EPISODES = 500  # 2000
+N_EPISODES = 2000  # 2000
 N_STEPS = 20
 
 STOCH = 1
 ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
-UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
-STOCH_L_MULTIPLIER = 3  # Increase the L constant in stochastic environments.
+UPD_LAM = 0.005 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
+STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = np.array([12, 12]) if STOCH else np.array([9, 9])
+N_MCRST_DYN = np.array([11, 11]) if STOCH else np.array([9, 9])
 MIN_SPACE_VAL = np.array([-1, -1])
 MAX_SPACE_VAL = np.array([1, 1])
 MAX_ACTION_VAL = 1

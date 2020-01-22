@@ -14,6 +14,7 @@ class MaxLikelihoodAbstraction(Abstraction):
         self.i = None
         self.L = L
         self.arriving_mcrst_helper = {}
+        self.results = []
 
     def calculate_arriving_mcrst_list(self, mcrst):
         arriving_mcrst = []
@@ -111,9 +112,12 @@ class MaxLikelihoodAbstraction(Abstraction):
                 problem.solve(solver=cp.SCS, max_iters=200)
             # problem.solve(solver=cp.ECOS, max_iters=200, verbose=True)
             theta = problem.variables()[0].value
-            return theta
+            return (mcrst, theta)
         else:
-            return None
+            return (mcrst, None)
+
+    def collect_result(self, result):
+        self.results.append(result)
 
     def pre_construct_problem(self, mcrst):
         if len(self.container[mcrst]) > 0:  # I consider not empty macrostate.
@@ -125,12 +129,19 @@ class MaxLikelihoodAbstraction(Abstraction):
         self.i = len(self.container)  # it represents the # of columns of every matrix.
         self.create_arriving_mcrst_helper()  # it allows to consider fictitious samples.
 
-        # Step 1: Init multiprocessing.Pool()
         # pool = mp.Pool(mp.cpu_count())
         pool = mp.Pool(len(os.sched_getaffinity(0)))  # uses visible cpus
-        # Step 2: `pool.apply` the function
         problems = [pool.apply(self.pre_construct_problem, args=(i, )) for i in [j for j in range(self.i)]]
-        solution = [pool.apply(self.compute_parallel_solution, args=(i, p)) for i, p in enumerate(problems)]
+
+        self.results = []
+        for i, p in enumerate(problems):
+            pool.apply_async(self.compute_parallel_solution, args=(i, p), callback=self.collect_result)
+
+        pool.close()
+        pool.join()  # postpones the execution of next line of code until all processes in the queue are done.
+
+        self.results.sort(key=lambda x: x[0])
+        solution = [r for i, r in self.results]
 
         shape = [len(i) for i in self.intervals]
         for mcrst in range(0, len(self.container)):

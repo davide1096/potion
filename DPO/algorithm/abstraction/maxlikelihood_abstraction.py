@@ -97,31 +97,31 @@ class MaxLikelihoodAbstraction(Abstraction):
             constraints.append(cp.sum(theta[k]) == 1)
 
         # Lipschitz hypothesis between actions in the same macrostate.
-        # for k in range(self.i):
-        #
-        #     actions_mcrst = sorted(list(self.container[k].keys()), reverse=True)
-        #     new_mcrst_possible = []
-        #     for act in actions_mcrst:
-        #         new_mcrst = helper.get_mcrst(self.container[k][act]['new_state'], self.intervals, self.sink)
-        #         index_mcrst = helper.get_multidim_mcrst(new_mcrst, self.intervals)
-        #
-        #         if index_mcrst not in new_mcrst_possible:
-        #             new_mcrst_possible.append(index_mcrst)
-        #
-        #         # The helper might contain new_mcrst that are not yet included in new_mcrst_possible.
-        #         from_helper = self.arriving_mcrst_helper[act].keys()
-        #         for index_mcrst in from_helper:
-        #             if index_mcrst not in new_mcrst_possible:
-        #                 new_mcrst_possible.append(index_mcrst)
-        #
-        #     for i in range(len(actions_mcrst) - 1):
-        #         for k2 in new_mcrst_possible:
-        #             constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
-        #                                theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] <=
-        #                                self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
-        #             constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
-        #                                theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] >=
-        #                                - self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
+        for k in range(self.i):
+
+            actions_mcrst = sorted(list(self.container[k].keys()), reverse=True)
+            new_mcrst_possible = []
+            for act in actions_mcrst:
+                new_mcrst = helper.get_mcrst(self.container[k][act]['new_state'], self.intervals, self.sink)
+                index_mcrst = helper.get_multidim_mcrst(new_mcrst, self.intervals)
+
+                if index_mcrst not in new_mcrst_possible:
+                    new_mcrst_possible.append(index_mcrst)
+
+                # The helper might contain new_mcrst that are not yet included in new_mcrst_possible.
+                from_helper = self.arriving_mcrst_helper[act].keys()
+                for index_mcrst in from_helper:
+                    if index_mcrst not in new_mcrst_possible:
+                        new_mcrst_possible.append(index_mcrst)
+
+            for i in range(len(actions_mcrst) - 1):
+                for k2 in new_mcrst_possible:
+                    constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
+                                       theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] <=
+                                       self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
+                    constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
+                                       theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] >=
+                                       - self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
 
         # lipschitz_cons = helper_maxlikelihood.compute_lipschitz_constraints(self.container, self.intervals, self.sink,
         #                                                                     self.arriving_mcrst_helper,

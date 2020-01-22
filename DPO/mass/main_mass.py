@@ -2,7 +2,7 @@ import gym
 import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
-from DPO.algorithm.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
+from DPO.algorithm.abstraction.maxlikelihood_abstraction_parallel import MaxLikelihoodAbstraction
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 from DPO.algorithm.updater_deterministic.updater import Updater
@@ -40,7 +40,7 @@ ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
 UPD_LAM = 0.01 if STOCH else 0.0001  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = np.array([5, 5]) if STOCH else np.array([9, 13])
+N_MCRST_DYN = np.array([9, 13]) if STOCH else np.array([9, 13])
 MIN_SPACE_VAL = np.array([-1, -2])
 MAX_SPACE_VAL = np.array([1, 2])
 MAX_ACTION_VAL = 1

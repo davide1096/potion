@@ -4,6 +4,7 @@ from DPO.algorithm.abstraction.abstraction import Abstraction
 import DPO.helper as helper
 import DPO.algorithm.abstraction.helper_maxlikelihood as helper_maxlikelihood
 import multiprocessing as mp
+import os
 
 
 class MaxLikelihoodAbstraction(Abstraction):
@@ -104,15 +105,9 @@ class MaxLikelihoodAbstraction(Abstraction):
         if problem is not None:
             # initial_solution = self.build_initial_solution(i)
             # p.variables()[0] = initial_solution
-            problem.solve(solver=cp.SCS, max_iters=100, verbose=True)
+            problem.solve(solver=cp.SCS, max_iters=200, verbose=True)
             theta = problem.variables()[0].value
             return theta
-        else:
-            return None
-
-    def pre_constructed_problem(self, i):
-        if len(self.container[i]) > 0:
-            return self.construct_problem(i)
         else:
             return None
 
@@ -127,7 +122,8 @@ class MaxLikelihoodAbstraction(Abstraction):
         self.create_arriving_mcrst_helper()  # it allows to consider fictitious samples.
 
         # Step 1: Init multiprocessing.Pool()
-        pool = mp.Pool(mp.cpu_count())
+        # pool = mp.Pool(mp.cpu_count())
+        pool = mp.Pool(len(os.sched_getaffinity(0)))  # uses visible cpus
         # Step 2: `pool.apply` the function
         problems = [pool.apply(self.pre_construct_problem, args=(i, )) for i in [j for j in range(self.i)]]
         solution = [pool.apply(self.compute_parallel_solution, args=(i, p)) for i, p in enumerate(problems)]

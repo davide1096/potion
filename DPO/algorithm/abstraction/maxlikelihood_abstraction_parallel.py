@@ -102,10 +102,9 @@ class MaxLikelihoodAbstraction(Abstraction):
 
         print("Solving the problem for the mcrst: {}".format(mcrst))
         if problem is not None:
-            print("")
             # initial_solution = self.build_initial_solution(i)
             # p.variables()[0] = initial_solution
-            problem.solve(solver=cp.SCS, max_iters=200, verbose=True)
+            problem.solve(solver=cp.SCS, max_iters=100, verbose=True)
             theta = problem.variables()[0].value
             return theta
         else:
@@ -117,19 +116,20 @@ class MaxLikelihoodAbstraction(Abstraction):
         else:
             return None
 
+    def pre_construct_problem(self, mcrst):
+        if len(self.container[mcrst]) > 0:  # I consider not empty macrostate.
+            return self.construct_problem(mcrst)
+        else:
+            return None
+
     def compute_abstract_tf(self, optA, mins=-1, maxs=1, maxa=1, std=0):
         self.i = len(self.container)  # it represents the # of columns of every matrix.
         self.create_arriving_mcrst_helper()  # it allows to consider fictitious samples.
-        problems = []
-        for i in range(self.i):
-            if len(self.container[i]) > 0:  # I consider not empty macrostate.
-                problems.append(self.construct_problem(i))
-            else:
-                problems.append(None)
 
         # Step 1: Init multiprocessing.Pool()
         pool = mp.Pool(mp.cpu_count())
         # Step 2: `pool.apply` the function
+        problems = [pool.apply(self.pre_construct_problem, args=(i, )) for i in [j for j in range(self.i)]]
         solution = [pool.apply(self.compute_parallel_solution, args=(i, p)) for i, p in enumerate(problems)]
 
         shape = [len(i) for i in self.intervals]

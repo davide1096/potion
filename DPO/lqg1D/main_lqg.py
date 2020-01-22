@@ -2,7 +2,7 @@ import DPO.lqg1D.lqg_linearpolicy as lqg_main
 import numpy as np
 from DPO.visualizer.lqg1d_visualizer import Lqg1dVisualizer
 
-N_ITERATIONS = 6
+N_ITERATIONS = 5
 
 stats = {}
 avg = {}
@@ -12,7 +12,7 @@ stats['j'] = np.array([])
 stats['sampleJ'] = np.array([])
 stats['abstractJ'] = np.array([])
 
-for i in range(1, N_ITERATIONS):
+for i in range(1, N_ITERATIONS + 1):
     data, optP, optJ = lqg_main.main(i)
     if i == 1:
         stats['param'] = np.array([data['param']])

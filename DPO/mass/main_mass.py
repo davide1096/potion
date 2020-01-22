@@ -40,7 +40,7 @@ ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
 UPD_LAM = 0.01 if STOCH else 0.0001  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = np.array([9, 13]) if STOCH else np.array([9, 13])
+N_MCRST_DYN = np.array([12, 15]) if STOCH else np.array([9, 13])
 MIN_SPACE_VAL = np.array([-1, -2])
 MAX_SPACE_VAL = np.array([1, 2])
 MAX_ACTION_VAL = 1

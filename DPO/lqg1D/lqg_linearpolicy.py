@@ -2,7 +2,7 @@ import gym
 import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
-from DPO.algorithm.abstraction.maxlikelihood_abstraction import MaxLikelihoodAbstraction
+from DPO.algorithm.abstraction.maxlikelihood_abstraction_parallel import MaxLikelihoodAbstraction
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 from DPO.algorithm.updater_deterministic.updater import Updater

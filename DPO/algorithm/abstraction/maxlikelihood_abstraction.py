@@ -58,8 +58,8 @@ class MaxLikelihoodAbstraction(Abstraction):
 
             # contribution of the fictitious samples.
             for act in self.arriving_mcrst_helper.keys():
-                for mcrst in self.arriving_mcrst_helper[act].keys():
-                    matrix_i[self.get_id_from_action(act)][mcrst] += self.arriving_mcrst_helper[act][mcrst]
+                for index_mcrst in self.arriving_mcrst_helper[act].keys():
+                    matrix_i[self.get_id_from_action(act)][index_mcrst] += self.arriving_mcrst_helper[act][index_mcrst]
 
         self.I.value = matrix_i
 
@@ -93,14 +93,42 @@ class MaxLikelihoodAbstraction(Abstraction):
 
         constraints = []
         # Sum of rows must be equal to 1.
-        for k in range(0, self.n_actions):
+        for k in range(self.n_actions):
             constraints.append(cp.sum(theta[k]) == 1)
 
-        lipschitz_cons = helper_maxlikelihood.compute_lipschitz_constraints(self.container, self.intervals, self.sink,
-                                                                            self.arriving_mcrst_helper,
-                                                                            self.action_index, theta, self.L)
+        # Lipschitz hypothesis between actions in the same macrostate.
+        # for k in range(self.i):
+        #
+        #     actions_mcrst = sorted(list(self.container[k].keys()), reverse=True)
+        #     new_mcrst_possible = []
+        #     for act in actions_mcrst:
+        #         new_mcrst = helper.get_mcrst(self.container[k][act]['new_state'], self.intervals, self.sink)
+        #         index_mcrst = helper.get_multidim_mcrst(new_mcrst, self.intervals)
+        #
+        #         if index_mcrst not in new_mcrst_possible:
+        #             new_mcrst_possible.append(index_mcrst)
+        #
+        #         # The helper might contain new_mcrst that are not yet included in new_mcrst_possible.
+        #         from_helper = self.arriving_mcrst_helper[act].keys()
+        #         for index_mcrst in from_helper:
+        #             if index_mcrst not in new_mcrst_possible:
+        #                 new_mcrst_possible.append(index_mcrst)
+        #
+        #     for i in range(len(actions_mcrst) - 1):
+        #         for k2 in new_mcrst_possible:
+        #             constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
+        #                                theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] <=
+        #                                self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
+        #             constraints.append(theta[self.get_id_from_action(actions_mcrst[i])][k2] -
+        #                                theta[self.get_id_from_action(actions_mcrst[i + 1])][k2] >=
+        #                                - self.L * abs(actions_mcrst[i] - actions_mcrst[i + 1]))
 
-        problem = cp.Problem(objective, constraints + lipschitz_cons)
+        # lipschitz_cons = helper_maxlikelihood.compute_lipschitz_constraints(self.container, self.intervals, self.sink,
+        #                                                                     self.arriving_mcrst_helper,
+        #                                                                     self.action_index, theta, self.L)
+        #
+        # problem = cp.Problem(objective, constraints + lipschitz_cons)
+        problem = cp.Problem(objective, constraints)
         problem.solve(solver=cp.ECOS, abstol=1e-4, max_iters=200)
 
         return theta.value

@@ -15,7 +15,7 @@ import logging
 problem = 'mass'
 SINK = False
 # INIT_DETERMINISTIC_PARAM = np.array([-1.8, -1.])
-INIT_DETERMINISTIC_PARAM = np.array([-0.3, -0.6])
+INIT_DETERMINISTIC_PARAM = np.array([-0.5, -1.2])
 # optimal param values: [-1.376, -0.822]
 TAO = 0.1
 MASS = 0.1
@@ -35,9 +35,9 @@ N_ITERATION = 1000
 N_EPISODES = 500  # 2000
 N_STEPS = 20
 
-STOCH = 1
+STOCH = 0
 ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
-UPD_LAM = 0.01 if STOCH else 0.0001  # Regularization parameter in the policy re-projection.
+UPD_LAM = 0.01 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
 N_MCRST_DYN = np.array([12, 12]) if STOCH else np.array([9, 9])
@@ -123,7 +123,7 @@ def main(seed=None):
         abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
     else:
         abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-    det_upd = Updater(help.getSeed())
+    det_upd = Updater(help.getSeed(), UPD_LAM)
 
     opt_par4vis = np.round(opt_par, 3)
     title = "mass"

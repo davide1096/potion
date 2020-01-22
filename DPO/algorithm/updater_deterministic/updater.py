@@ -5,13 +5,14 @@ import numpy as np
 LR_DET_POLICY = 0.05  # 0.05 - 0.01 - 0.005
 # N_ITERATIONS_BATCH_GRAD = 200
 # BATCH_SIZE = 50
-LAMBDA = 0.0001  # 0.0001
+# LAMBDA = 0.0001  # 0.0001
 
 
 class Updater(object):
 
-    def __init__(self, seed=None):
+    def __init__(self, seed=None, lam=0.0005):
         super().__init__()
+        self.lam = lam
         if seed is not None:
             self.seed = seed
         else:
@@ -34,7 +35,7 @@ class Updater(object):
 
         for s in samples:
             grad = (np.dot(det_param, s[0]) - s[1]) * s[0]
-            det_param = det_param - LR_DET_POLICY * (grad + LAMBDA * np.sign(det_param - init_par))
+            det_param = det_param - LR_DET_POLICY * (grad + self.lam * np.sign(det_param - init_par))
         return det_param
 
     # def calculate_error(self, det_param, samples):

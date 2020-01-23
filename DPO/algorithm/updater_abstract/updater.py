@@ -17,7 +17,7 @@ class AbsUpdater(object):
         self.best_policy = {}
         self.sink_val = sink_val
 
-    def solve_mdp(self, container, intervals=None):
+    def solve_mdp(self, container):
 
         self.v_function = {}
         self.best_policy = {}
@@ -70,7 +70,9 @@ class AbsUpdater(object):
                     for k3, v3 in abs_tf.items():
                         if k3 in self.v_function.keys():
                             x += v3 * self.v_function[k3]
-                        # TODO else
+                        else:
+                            x += v3 * min(self.v_function.values())
+                        # TODO is this correction good?
                     possible_actions[k2] = abs_reward + self.gamma * x
 
             self.best_policy[k1], new_v_function[k1] = self.best_actions(possible_actions, k1, container)

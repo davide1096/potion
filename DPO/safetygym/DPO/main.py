@@ -17,8 +17,8 @@ ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 ds0 = 1
 
 N_ITERATION = 1000
-N_EPISODES = 50
-N_STEPS = 200
+N_EPISODES = 250
+N_STEPS = 20
 
 
 def deterministic_action(det_par, state):
@@ -32,15 +32,6 @@ def compute_state_bounds(samples):
     for sam in samples[1:]:
         min_values = np.minimum(min_values, sam[3])
         max_values = np.maximum(max_values, sam[3])
-    # normalized_samples = []
-    # den = (max_values - min_values)
-    # den = np.array([d if d != 0 else 1 for d in den])
-    # for i in range(len(samples)):
-    #     sam = samples[i]
-    #     norm_s = (sam[0] - min_values) / den
-    #     norm_ns = (sam[3] - min_values) / den
-    #     normalized_samples.append([norm_s, sam[1], sam[2], norm_ns])
-    # return normalized_samples
     return min_values, max_values
 
 
@@ -78,7 +69,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
 def main(seed=42):
 
     help = Helper(seed)
-    GAMMA = 0.95
+    GAMMA = 1
 
     # load and configure the environment.
     env = base_env.create_env(seed)

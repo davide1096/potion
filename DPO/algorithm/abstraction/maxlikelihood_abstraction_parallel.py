@@ -80,12 +80,15 @@ class MaxLikelihoodAbstraction(Abstraction):
             constraints.append(cp.sum(theta[k]) == 1)
 
         # Lipschitz hypothesis between actions.
-        for i in range(len(actions) - 1):
-            for k2 in arriving_mcrst:
-                constraints.append(theta[i][k2] - theta[i+1][k2] <= self.L *
-                                   abs(ordered_actions[i] - ordered_actions[i+1]))
-                constraints.append(theta[i][k2] - theta[i+1][k2] >= - self.L *
-                                   abs(ordered_actions[i] - ordered_actions[i+1]))
+        # for i in range(len(actions) - 1):
+        #     for k2 in arriving_mcrst:
+        #         constraints.append(theta[i][k2] - theta[i+1][k2] <= self.L *
+        #                            abs(ordered_actions[i] - ordered_actions[i+1]))
+        #         constraints.append(theta[i][k2] - theta[i+1][k2] >= - self.L *
+        #                            abs(ordered_actions[i] - ordered_actions[i+1]))
+        lip_cons = helper_maxlikelihood.compute_lipschitz_constraints(self.intervals, ordered_actions, arriving_mcrst,
+                                                                      theta, self.L)
+        constraints = constraints + lip_cons
 
         problem = cp.Problem(objective, constraints)
         return problem
@@ -110,7 +113,6 @@ class MaxLikelihoodAbstraction(Abstraction):
                 problem.solve(solver=cp.ECOS, max_iters=200)
             except cp.SolverError:
                 problem.solve(solver=cp.SCS, max_iters=200)
-            # problem.solve(solver=cp.ECOS, max_iters=200, verbose=True)
             theta = problem.variables()[0].value
             return (mcrst, theta)
         else:
@@ -121,24 +123,24 @@ class MaxLikelihoodAbstraction(Abstraction):
 
     def pre_construct_problem(self, mcrst):
         if len(self.container[mcrst]) > 0:  # I consider not empty macrostate.
-            return self.construct_problem(mcrst)
+            problem = self.construct_problem(mcrst)
+            return self.compute_parallel_solution(mcrst, problem)
+
         else:
-            return None
+            return (mcrst, None)
 
     def compute_abstract_tf(self, optA, mins=-1, maxs=1, maxa=1, std=0):
         self.i = len(self.container)  # it represents the # of columns of every matrix.
         self.create_arriving_mcrst_helper()  # it allows to consider fictitious samples.
 
-        # pool = mp.Pool(mp.cpu_count())
         pool = mp.Pool(len(os.sched_getaffinity(0)))  # uses visible cpus
-        problems = [pool.apply(self.pre_construct_problem, args=(i, )) for i in [j for j in range(self.i)]]
 
         self.results = []
-        for i, p in enumerate(problems):
-            pool.apply_async(self.compute_parallel_solution, args=(i, p), callback=self.collect_result)
+        for i in range(self.i):
+            pool.apply_async(self.pre_construct_problem, args=(i, ), callback=self.collect_result)
 
         pool.close()
-        pool.join()  # postpones the execution of next line of code until all processes in the queue are done.
+        pool.join()
 
         self.results.sort(key=lambda x: x[0])
         solution = [r for i, r in self.results]
@@ -150,11 +152,3 @@ class MaxLikelihoodAbstraction(Abstraction):
             for i, act in enumerate(ordered_actions):
                 self.container[mcrst][act]['abs_tf'] = np.array(solution[mcrst][i]).reshape(tuple(shape))
 
-        if self.sink:
-            sink_tf = np.zeros(len(self.intervals) + 1)
-            sink_tf[-1] = 1
-            for act in self.container[-1].keys():
-                self.container[-1][act]['abs_tf'] = sink_tf
-
-        # Step 3: Don't forget to close
-        pool.close()

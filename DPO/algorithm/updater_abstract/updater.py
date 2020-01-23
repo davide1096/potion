@@ -1,5 +1,7 @@
 import numpy as np
 import DPO.helper as helper
+import multiprocessing as mp
+import os
 
 # to avoid a slow computation.
 MAX_ITERATIONS = 500
@@ -16,6 +18,7 @@ class AbsUpdater(object):
         self.v_function = []
         self.best_policy = []
         self.sink_val = sink_val
+        self.results = []
 
         if intervals is not None:
             adder = 1 if sink else 0
@@ -60,25 +63,47 @@ class AbsUpdater(object):
         # True if there is no diff between prev and new value greater than EPSILON.
         return not np.any(diff > EPSILON)
 
+    def collect_result(self, result):
+        self.results.append(result)
+
     def single_step_update(self, container):
 
         new_v_function = np.empty_like(self.v_function)
-        for i in range(len(container)):
-            possible_actions = {}
+        pool = mp.Pool(len(os.sched_getaffinity(0)))
 
-            for a in container[i].keys():
-                abs_reward = container[i][a]['abs_reward']
+        self.results = []
+        for i, cont in enumerate(container):
+            pool.apply_async(self.single_step_update_parallel, args=(i, cont), callback=self.collect_result)
 
-                if 'abs_tf' in container[i][a]:
-                    abs_tf = container[i][a]['abs_tf']
-                    # x is the sum of the v_functions of new_mcrst, weighted according to the abs_tf.
-                    x = np.sum(abs_tf * self.v_function)
-                    possible_actions[a] = abs_reward + self.gamma * x
+        pool.close()
+        pool.join()
 
+        self.results.sort(key=lambda x: x[0])
+        nvf = [r[1] for i, r in self.results]
+        self.best_policy = [r[0] for i, r in self.results]
+
+        for i, single_vf in enumerate(nvf):
             mcrst = helper.get_mcrst_from_index(i, self.intervals)
-            self.best_policy[i], new_v_function[tuple(mcrst)] = self.best_actions(possible_actions, i)
+            new_v_function[tuple(mcrst)] = single_vf
 
         return new_v_function
+
+    def single_step_update_parallel(self, i, cont):
+
+        possible_actions = {}
+
+        for a in cont.keys():
+            abs_reward = cont[a]['abs_reward']
+
+            if 'abs_tf' in cont[a]:
+                abs_tf = cont[a]['abs_tf']
+                # x is the sum of the v_functions of new_mcrst, weighted according to the abs_tf.
+                x = np.sum(abs_tf * self.v_function)
+                possible_actions[a] = abs_reward + self.gamma * x
+
+        bp, nvf = self.best_actions(possible_actions, i)
+
+        return (i, [bp, nvf])
 
     def best_actions(self, possibilities, i):
 

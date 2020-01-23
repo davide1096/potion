@@ -37,7 +37,7 @@ N_STEPS = 20
 
 STOCH = 1
 ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
-UPD_LAM = 0.0025 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
+UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
 N_MCRST_DYN = np.array([13, 13]) if STOCH else np.array([9, 9])

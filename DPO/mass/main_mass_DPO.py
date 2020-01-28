@@ -31,13 +31,13 @@ GAMMA = 0.95
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 0
 
-N_ITERATION = 1000
-N_EPISODES = 2000  # 2000
+N_ITERATION = 50
+N_EPISODES = 500
 N_STEPS = 20
 
 STOCH = 1
 ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
-UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
+# UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 5  # Increase the L constant in stochastic environments.
 
 N_MCRST_DYN = np.array([13, 13]) if STOCH else np.array([9, 9])
@@ -86,7 +86,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv, IN
     return fictitious_samples
 
 
-def main(seed=None):
+def main(seed=None, alpha=0.025, lam=0.0005):
 
     help = Helper(seed)
 
@@ -123,7 +123,7 @@ def main(seed=None):
         abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
     else:
         abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-    det_upd = Updater(help.getSeed(), UPD_LAM)
+    det_upd = Updater(help.getSeed(), alpha, lam)
 
     opt_par4vis = np.round(opt_par, 3)
     title = "mass"
@@ -136,11 +136,13 @@ def main(seed=None):
     stats = {}
     stats['param'] = []
     stats['j'] = []
-    stats['sampleJ'] = []
-    stats['abstractJ'] = []
-    stats['param'].append(det_param)
-    stats['j'].append(initJ)
+    stats['estj'] = []
+    # stats['param'].append(det_param)
+    # stats['j'].append(initJ)
     # ------------
+
+    tot_env_j = 0
+    tot_est_j = 0
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
@@ -166,6 +168,8 @@ def main(seed=None):
 
         j = env.computeJ(det_param, 0)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
+        tot_env_j += j
+        tot_est_j += estj
 
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
         print("Updated performance measure: {}".format(j))
@@ -177,12 +181,12 @@ def main(seed=None):
         # PLOTTER INFO
         stats['param'].append(det_param)
         stats['j'].append(j)
-        stats['sampleJ'].append(estj)
+        stats['estj'].append(estj)
         # stats['abstractJ'].append(absJ)
         # ------------
 
     # visualizer.save_image()
-    return stats, opt_par4vis, optJ4vis
+    return stats, tot_env_j, tot_est_j
 
 
-main(0)
+# main(0)

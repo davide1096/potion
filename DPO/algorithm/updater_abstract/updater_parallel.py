@@ -71,9 +71,10 @@ class AbsUpdater(object):
         new_v_function = np.empty_like(self.v_function)
         pool = mp.Pool(len(os.sched_getaffinity(0)))
 
+        copy_vf = self.v_function.copy()
         self.results = []
         for i, cont in enumerate(container):
-            pool.apply_async(self.single_step_update_parallel, args=(i, cont, self.v_function.copy(), self.gamma),
+            pool.apply_async(self.single_step_update_parallel, args=(i, cont, copy_vf, 0.95),
                              callback=self.collect_result)
 
         pool.close()

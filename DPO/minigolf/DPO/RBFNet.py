@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-BATCH_SIZE = 50
-LAMBDA = 0.001
+# BATCH_SIZE = 50
+# LAMBDA = 0.001
 
 
 def rbf(x, c, s):
@@ -13,9 +13,10 @@ def rbf(x, c, s):
 class RBFNet(object):
     """Implementation of a Radial Basis Function Network"""
 
-    def __init__(self, centers, sigma, w, seed, k=5, lr=0.01, epochs=200, rbf=rbf, inferStds=True):
+    def __init__(self, centers, sigma, w, seed, lr=0.01, lam=0.001, k=5, epochs=200, rbf=rbf, inferStds=True):
         self.k = k
         self.lr = lr
+        self.lam = lam
         self.epochs = epochs
         self.rbf = rbf
         self.inferStds = inferStds
@@ -72,7 +73,7 @@ class RBFNet(object):
 
             reg = np.sign([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L1-norm
             # reg = np.array([neww - oldw for neww, oldw in zip(new_w, old_w)])  # L2-norm
-            new_w = new_w - self.lr * (grad + LAMBDA * reg)
+            new_w = new_w - self.lr * (grad + self.lam * reg)
 
         self.w = new_w
 

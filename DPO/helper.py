@@ -158,3 +158,19 @@ def get_constant_intervals(min_space, max_space, n_mcrst):
         counter = round(counter + dim, 2)
     intervals.append([counter, max_space])
     return intervals
+
+
+def get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):
+    mcrst = []
+    for mins, maxs, n in zip(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):  # for every dimension
+        dim = math.floor(((maxs - mins) / n) * 100)/100.0  # diameter of the macrostate
+        remaining = round(((maxs - mins) - dim * n), 2)  # correction
+        intervals = []
+        counter = round(mins + dim + math.floor(remaining/2 * 100)/100.0, 2)
+        intervals.append([mins, counter])
+        while counter <= round(maxs - 2 * dim, 2):
+            intervals.append([counter, round(counter + dim, 2)])
+            counter = round(counter + dim, 2)
+        intervals.append([counter, maxs])
+        mcrst.append(intervals)
+    return mcrst

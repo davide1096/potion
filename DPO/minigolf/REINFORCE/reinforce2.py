@@ -116,7 +116,7 @@ def reinforce2(env, policy, horizon, *,
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-    visualizer = MGVisualizer("MG visualizer", "/minigolf/REINFORCE/test{}.jpg".format(seed))
+    visualizer = MGVisualizer("MG visualizer", "/minigolf/REINFORCE/test{}.png".format(seed))
     visualizer.clean_panels()
 
     # PLOTTER INFO

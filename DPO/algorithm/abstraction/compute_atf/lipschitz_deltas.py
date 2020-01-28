@@ -52,6 +52,8 @@ class LipschitzDeltaS(LipschitzAbstraction):
                 bounds.append([round(min_val2, 3), round(max_val2, 3)])
 
             min_val, max_val = helper.interval_intersection(bounds)
+            if abs(min_val - max_val) > 0.01:
+                print("here")
             # in case of void intersections, None values are returned.
             if min_val is not None and max_val is not None:
                 new_state_bounds.append([min_val, max_val])

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from DPO.visualizer.visualizer import Visualizer
 import numpy as np
 from collections import OrderedDict
+import os
 
 
 class MGVisualizer(Visualizer):
@@ -17,7 +18,7 @@ class MGVisualizer(Visualizer):
         self.fail = []
         self.title = title
         self.filename = filename
-        plt.figure(figsize=(12.8, 9.6))
+        self.fig = plt.figure(figsize=(12.8, 9.6))
         self.k = ['w1', 'w2', 'w3', 'w4', 'fail', 'j']
         self.titles = ["w1", "w2", "w3", "w4", "Failures", "Performance"]
 
@@ -43,10 +44,11 @@ class MGVisualizer(Visualizer):
             plt.grid(b=True)
 
         plt.draw()
-        plt.pause(0.001)
+        self.fig.canvas.start_event_loop(0.001)
 
     def save_image(self):
         filename = "../images/" + self.filename
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         plt.savefig(filename, dpi=150, transparent=False)
         plt.close()
 
@@ -55,7 +57,7 @@ class MGVisualizer(Visualizer):
 
     def show_average(self, avg, std):
 
-        plt.figure(figsize=(12.8, 9.6))
+        fig = plt.figure(figsize=(12.8, 9.6))
         plt.suptitle("Average and confidence")
         plt.subplots_adjust(hspace=0.6, wspace=0.4)
 
@@ -70,5 +72,6 @@ class MGVisualizer(Visualizer):
             plt.grid(b=True)
 
         plt.draw()
-        plt.pause(0.001)
+        self.fig.canvas.start_event_loop(0.001)
+        plt.close()
 

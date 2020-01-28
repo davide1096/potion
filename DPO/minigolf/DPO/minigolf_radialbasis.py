@@ -10,6 +10,8 @@ from DPO.helper import Helper
 import logging
 from DPO.minigolf.DPO.RBFNet import RBFNet
 import csv
+import os
+import errno
 
 
 problem = 'minigolf'
@@ -20,22 +22,14 @@ GAMMA = 0.99
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
-N_ITERATION = 501
+N_ITERATION = 300
 N_EPISODES = 500
 N_STEPS = 20
 
-N_MCRST_DYN = 30
+N_MCRST_DYN = 8
 MIN_SPACE_VAL = 0
 MAX_SPACE_VAL = 20
-# INTERVALS = [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16], [16, 18], [18, 20]]
-# INTERVALS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12],
-#              [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20]]
-# INTERVALS = [[0, 0.67], [0.67, 1.34], [1.34, 2.01], [2.01, 2.68], [2.68, 3.35], [3.35, 4.02], [4.02, 4.69],
-#              [4.69, 5.36], [5.36, 6.03], [6.03, 6.7], [6.7, 7.37], [7.37, 8.04], [8.04, 8.71], [8.71, 9.38],
-#              [9.38, 10.05], [10.05, 10.72], [10.72, 11.39], [11.39, 12.06], [12.06, 12.73], [12.73, 13.4],
-#              [13.4, 14.07], [14.07, 14.74], [14.74, 15.41], [15.41, 16.08], [16.08, 16.75], [16.75, 17.42],
-#              [17.42, 18.09], [18.09, 18.76], [18.76, 19.43], [19.43, 20]]
-INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16], [16, 20]]
+# INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16], [16, 20]]
 
 # radial bases configuration
 CENTERS = [4, 8, 12, 16]
@@ -65,17 +59,14 @@ def sampling_from_det_pol(env, n_episodes, n_steps, rbf):
     return samples_list
 
 
-def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, interv):
+def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, INTERVALS):
     fictitious_samples = []
     for sam in det_samples:
         single_sample = []
         for s in sam:
             prev_action = deterministic_action(np.reshape(s[0], (1, 1)), rbf)
             prev_action = prev_action[0]
-            if interv is not None:
-                mcrst = helper.get_mcrst(s[0], interv, SINK)
-            else:
-                mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
+            mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
             if prev_action in abs_opt_policy[mcrst]:
                 single_sample.append([s[0], prev_action])
             else:
@@ -85,7 +76,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, interv):
     return fictitious_samples
 
 
-def main(seed=None):
+def main(seed=None, alpha=0.01, lam=0.001):
 
     help = Helper(seed)
 
@@ -97,19 +88,18 @@ def main(seed=None):
 
     # logging.basicConfig(level=logging.DEBUG, filename='../../test.log', filemode='w', format='%(message)s')
     cumulative_fail = 0
+    cumulative_j = 0
 
-    filename = "../csv/minigolf/DPO/data{}.csv".format(help.getSeed())
+    filename = "../csv/minigolf/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-    abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
-    # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
-    abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
-    # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)
-    rbf = RBFNet(CENTERS, STD_DEV, INIT_W, help.getSeed())
+    rbf = RBFNet(CENTERS, STD_DEV, INIT_W, help.getSeed(), alpha, lam)
     # rbf = RBFNet([3, 6, 10, 14, 17], [0.1, 0.3, 0.5, 0.7, 1])
     # rbf = RBFNet([3, 6, 10, 14, 17], [0.49, 0.63, 0.79, 0.95, 1.33], help.getSeed())
-    visualizer = MGVisualizer("MG visualizer", "/minigolf/DPO/test{}.jpg".format(help.getSeed()))
+    visualizer = MGVisualizer("MG visualizer", "minigolf/DPO/ALPHA={}/LAM={}/test{}.png".format(alpha, lam,
+                                                                                                 help.getSeed()))
     visualizer.clean_panels()
 
     # PLOTTER INFO
@@ -125,14 +115,24 @@ def main(seed=None):
     for i in range(0, N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
+        # INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16],
+        #              [16, 20]]
+        INTERVALS = helper.get_constant_intervals([MIN_SPACE_VAL], [MAX_SPACE_VAL], [N_MCRST_DYN])[0]
         # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
         dyn_intervals = None
+
+        if i == 0:
+            abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
+            # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
+            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
+            # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)
+
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, ENV_NOISE)
 
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
 
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf, dyn_intervals)
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf, INTERVALS)
         fictitious_samples = helper.flat_listoflists(fictitious_samples)
         X = [f[0] for f in fictitious_samples]
         y = [f[1] for f in fictitious_samples]
@@ -141,6 +141,7 @@ def main(seed=None):
         rbf.fit(X, y)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
+        cumulative_j += estj
         print("Iteration n.{}".format(i))
         print("W: {}".format(rbf.w))
         print("Updated estimated performance measure: {}".format(estj))
@@ -172,4 +173,4 @@ def main(seed=None):
         # ------------
 
     visualizer.save_image()
-    return stats
+    return stats, cumulative_j

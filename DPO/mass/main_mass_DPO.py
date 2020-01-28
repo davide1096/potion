@@ -15,7 +15,7 @@ import logging
 problem = 'mass'
 SINK = False
 # INIT_DETERMINISTIC_PARAM = np.array([-1.8, -1.])
-INIT_DETERMINISTIC_PARAM = np.array([-0.3, -0.6])
+INIT_DETERMINISTIC_PARAM = np.array([-0.3, -0.3])
 # optimal param values: [-1.376, -0.822]
 TAO = 0.1
 MASS = 0.1
@@ -146,9 +146,7 @@ def main(seed=None, alpha=0.025, lam=0.0005):
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        # helper_vis.plot_samples([d[0] for d in helper.flat_listoflists(determin_samples)], INTERVALS, "samples",
-        #                         MIN_SPACE_VAL, MAX_SPACE_VAL)
-        # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
+
         dyn_intervals = None
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL, ENV_NOISE)

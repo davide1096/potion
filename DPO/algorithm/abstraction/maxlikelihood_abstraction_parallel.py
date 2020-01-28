@@ -105,7 +105,7 @@ class MaxLikelihoodAbstraction(Abstraction):
 
     def compute_parallel_solution(self, mcrst, problem):
 
-        print("Solving the problem for the mcrst: {}".format(mcrst))
+        # print("Solving the problem for the mcrst: {}".format(mcrst))
         if problem is not None:
             # initial_solution = self.build_initial_solution(i)
             # p.variables()[0] = initial_solution

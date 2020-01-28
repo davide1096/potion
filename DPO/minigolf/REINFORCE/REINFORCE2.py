@@ -17,7 +17,7 @@ def feature_function(s):
     return res
 
 
-def main(seed=None):
+def main(seed=None, alpha=0.01, logsigma=-3.):
 
     gamma = 0.99
     env = gym.make('MiniGolf-v0')
@@ -30,7 +30,7 @@ def main(seed=None):
     horizon = 20  # maximum length of a trajectory
 
     mu_init = torch.tensor([1., 1., 1., 1.])
-    log_std_init = torch.tensor([-3.])
+    log_std_init = torch.tensor([logsigma])
 
     policy = RadialBasisPolicy(state_dim, #input size
                                    action_dim, #output size
@@ -40,7 +40,7 @@ def main(seed=None):
                                    learn_std=True
                               )
 
-    stepper = ConstantStepper(0.01)
+    stepper = ConstantStepper(alpha)
 
     batchsize = 500
     log_dir = '../../../logs'
@@ -58,13 +58,13 @@ def main(seed=None):
     # Reset the policy (in case is run multiple times)
     policy.set_from_flat(init_ten)
 
-    stats = reinforce2(env = env,
+    stats, performance = reinforce2(alpha, logsigma, env = env,
               policy = policy,
               horizon = horizon,
               stepper = stepper,
               batchsize = batchsize,
               disc = gamma,
-              iterations = 501,
+              iterations = 300,
               seed = seed,
               logger = logger,
               save_params = 5, #Policy parameters will be saved on disk each 5 iterations
@@ -74,4 +74,4 @@ def main(seed=None):
              )
 
     policy.get_flat()
-    return stats
+    return stats, performance

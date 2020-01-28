@@ -5,18 +5,17 @@ from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import csv
 import os
 
-algorithm = "DPO"  # use "DPO" or "REINFORCE" to change algorithm
 N_ITERATIONS = 5
 
 ALPHA = [0.005, 0.01, 0.05]
-LAM = [0.0005, 0.001, 0.005]
+LOGSIGMA = [-4., -3., -2.]
 
 tot_j_keeper = {}
 
 for alpha in ALPHA:
 
     tot_j_keeper[alpha] = {}
-    for lam in LAM:
+    for logsigma in LOGSIGMA:
 
         stats = {}
         avg = {}
@@ -24,7 +23,7 @@ for alpha in ALPHA:
 
         tot_j = 0
         for i in range(1, N_ITERATIONS + 1):
-            data, j = mini_main_dpo.main(i, alpha, lam) if algorithm == "DPO" else mini_main_rei.main(i)
+            data, j = mini_main_rei.main(i, alpha, logsigma)
             tot_j += j
             if i == 1:
                 stats['w1'] = np.array([data['w1']])
@@ -55,9 +54,8 @@ for alpha in ALPHA:
         std['j'] = np.std(stats['j'], axis=0)
         std['fail'] = np.std(stats['fail'], axis=0)
 
-        filename = "minigolf/DPO/ALPHA={}/LAM={}/stats.png".format(alpha, lam) if algorithm == "DPO" \
-            else "/minigolf/REINFORCE/stats.png"
-        filename_csv = "../csv/minigolf/DPO/ALPHA={}/LAM={}/stats.csv".format(alpha, lam)
+        filename = "/minigolf/ALPHA={}/LOGSTD={}/REINFORCE/stats.png".format(alpha, logsigma)
+        filename_csv = "../csv/minigolf/REINFORCE/ALPHA={}/LOGSTD={}/stats.csv".format(alpha, logsigma)
         os.makedirs(os.path.dirname(filename_csv), exist_ok=True)
         data_file = open(filename_csv, mode='w')
         file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -73,14 +71,14 @@ for alpha in ALPHA:
         visualizer.show_average(avg, std)
         visualizer.save_image()
 
-        tot_j_keeper[alpha][lam] = tot_j / N_ITERATIONS
+        tot_j_keeper[alpha][logsigma] = tot_j / N_ITERATIONS
 
-filename = "../tuning/minigolf/DPO/alpha_lam_j.csv"
+filename = "../tuning/minigolf/REINFORCE/alpha_lam_j.csv"
 os.makedirs(os.path.dirname(filename), exist_ok=True)
 data_file = open(filename, mode='w')
 file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 file_writer.writerow(['alpha', 'lambda', 'j'])
 for alpha in ALPHA:
-    for lam in LAM:
-        file_writer.writerow([alpha, lam, tot_j_keeper[alpha][lam]])
+    for logsigma in LOGSIGMA:
+        file_writer.writerow([alpha, logsigma, tot_j_keeper[alpha][logsigma]])
 

@@ -16,8 +16,9 @@ import time
 import numpy as np
 from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import csv
+import os
 
-def reinforce2(env, policy, horizon, *,
+def reinforce2(alpha, logsig, env, policy, horizon, *,
               batchsize=100,
               iterations=1000,
               disc=0.99,
@@ -112,11 +113,13 @@ def reinforce2(env, policy, horizon, *,
     logger.open(log_row.keys())
 
     # init image & csv
-    filename = "../csv/minigolf/REINFORCE/data{}.csv".format(seed)
+    filename = "../csv/minigolf/REINFORCE/ALPHA={}/LOGSTD={}/data{}.csv".format(alpha, logsig, seed)
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-    visualizer = MGVisualizer("MG visualizer", "/minigolf/REINFORCE/test{}.png".format(seed))
+    visualizer = MGVisualizer("MG visualizer", "/minigolf/REINFORCE/ALPHA={}/LOGSTD={}/test{}.png".format(alpha, logsig,
+                                                                                                          seed))
     visualizer.clean_panels()
 
     # PLOTTER INFO
@@ -132,6 +135,7 @@ def reinforce2(env, policy, horizon, *,
     # Learning loop
     it = 0
     cumulative_fail = 0
+    cumulative_j = 0
     while it < iterations:
         # Begin iteration
         start = time.time()
@@ -175,6 +179,7 @@ def reinforce2(env, policy, horizon, *,
         # ---------------------------------------------------
 
         perf = performance(batch, disc)
+        cumulative_j += perf
         log_row['Perf'] = perf
         log_row['Info'] = mean_sum_info(batch).item()
         log_row['UPerf'] = performance(batch, disc=1.)
@@ -247,4 +252,4 @@ def reinforce2(env, policy, horizon, *,
     visualizer.save_image()
     # Cleanup
     logger.close()
-    return stats
+    return stats, perf

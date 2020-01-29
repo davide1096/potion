@@ -31,7 +31,7 @@ GAMMA = 0.95
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 0
 
-N_ITERATION = 50
+N_ITERATION = 60
 N_EPISODES = 500
 N_STEPS = 20
 

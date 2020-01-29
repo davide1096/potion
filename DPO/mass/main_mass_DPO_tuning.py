@@ -4,9 +4,9 @@ from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import csv
 import os
 
-N_ITERATIONS = 5
+N_ITERATIONS = 3
 
-ALPHA = [0.01, 0.025, 0.05]
+ALPHA = [0.025]
 LAM = [0.0001, 0.0005, 0.001]
 
 tot_j_keeper = {}

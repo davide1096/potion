@@ -74,7 +74,7 @@ class AbsUpdater(object):
         copy_vf = self.v_function.copy()
         self.results = []
         for i, cont in enumerate(container):
-            pool.apply_async(self.single_step_update_parallel, args=(i, cont, copy_vf, 0.95),
+            pool.apply_async(self.single_step_update_parallel, args=(i, cont, copy_vf, self.gamma),
                              callback=self.collect_result)
 
         pool.close()

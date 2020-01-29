@@ -101,6 +101,7 @@ def main(seed=None, alpha=0.025, lam=0.0005):
     env.seed(help.getSeed())
 
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
+    print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
     print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
 
     # calculate the optimal values of the problem.

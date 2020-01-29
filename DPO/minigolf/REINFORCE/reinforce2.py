@@ -233,13 +233,13 @@ def reinforce2(alpha, logsig, env, policy, horizon, *,
         file_writer.writerow([params[0], params[1], params[2], params[3], cumulative_fail, perf])
 
         # PLOTTER INFO
-        if it % 10 == 0:
-            stats['w1'].append(params[0])
-            stats['w2'].append(params[1])
-            stats['w3'].append(params[2])
-            stats['w4'].append(params[3])
-            stats['j'].append(perf)
-            stats['fail'].append(cumulative_fail)
+        # if it % 10 == 0:
+        stats['w1'].append(params[0])
+        stats['w2'].append(params[1])
+        stats['w3'].append(params[2])
+        stats['w4'].append(params[3])
+        stats['j'].append(perf)
+        stats['fail'].append(cumulative_fail)
         # ------------
 
         # Next iteration
@@ -252,4 +252,4 @@ def reinforce2(alpha, logsig, env, policy, horizon, *,
     visualizer.save_image()
     # Cleanup
     logger.close()
-    return stats, perf
+    return stats, cumulative_j

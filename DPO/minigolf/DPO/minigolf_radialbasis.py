@@ -76,7 +76,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, INTERVALS):
     return fictitious_samples
 
 
-def main(seed=None, alpha=0.01, lam=0.001):
+def main(seed=None, alpha=0.05, lam=0.0005):
 
     help = Helper(seed)
 
@@ -163,13 +163,13 @@ def main(seed=None, alpha=0.01, lam=0.001):
         file_writer.writerow([w[0], w[1], w[2], w[3], cumulative_fail, estj])
 
         # PLOTTER INFO
-        if i % 10 == 0:
-            stats['w1'].append(w[0])
-            stats['w2'].append(w[1])
-            stats['w3'].append(w[2])
-            stats['w4'].append(w[3])
-            stats['j'].append(estj)
-            stats['fail'].append(cumulative_fail)
+        # if i % 10 == 0:
+        stats['w1'].append(w[0])
+        stats['w2'].append(w[1])
+        stats['w3'].append(w[2])
+        stats['w4'].append(w[3])
+        stats['j'].append(estj)
+        stats['fail'].append(cumulative_fail)
         # ------------
 
     visualizer.save_image()

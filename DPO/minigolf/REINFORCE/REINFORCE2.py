@@ -17,7 +17,7 @@ def feature_function(s):
     return res
 
 
-def main(seed=None, alpha=0.01, logsigma=-3.):
+def main(seed=None, alpha=0.05, logsigma=-2.):
 
     gamma = 0.99
     env = gym.make('MiniGolf-v0')

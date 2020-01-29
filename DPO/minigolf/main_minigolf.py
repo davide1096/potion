@@ -17,7 +17,7 @@ lam = 0.0005
 logsig = -2.
 
 for i in range(1, N_ITERATIONS + 1):
-    data, _ = mini_main_dpo.main(i+5, alpha, lam) if algorithm == "DPO" else mini_main_rei.main(i, alpha, logsig)
+    data, _ = mini_main_dpo.main(i+5, alpha, lam) if algorithm == "DPO" else mini_main_rei.main(i+5, alpha, logsig)
     if i == 1:
         stats['w1'] = np.array([data['w1']])
         stats['w2'] = np.array([data['w2']])

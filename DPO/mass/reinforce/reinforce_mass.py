@@ -15,7 +15,7 @@ import torch
 import time
 
 
-def reinforce(env, policy, horizon, *,
+def reinforce(alpha, logsig, env, policy, horizon, *,
               batchsize=100,
               iterations=1000,
               disc=0.99,
@@ -108,8 +108,17 @@ def reinforce(env, policy, horizon, *,
     log_row = dict.fromkeys(log_keys)
     logger.open(log_row.keys())
 
+    # PLOTTER INFO
+    stats = {}
+    stats['param'] = []
+    stats['j'] = []
+    stats['estj'] = []
+    # ------------
+
     # Learning loop
     it = 0
+    cumulative_envj = 0
+    cumulative_estj = 0
     while (it < iterations):
         # Begin iteration
         start = time.time()
@@ -145,7 +154,8 @@ def reinforce(env, policy, horizon, *,
                                seed=seed,
                                n_jobs=parallel,
                                key=info_key)
-        log_row['Perf'] = performance(batch, disc)
+        perf = performance(batch, disc)
+        log_row['Perf'] = perf
         log_row['Info'] = mean_sum_info(batch).item()
         log_row['UPerf'] = performance(batch, disc=1.)
         log_row['AvgHorizon'] = avg_horizon(batch)
@@ -189,6 +199,17 @@ def reinforce(env, policy, horizon, *,
             logger.save_params(params, it)
 
         log_row['NewParams'] = new_params
+        db = new_params.numpy()
+        j = env.computeJ(new_params.numpy().reshape((1,2)), 0)
+        cumulative_envj += j
+        cumulative_estj += perf
+
+        # PLOTTER INFO
+        # if it % 10 == 0:
+        stats['param'].append(new_params.numpy().reshape((1,2)))
+        stats['j'].append(j)
+        stats['estj'].append(perf)
+        # ------------
 
         # Next iteration
         it += 1
@@ -199,3 +220,4 @@ def reinforce(env, policy, horizon, *,
 
     # Cleanup
     logger.close()
+    return stats, cumulative_envj, cumulative_estj

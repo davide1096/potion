@@ -199,14 +199,14 @@ def reinforce(alpha, logsig, env, policy, horizon, *,
             logger.save_params(params, it)
 
         log_row['NewParams'] = new_params
-        db = new_params.numpy()
-        j = env.computeJ(new_params.numpy().reshape((1,2)), 0)
+        # j = env.computeJ(new_params.numpy().reshape((1,2)), 0)
+        j = 0
         cumulative_envj += j
         cumulative_estj += perf
 
         # PLOTTER INFO
         # if it % 10 == 0:
-        stats['param'].append(new_params.numpy().reshape((1,2)))
+        stats['param'].append(new_params.numpy()[1:].reshape((1, 2)))
         stats['j'].append(j)
         stats['estj'].append(perf)
         # ------------

@@ -187,5 +187,3 @@ def main(seed=None, alpha=0.025, lam=0.0005):
     # visualizer.save_image()
     return stats, tot_env_j, tot_est_j
 
-
-# main(0)

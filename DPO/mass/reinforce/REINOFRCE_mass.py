@@ -5,6 +5,15 @@ from potion.actors.continuous_policies import ShallowGaussianPolicy
 from DPO.mass.reinforce.reinforce_mass import reinforce
 from potion.common.logger import Logger
 from potion.meta.steppers import ConstantStepper
+import numpy as np
+
+
+A = np.array([[1., 1.], [0., 1.]])
+B = np.array([[0.], [1.]])
+Q = np.diag([1., 0.])
+R = 0.1 * np.eye(1)
+GAMMA = 0.95
+ENV_NOISE = 0.1 * np.eye(2)
 
 
 def main(seed=None, alpha=0.025, logsig=-3.):
@@ -13,17 +22,24 @@ def main(seed=None, alpha=0.025, logsig=-3.):
     logger = Logger(directory=log_dir, name=log_name)
 
     env = gym.make('mass-v0')
+    env.sigma_noise = ENV_NOISE
+    env.A = A
+    env.B = B
+    env.Q = Q
+    env.R = R
+    env.gamma = GAMMA
+
+    print(env.computeOptimalK())
 
     state_dim = sum(env.observation_space.shape) #dimensionality of the state space
     action_dim = sum(env.action_space.shape) #dimensionality of the action space
     print(state_dim, action_dim)
 
     horizon = 20 #maximum length of a trajectory
-    gamma = 0.95
 
     mu_init = torch.tensor([-0.3, -0.3])
     log_std_init = torch.tensor([logsig])
-    learn_shallow_variance = False
+    learn_shallow_variance = True
 
     policy = ShallowGaussianPolicy(state_dim, #input size
                                    action_dim, #output size
@@ -56,7 +72,7 @@ def main(seed=None, alpha=0.025, logsig=-3.):
               horizon = horizon,
               stepper = stepper,
               batchsize = batchsize,
-              disc = gamma,
+              disc = GAMMA,
               iterations = 300,
               seed = seed,
               logger = logger,

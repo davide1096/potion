@@ -295,7 +295,7 @@ class ComplexMiniGolf(gym.Env):
         self.putter_length = 1.0 # [0.7:1.0]
         #self.friction = 0.131 # [0.065:0.196]
         self.friction_low = 0.131
-        self.friction_high =  0.19 #0.190
+        self.friction_high =  0.17 #0.190
         self.hole_size = 0.10 # [0.10:0.15]
         self.sigma_noise = 0.3
         self.ball_radius = 0.02135
@@ -321,13 +321,16 @@ class ComplexMiniGolf(gym.Env):
         self.sigma_noise = m.sqrt(env_param[-1])
 
     def computeFriction(self, state):
-        if state < (self.max_pos - self.min_pos) / 3:
-            friction = self.friction_low
-        elif state < (self.max_pos - self.min_pos) * 2 / 3:
-            friction = self.friction_low
-        else:
-            friction = self.friction_high
-        return friction
+        # if state < (self.max_pos - self.min_pos) / 3:
+        #     friction = self.friction_low
+        # elif state < (self.max_pos - self.min_pos) * 2 / 3:
+        #     friction = self.friction_low
+        # else:
+        #     friction = self.friction_high
+        # return friction
+        delta_f = self.friction_high - self.friction_low
+        delta_p = self.max_pos - self.min_pos
+        return self.friction_low + (delta_f / delta_p) * state
 
     def step(self, action, render=False):
         action = np.clip(action, self.min_action, self.max_action / 2)

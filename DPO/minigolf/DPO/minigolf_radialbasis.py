@@ -81,7 +81,7 @@ def main(seed=None, alpha=0.05, lam=0.0005):
     help = Helper(seed)
 
     # load and configure the environment.
-    env = gym.make('MiniGolf-v0')
+    env = gym.make('ComplexMiniGolf-v0')
     env.sigma_noise = ENV_NOISE
     env.gamma = GAMMA
     env.seed(help.getSeed())
@@ -122,7 +122,7 @@ def main(seed=None, alpha=0.05, lam=0.0005):
         dyn_intervals = None
 
         if i == 0:
-            abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
+            abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS) if ds0 else LipschitzDeltaS(GAMMA, SINK, INTERVALS, 1.3, 0.9)
             # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
             abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
             # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)

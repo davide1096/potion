@@ -3,6 +3,7 @@ import DPO.algorithm.abstraction.compute_atf.abstract_tf.sample_distribution as 
 import DPO.algorithm.abstraction.compute_atf.abstract_tf.bounded_atf as bounded_atf
 import DPO.helper as helper
 import logging
+import numpy as np
 # import DPO.visualizer.bounds_visualizer as bvis
 
 
@@ -41,7 +42,9 @@ class LipschitzDeltaS(LipschitzAbstraction):
             # if not ds0 the bound computed above is not a single point.
             if not ds0:
                 # I compute a bound according to the distance between two diff actions.
-                dist_a_ahat = abs(action - act)
+                action_c = np.clip(action, 1e-5, 5)
+                act_c = np.clip(act, 1e-5, 5)
+                dist_a_ahat = abs(action_c - act_c)
                 delta_s2 = cont[action]['new_state'] - cont[action]['state']
                 # the bound is the difference I can have when I take act instead of action
                 # according to the Lipschitz hypothesis on delta s.
@@ -52,8 +55,6 @@ class LipschitzDeltaS(LipschitzAbstraction):
                 bounds.append([round(min_val2, 3), round(max_val2, 3)])
 
             min_val, max_val = helper.interval_intersection(bounds)
-            if abs(min_val - max_val) > 0.01:
-                print("here")
             # in case of void intersections, None values are returned.
             if min_val is not None and max_val is not None:
                 new_state_bounds.append([min_val, max_val])
@@ -73,7 +74,6 @@ class LipschitzDeltaS(LipschitzAbstraction):
         #         true_value.append(self.a * cont[action]['state'] + self.b * act)
         #     bvis.plot_bounds(new_state_bounds, "max action", true_value)
         # ---------------
-
         if ds0:
             return sample_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)
         else:

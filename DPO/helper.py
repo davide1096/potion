@@ -77,10 +77,17 @@ def calc_abs_reward_cartpole(cont, action):
 def calc_abs_reward_minigolf(cont, action):
     action = np.clip(action, 0, 5)
     rew = 0
+
     for act in cont.keys():
-        if action < np.sqrt(1.836 * cont[act]['state']):
+        # friction
+        friction = 0.131 + ((0.19 - 0.131) / 20) * cont[act]['state']
+
+        v_min = np.sqrt(10 / 7 * friction * 9.81 * cont[act]['state'])
+        v_max = np.sqrt((2 * 0.10 - 0.02135) ** 2 * (9.81 / (2 * 0.02135)) + v_min ** 2)
+
+        if action < v_min:
             rew += -1
-        elif action > np.sqrt(7.33 + 1.836 * cont[act]['state']):
+        elif action > v_max:
             rew += -100
         else:
             rew += 0

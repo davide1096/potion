@@ -113,6 +113,7 @@ venv.bak/
 # images
 images/
 csv/
+tuning/
 *test.py
 lipschitz_estimator/
 runs/

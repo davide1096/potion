@@ -11,6 +11,8 @@ import DPO.helper as helper
 from DPO.helper import Helper
 import logging
 # import DPO.visualizer.helper_visualizer as helper_vis
+import os
+import csv
 
 problem = 'mass'
 SINK = False
@@ -31,7 +33,7 @@ GAMMA = 0.95
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 0
 
-N_ITERATION = 60
+N_ITERATION = 120
 N_EPISODES = 500
 N_STEPS = 20
 
@@ -99,6 +101,12 @@ def main(seed=None, alpha=0.025, lam=0.0005):
     env.R = R
     env.gamma = GAMMA
     env.seed(help.getSeed())
+
+    filename = "../csv/mass/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    data_file = open(filename, mode='w')
+    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    file_writer.writerow(['param0', 'param1', 'env j', 'est j'])
 
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
     print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
@@ -184,6 +192,9 @@ def main(seed=None, alpha=0.025, lam=0.0005):
         # stats['abstractJ'].append(absJ)
         # ------------
 
+        file_writer.writerow([det_param[0][0], det_param[0][1], j, estj])
+
+    data_file.close()
     # visualizer.save_image()
     return stats, tot_env_j, tot_est_j
 

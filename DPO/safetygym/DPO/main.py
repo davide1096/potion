@@ -79,10 +79,12 @@ def main(seed=42):
     N_MCRST_DYN = np.full((state_dim, ), 5)
 
     # INIT_DETERMINISTIC_PARAM = np.array([np.full((state_dim, ), 0.1), np.full((state_dim, ), 0.2)])
-    p = np.array([0.1, 0.2, 0.3, 0.4])
-    p = np.append(p, p)
-    p = np.append(p, p)
-    p = np.append(p, np.array([0.1, 0.2]))
+    p = np.array([0.07115151733160019, 0.020830286666750908, 4.0109477043151855, 0.08522021025419235,
+                  0.009776106104254723, 0.05765130743384361, -0.0168423131108284, -0.30196452140808105,
+                  0.0338495634496212, -0.020620619878172874, 0.4266248345375061, -0.06521940976381302,
+                  -10.604312896728516, 1.2437024116516113, -0.03707394748926163, -0.3024933636188507,
+                  0.013475009240210056, -0.42220932245254517])
+
     INIT_DETERMINISTIC_PARAM = p.reshape((action_dim, state_dim))
     det_param = INIT_DETERMINISTIC_PARAM
 

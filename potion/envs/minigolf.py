@@ -72,12 +72,20 @@ class MiniGolf(gym.Env):
         t = u / deceleration
         xn = self.state - u * t + 0.5 * deceleration * t ** 2
 
+        # reward = 0
+        # done = True
+        # if u < v_min:
+        #     reward = -1
+        #     done = False
+        # elif u > v_max:
+        #     reward = -100
+
         reward = 0
         done = True
-        if u < v_min:
+        if self.state > 0:
             reward = -1
             done = False
-        elif u > v_max:
+        elif self.state < -4:
             reward = -100
 
         self.state = xn
@@ -295,7 +303,7 @@ class ComplexMiniGolf(gym.Env):
         self.putter_length = 1.0 # [0.7:1.0]
         #self.friction = 0.131 # [0.065:0.196]
         self.friction_low = 0.131
-        self.friction_high =  0.17 #0.190
+        self.friction_high =  0.16 #0.190
         self.hole_size = 0.10 # [0.10:0.15]
         self.sigma_noise = 0.3
         self.ball_radius = 0.02135
@@ -350,13 +358,22 @@ class ComplexMiniGolf(gym.Env):
         t = u / deceleration
         xn = self.state - u * t + 0.5 * deceleration * t ** 2
 
+        # reward = 0
+        # done = True
+        # if u < v_min:
+        #     reward = -1
+        #     done = False
+        # elif u > v_max:
+        #     reward = -100
+
         reward = 0
         done = True
-        if u < v_min:
+        if self.state > 0:
             reward = -1
             done = False
-        elif u > v_max:
+        elif self.state < -4:
             reward = -100
+
         state = self.state
         self.state = xn
 

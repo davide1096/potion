@@ -26,7 +26,7 @@ N_ITERATION = 300
 N_EPISODES = 500
 N_STEPS = 20
 
-N_MCRST_DYN = 8
+N_MCRST_DYN = 12
 MIN_SPACE_VAL = 0
 MAX_SPACE_VAL = 20
 # INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16], [16, 20]]
@@ -38,6 +38,8 @@ INIT_W = [1, 1, 1, 1]
 
 
 def deterministic_action(state, rbf):
+    if state < 0:
+        return np.array([0])
     return rbf.predict(state)[0]
 
 
@@ -64,14 +66,15 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, INTERVALS):
     for sam in det_samples:
         single_sample = []
         for s in sam:
-            prev_action = deterministic_action(np.reshape(s[0], (1, 1)), rbf)
-            prev_action = prev_action[0]
-            mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
-            if prev_action in abs_opt_policy[mcrst]:
-                single_sample.append([s[0], prev_action])
-            else:
-                index = np.argmin([abs(act - prev_action) for act in abs_opt_policy[mcrst]])
-                single_sample.append([s[0], abs_opt_policy[mcrst][index]])
+            if s[0] > 0:  # exclude s<0 from fictitious samples
+                prev_action = deterministic_action(np.reshape(s[0], (1, 1)), rbf)
+                prev_action = prev_action[0]
+                mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
+                if prev_action in abs_opt_policy[mcrst]:
+                    single_sample.append([s[0], prev_action])
+                else:
+                    index = np.argmin([abs(act - prev_action) for act in abs_opt_policy[mcrst]])
+                    single_sample.append([s[0], abs_opt_policy[mcrst][index]])
         fictitious_samples.append(single_sample)
     return fictitious_samples
 
@@ -115,16 +118,15 @@ def main(seed=None, alpha=0.05, lam=0.0005):
     for i in range(0, N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
-        # INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16],
-        #              [16, 20]]
         INTERVALS = helper.get_constant_intervals([MIN_SPACE_VAL], [MAX_SPACE_VAL], [N_MCRST_DYN])[0]
         # dyn_intervals = helper.build_mcrst_from_samples(determin_samples, N_MCRST_DYN, MIN_SPACE_VAL, MAX_SPACE_VAL)
+        INTERVALS = [[-4, 0]] + INTERVALS
         dyn_intervals = None
 
         if i == 0:
             abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS) if ds0 else LipschitzDeltaS(GAMMA, SINK, INTERVALS, 1.3, 0.9)
             # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
-            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
+            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, -100) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
             # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)
 
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)

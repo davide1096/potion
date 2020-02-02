@@ -65,6 +65,29 @@ def gpomdp_estimator(batch, disc, policy, baselinekind='avg', result='mean',
     else:
         return torch.mean(_samples, 0) #m
     
+#entropy-augmented version
+def egpomdp_estimator(batch, disc, policy, coeff, baselinekind='avg', result='mean',
+                     shallow=False):
+    """G(PO)MDP policy gradient estimator
+       
+    batch: list of N trajectories. Each trajectory is a tuple 
+        (states, actions, rewards, mask). Each element of the tuple is a 
+        tensor where the first dimension is time.
+    disc: discount factor
+    policy: the one used to collect the data
+    coeff: entropy bonus coefficient
+    baselinekind: kind of baseline to employ in the estimator. 
+        Either 'avg' (average reward, default), 'peters' 
+        (variance-minimizing),  or 'zero' (no baseline)
+    result: whether to return the final estimate ('mean', default), or the 
+        single per-trajectory estimates ('samples')
+    shallow: whether to use precomputed score functions (only available
+        for shallow policies)
+    """
+    if shallow:
+        return _shallow_egpomdp_estimator(batch, disc, policy, coeff, baselinekind, result)    
+    else:
+        raise NotImplementedError
 
 def reinforce_estimator(batch, disc, policy, baselinekind='avg', 
                         result='mean', shallow=False):
@@ -129,6 +152,58 @@ def _shallow_gpomdp_estimator(batch, disc, policy, baselinekind='peters', result
         disc_rewards = discount(rewards, disc) #NxH
         scores = policy.score(states, actions) #NxHxM
         G = torch.cumsum(tensormat(scores, mask), 1) #NxHxm
+        n_k = torch.sum(mask, dim=0) #H
+        n_k[n_k==0.] = 1.
+        
+        if baselinekind == 'avg':
+            baseline = (torch.sum(disc_rewards, 0) / n_k).unsqueeze(-1) #Hx1
+        elif baselinekind == 'peters':
+            baseline = torch.sum(tensormat(G ** 2, disc_rewards), 0) / \
+                            torch.sum(G ** 2, 0) #Hxm
+        elif baselinekind == 'peters2':
+            G2 = torch.cumsum(tensormat(scores ** 2, mask), 1) #NxHxm
+            baseline = torch.sum(tensormat(G ** 2, disc_rewards), 0) / \
+                            torch.sum(G2, 0) #Hxm
+        elif baselinekind == 'optimal':
+            g = tensormat(scores, mask) #NxHxm
+            vanilla = tensormat(G, disc_rewards) #NxHxm
+            term1 = torch.flip(torch.cumsum(torch.flip(vanilla, (1,)), 1), (1,)) #NxHxm (reverse cumsum)
+            m2 = torch.sum(g ** 2, dim=0, keepdim=True) / n_k.unsqueeze(0).unsqueeze(-1) #(N)xHxm
+            scores_on_m2 = g / m2 #NxHxm
+            scores_on_m2[g==0] = 0
+            shifted = torch.zeros_like(scores_on_m2) #NxHxm
+            shifted[:,:-1,:] = scores_on_m2[:,1:,:]
+            term2 = scores_on_m2 - shifted #NxHxm
+            baseline = torch.sum(term1 * term2, dim=0) / n_k.unsqueeze(-1) #Hxm
+        elif baselinekind == 'system':
+            A = torch.mean(torch.einsum('ijk,ihk->ijhk', (G, G)), 0).transpose(0,2) #mxHxH
+            vanilla = torch.sum(tensormat(G, disc_rewards), dim=1, keepdim=True) #Nx(H)xm
+            c = torch.mean(vanilla * G, 0).transpose(0,1).unsqueeze(-1) #Hxmx1
+            #print(scores[0,:,1], G[0,:,1])
+            x, _ = torch.solve(c, A) #mxHx1
+            baseline = x.squeeze(-1).transpose(0,1)
+        elif baselinekind == 'zero':
+            baseline = torch.zeros(1,1) #1x1
+        else:
+            raise ValueError('Unknown baseline')
+        baseline[baseline != baseline] = 0 #removes non-real values
+        values = disc_rewards.unsqueeze(2) - baseline.unsqueeze(0) #NxHxm
+        
+        _samples = torch.sum(tensormat(G * values, mask), 1) #Nxm
+        if result == 'samples':
+            return _samples #Nxm
+        else:
+            return torch.mean(_samples, 0) #m
+   
+#entopy-augmented version     
+def _shallow_egpomdp_estimator(batch, disc, policy, coeff, baselinekind='peters', result='mean'):
+    with torch.no_grad():        
+        states, actions, rewards, mask, _ = unpack(batch) # NxHxm, NxHxd, NxH, NxH
+        
+        rewards = (1-coeff) * rewards +  coeff * policy.entropy(states)
+        disc_rewards = discount(rewards, disc) #NxH
+        scores = policy.score(states, actions) #NxHxM
+        G = torch.cumsum(tensormat(scores, mask), 1) #NxHxm
         
         if baselinekind == 'avg':
             baseline = torch.mean(disc_rewards, 0).unsqueeze(1) #Hx1
@@ -140,7 +215,8 @@ def _shallow_gpomdp_estimator(batch, disc, policy, baselinekind='peters', result
         baseline[baseline != baseline] = 0
         values = disc_rewards.unsqueeze(2) - baseline.unsqueeze(0) #NxHxm
         
-        _samples = torch.sum(tensormat(G * values, mask), 1) #Nxm
+        ent_bonus = torch.mean(policy.entropy_grad(states), 1) #Nxm
+        _samples = (1-coeff) * torch.sum(tensormat(G * values, mask), 1) + coeff * ent_bonus #Nxm
         if result == 'samples':
             return _samples #Nxm
         else:

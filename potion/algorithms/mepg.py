@@ -10,7 +10,7 @@ from potion.common.misc_utils import performance, avg_horizon
 from potion.estimation.gradients import gpomdp_estimator
 from potion.estimation.metagradients import metagrad
 from potion.common.logger import Logger
-from potion.common.misc_utils import clip, seed_all_agent
+from potion.common.misc_utils import clip, seed_all_agent, mean_sum_info
 from potion.actors.continuous_policies import ShallowGaussianPolicy
 import torch
 
@@ -27,9 +27,11 @@ def mepg(env, policy,
             action_filter = None,
             parallel = False,
             logger = Logger(name='MEPG'),
+            info_key = 'danger',
             save_params = 50,
             log_params = True,
-            verbose = True):
+            verbose = True,
+            ablation = False):
     """
         MEPG algorithm
         Only for shallow Gaussian policy w/ scalar variance
@@ -59,7 +61,7 @@ def mepg(env, policy,
     logger.write_info({**algo_info, **policy.info()})
     log_keys = ['Perf', 'UPerf', 'AvgHorizon', 
                 'StepSize', 'MetaStepSize', 'BatchSize', 'Exploration', 
-                'OmegaGrad', 'OmegaMetagrad', 'UpsilonGradNorm']
+                'OmegaGrad', 'OmegaMetagrad', 'UpsilonGradNorm', 'Info']
     if log_params:
         log_keys += ['param%d' % i for i in range(policy.num_params())]
     if test_batchsize:
@@ -83,11 +85,12 @@ def mepg(env, policy,
                                         action_filter=action_filter,
                                         seed=seed,
                                         njobs=parallel,
-                                        deterministic=True)
+                                        deterministic=True,
+                                        key=info_key)
             log_row['DetPerf'] = performance(test_batch, disc)
         #Render behavior
         if render:
-            generate_batch(env, policy, horizon, 1, action_filter, render=True)
+            generate_batch(env, policy, horizon, 1, action_filter, render=True, key=info_key)
 
         #Set metaparameters
         omega = policy.get_scale_params()
@@ -97,7 +100,8 @@ def mepg(env, policy,
         batch = generate_batch(env, policy, horizon, batchsize, 
                                action_filter=action_filter, 
                                seed=seed, 
-                               n_jobs=parallel)
+                               n_jobs=parallel,
+                               key=info_key)
         
         #Estimate policy gradient
         grad_samples = gpomdp_estimator(batch, disc, policy, 
@@ -110,7 +114,10 @@ def mepg(env, policy,
         
         #Estimate meta gradient
         omega_metagrad = metagrad(batch, disc, policy, alpha,
-                                  grad_samples=grad_samples)
+                                  grad_samples=grad_samples, 
+                                  no_first=(ablation==1),
+                                  no_second=(ablation==2), 
+                                  no_third=(ablation==3))
         
         #Update mean parameters
         upsilon = policy.get_loc_params()
@@ -132,6 +139,7 @@ def mepg(env, policy,
         log_row['Perf'] = performance(batch, disc)
         log_row['UPerf'] = performance(batch, 1.)
         log_row['AvgHorizon'] = avg_horizon(batch)
+        log_row['Info'] = mean_sum_info(batch).item()
         params = policy.get_flat()
         if log_params:
             for i in range(policy.num_params()):

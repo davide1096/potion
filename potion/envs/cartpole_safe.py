@@ -13,7 +13,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-class CartPole1d(gym.Env):
+class SafeCartPole(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : 50
@@ -28,6 +28,7 @@ class CartPole1d(gym.Env):
         self.polemass_length = (self.masspole * self.length)
         self.force_mag = 10.0
         self.tau = 0.02  # seconds between state updates
+        self.crash_penalty = -100.
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
@@ -41,7 +42,7 @@ class CartPole1d(gym.Env):
             np.finfo(np.float32).max])
 
         self.action_space = spaces.Box(low=-self.force_mag,high=self.force_mag,shape=(1,), dtype=np.float32)
-        self.observation_space = spaces.Box(-self.theta_threshold_radians * 2, self.theta_threshold_radians * 2, shape=(1,), dtype=np.float32)
+        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 
         self.seed()
         self.viewer = None
@@ -69,25 +70,29 @@ class CartPole1d(gym.Env):
         theta = theta + self.tau * theta_dot
         theta_dot = theta_dot + self.tau * thetaacc
         self.state = (x,x_dot,theta,theta_dot)
-        done =  x < -self.x_threshold \
-                or x > self.x_threshold \
-                or theta < -self.theta_threshold_radians \
-                or theta > self.theta_threshold_radians
+        
+        fallen = theta < -self.theta_threshold_radians \
+                    or theta > self.theta_threshold_radians
+        
+        crashed = x < -self.x_threshold \
+                    or x > self.x_threshold
+        
+        done =   fallen or crashed
         done = bool(done)
 
         if not done:
-            reward = 1.0
+            reward = 1.0 if not crashed else self.crash_penalty
         elif self.steps_beyond_done is None:
             # Pole just fell!
             self.steps_beyond_done = 0
-            reward = 1.0
+            reward = 1.0 if not crashed else self.crash_penalty
         else:
             if self.steps_beyond_done == 0:
                 logger.warning("You are calling 'step()' even though this environment has already returned done = True. You should always call 'reset()' once you receive 'done = True' -- any further steps are undefined behavior.")
             self.steps_beyond_done += 1
             reward = 0.0
 
-        return np.array(self.state[2]), reward, done, {}
+        return np.array(self.state), reward, done, {'danger': int(crashed)}
 
     def reset(self,initial=None):
         if initial==None:
@@ -95,7 +100,7 @@ class CartPole1d(gym.Env):
         else:
             self.state = initial
         self.steps_beyond_done = None
-        return np.array(self.state[2])
+        return np.array(self.state)
 
     def render(self, mode='human', close=False):
         if close:

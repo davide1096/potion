@@ -7,7 +7,7 @@ REINFORCE family of algorithms (actor-only policy gradient)
 
 from potion.simulation.trajectory_generators import generate_batch
 from potion.common.misc_utils import performance, avg_horizon, mean_sum_info
-from potion.estimation.gradients import gpomdp_estimator, reinforce_estimator
+from potion.estimation.gradients import gpomdp_estimator, reinforce_estimator, egpomdp_estimator
 from potion.common.logger import Logger
 from potion.common.misc_utils import clip, seed_all_agent
 from potion.meta.steppers import ConstantStepper
@@ -20,12 +20,14 @@ def reinforce(env, policy, horizon, *,
                     iterations = 1000,
                     disc = 0.99,
                     stepper = ConstantStepper(1e-2),
+                    entropy_coeff = 0.,
                     action_filter = None,
                     estimator = 'gpomdp',
                     baseline = 'avg',
                     logger = Logger(name='gpomdp'),
                     shallow = False,
                     seed = None,
+                    estimate_var = False,
                     test_batchsize = False,
                     info_key = 'danger',
                     save_params = 100,
@@ -88,6 +90,7 @@ def reinforce(env, policy, horizon, *,
                    'Disc': disc, 
                    'StepSizeCriterion': str(stepper), 
                    'Seed': seed,
+                   'EntropyCoefficient': entropy_coeff
                    }
     logger.write_info({**algo_info, **policy.info()})
     log_keys = ['Perf', 
@@ -98,7 +101,10 @@ def reinforce(env, policy, horizon, *,
                 'Time',
                 'StepSize',
                 'Exploration',
+                'Entropy',
                 'Info']
+    if estimate_var:
+        log_keys.append('SampleVar')
     if log_params:
         log_keys += ['param%d' % i for i in range(policy.num_params())]
     if log_grad:
@@ -150,25 +156,49 @@ def reinforce(env, policy, horizon, *,
         log_row['UPerf'] = performance(batch, disc=1.)
         log_row['AvgHorizon'] = avg_horizon(batch)
         log_row['Exploration'] = policy.exploration().item()
+        log_row['Entropy'] = policy.entropy(0.).item()
     
         #Estimate policy gradient
-        if estimator == 'gpomdp':
-            grad = gpomdp_estimator(batch, disc, policy, 
+        result = 'samples' if estimate_var else 'mean'
+        if estimator == 'gpomdp' and entropy_coeff == 0:
+            grad_samples = gpomdp_estimator(batch, disc, policy, 
                                     baselinekind=baseline, 
-                                    shallow=shallow)
+                                    shallow=shallow,
+                                    result=result)
+        elif estimator == 'gpomdp':
+            grad_samples = egpomdp_estimator(batch, disc, policy, entropy_coeff,
+                                     baselinekind=baseline,
+                                     shallow=shallow,
+                                    result=result)
         elif estimator == 'reinforce':
-            grad = reinforce_estimator(batch, disc, policy, 
+            grad_samples = reinforce_estimator(batch, disc, policy, 
                                        baselinekind=baseline, 
-                                       shallow=shallow)
+                                       shallow=shallow,
+                                    result=result)
         else:
             raise ValueError('Invalid policy gradient estimator')
+        
+        if estimate_var:
+            grad = torch.mean(grad_samples, 0)
+            centered = grad_samples - grad.unsqueeze(0)
+            grad_cov = (batchsize/(batchsize - 1) * 
+                        torch.mean(torch.bmm(centered.unsqueeze(2), 
+                                             centered.unsqueeze(1)),0))
+            grad_var = torch.sum(torch.diag(grad_cov)).item() #for humans
+        else:
+            grad = grad_samples
+        
         if verbose > 1:
             print('Gradients: ', grad)
         log_row['GradNorm'] = torch.norm(grad).item()
+        if estimate_var:
+            log_row['SampleVar'] = grad_var
         
         #Select meta-parameters
-        stepsize = stepper.next(grad)        
-        log_row['StepSize'] = torch.norm(torch.tensor(stepsize)).item()
+        stepsize = stepper.next(grad)
+        if not torch.is_tensor(stepsize):
+            stepsize = torch.tensor(stepsize)
+        log_row['StepSize'] = torch.norm(stepsize).item()
         
         #Update policy parameters
         new_params = params + stepsize * grad

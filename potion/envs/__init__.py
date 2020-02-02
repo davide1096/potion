@@ -15,9 +15,15 @@ register(
 )
 
 register(
+    id='SafeCartPole-v0',
+    entry_point='potion.envs.cartpole_safe:SafeCartPole'
+)
+
+register(
     id='CartPole1d-v0',
     entry_point='potion.envs.cartpole1d:CartPole1d'
 )
+
 
 register(
     id='LQ-v0',
@@ -29,19 +35,26 @@ register(
     entry_point='potion.envs.double_integrator:DoubleIntegrator'
 )
 
+
 register(
     id='mass-v0',
     entry_point='potion.envs.mass:mass'
 )
 
+
 register(
-    id='MiniGolf-v0',
-    entry_point='potion.envs.minigolf:MiniGolf'
+    id='Drone-v0',
+    entry_point='potion.envs.drone:Drone'
 )
 
 register(
-    id='ComplexMiniGolf-v0',
-    entry_point='potion.envs.minigolf:ComplexMiniGolf'
+    id='DroneCrash-v0',
+    entry_point='potion.envs.drone_crash:DroneCrash'
+)
+
+register(
+    id='MiniGolf-v0',
+    entry_point='potion.envs.minigolf:MiniGolf'
 )
 
 register(
@@ -100,6 +113,16 @@ register(
 )
 
 register(
+    id='Mass-v0',
+    entry_point='potion.envs.mass:Mass'
+)
+
+register(
     id='Robot-v0',
     entry_point='potion.envs.robot:Robot'
+)
+
+register(
+    id='Corridor-v0',
+    entry_point='potion.envs.corridor:Corridor'
 )

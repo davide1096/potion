@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jul 19 13:39:53 2019
+
 @author: matteo
 """
 
@@ -11,7 +12,6 @@ from gym.utils import seeding
 import numpy as np
 import math
 from numbers import Number
-
 
 class LQ(gym.Env):
     metadata = {
@@ -33,16 +33,16 @@ class LQ(gym.Env):
         self.Q = 0.9 * np.eye(self.ds)
         self.R = 0.9 * np.eye(self.da)
 
-        # Gym attributes
+        #Gym attributes
         self.viewer = None
         self.action_space = spaces.Box(low=-self.max_action,
-                                       high=self.max_action,
+                                       high=self.max_action, 
                                        dtype=np.float32)
-        self.observation_space = spaces.Box(low=-self.max_pos,
+        self.observation_space = spaces.Box(low=-self.max_pos, 
                                             high=self.max_pos,
                                             dtype=np.float32)
-
-        # Initialize state
+        
+        #Initialize state
         self.seed()
         self.reset()
 
@@ -52,18 +52,18 @@ class LQ(gym.Env):
         xn = np.clip(np.dot(self.A, self.state.T) + np.dot(self.B, u) + noise, -self.max_pos, self.max_pos)
         cost = np.dot(self.state,
                       np.dot(self.Q, self.state)) + \
-               np.dot(u, np.dot(self.R, u))
+            np.dot(u, np.dot(self.R, u))
 
         self.state = xn.ravel()
         self.timestep += 1
-
+        
         return self.get_state(), -np.asscalar(cost), self.timestep >= self.horizon, {}
 
     def reset(self, state=None):
         self.timestep = 0
         if state is None:
             self.state = np.array(self.np_random.uniform(low=-self.max_pos,
-                                                         high=self.max_pos))
+                                                          high=self.max_pos))
         else:
             self.state = np.array(state)
 
@@ -89,8 +89,8 @@ class LQ(gym.Env):
         world_width = math.ceil((self.max_pos[0] * 2) * 1.5)
         xscale = screen_width / world_width
         ballradius = 3
-
-        if self.ds == 1:
+        
+        if self.ds == 1:    
             screen_height = 400
         else:
             world_height = math.ceil((self.max_pos[1] * 2) * 1.5)
@@ -135,8 +135,10 @@ class LQ(gym.Env):
         problem.
         Args:
             K (matrix): the matrix associated to the linear controller K * x
+
         Returns:
             P (matrix): the Riccati Matrix
+
         """
         I = np.eye(self.Q.shape[0], self.Q.shape[1])
         if np.array_equal(self.A, I) and np.array_equal(self.B, I):
@@ -167,14 +169,16 @@ class LQ(gym.Env):
         """
         This function computes the optimal linear controller associated to the
         LQG problem (u = K * x).
+
         Returns:
             K (matrix): the optimal controller
+
         """
         P = np.eye(self.Q.shape[0], self.Q.shape[1])
         for i in range(100):
             K = -self.gamma * np.dot(np.linalg.inv(
                 self.R + self.gamma * (np.dot(self.B.T, np.dot(P, self.B)))),
-                np.dot(self.B.T, np.dot(P, self.A)))
+                                       np.dot(self.B.T, np.dot(P, self.A)))
             P = self._computeP2(K)
         K = -self.gamma * np.dot(np.linalg.inv(self.R + self.gamma *
                                                (np.dot(self.B.T,
@@ -192,8 +196,10 @@ class LQ(gym.Env):
                             the controller action
             n_random_x0: the number of samples to draw in order to average over
                          the initial state
+
         Returns:
             J (float): The discounted reward
+
         """
         if isinstance(K, Number):
             K = np.array([K]).reshape(1, 1)
@@ -202,59 +208,59 @@ class LQ(gym.Env):
 
         P = self._computeP2(K)
         temp = np.dot(
-            Sigma, (self.R + self.gamma * np.dot(self.B.T,
-                                                 np.dot(P, self.B))))
+                    Sigma, (self.R + self.gamma * np.dot(self.B.T,
+                                             np.dot(P, self.B))))
         temp = np.trace(temp) if np.ndim(temp) > 1 else temp
-        W = (1 / (1 - self.gamma)) * temp
+        W =  (1 / (1 - self.gamma)) * temp
 
-        if np.size(K) == 1:
-            return min(0, np.asscalar(-self.max_pos ** 2 * P / 3 - W))
+        if np.size(K)==1:
+            return min(0,np.asscalar(-self.max_pos**2*P/3 - W))
 
         J = 0.0
         for i in range(n_random_x0):
             self.reset()
             x0 = self.get_state()
             J -= np.dot(x0.T, np.dot(P, x0)) \
-                 + W
+                +  W
         J /= n_random_x0
-        return min(0, J)
+        return min(0,J)
 
     def grad_K(self, K, Sigma):
         I = np.eye(self.Q.shape[0], self.Q.shape[1])
         if not np.array_equal(self.A, I) or not np.array_equal(self.B, I):
             raise NotImplementedError
-        if not isinstance(K, Number) or not isinstance(Sigma, Number):
+        if not isinstance(K,Number) or not isinstance(Sigma, Number):
             raise NotImplementedError
         theta = np.asscalar(np.array(K))
         sigma = np.asscalar(np.array(Sigma))
 
-        den = 1 - self.gamma * (1 + 2 * theta + theta ** 2)
-        dePdeK = 2 * (theta * self.R / den + self.gamma * (self.Q + theta ** 2 * self.R) * (1 + theta) / den ** 2)
-        return np.asscalar(- dePdeK * (self.max_pos ** 2 / 3 + self.gamma * sigma / (1 - self.gamma)))
+        den = 1 - self.gamma*(1 + 2*theta + theta**2)
+        dePdeK = 2*(theta*self.R/den + self.gamma*(self.Q + theta**2*self.R)*(1+theta)/den**2)
+        return np.asscalar(- dePdeK*(self.max_pos**2/3 + self.gamma*sigma/(1 - self.gamma)))
 
     def grad_Sigma(self, K, Sigma=None):
         I = np.eye(self.Q.shape[0], self.Q.shape[1])
         if not np.array_equal(self.A, I) or not np.array_equal(self.B, I):
             raise NotImplementedError
-        if not isinstance(K, Number) or not isinstance(Sigma, Number):
+        if not isinstance(K,Number) or not isinstance(Sigma, Number):
             raise NotImplementedError
 
         K = np.array(K)
         P = self._computeP2(K)
-        return np.asscalar(-(self.R + self.gamma * P) / (1 - self.gamma))
+        return np.asscalar(-(self.R + self.gamma*P)/(1 - self.gamma))
 
     def grad_mixed(self, K, Sigma=None):
         I = np.eye(self.Q.shape[0], self.Q.shape[1])
         if not np.array_equal(self.A, I) or not np.array_equal(self.B, I):
             raise NotImplementedError
-        if not isinstance(K, Number) or not isinstance(Sigma, Number):
+        if not isinstance(K,Number) or not isinstance(Sigma, Number):
             raise NotImplementedError
         theta = np.asscalar(np.array(K))
 
-        den = 1 - self.gamma * (1 + 2 * theta + theta ** 2)
-        dePdeK = 2 * (theta * self.R / den + self.gamma * (self.Q + theta ** 2 * self.R) * (1 + theta) / den ** 2)
+        den = 1 - self.gamma*(1 + 2*theta + theta**2)
+        dePdeK = 2*(theta*self.R/den + self.gamma*(self.Q + theta**2*self.R)*(1+theta)/den**2)
 
-        return np.asscalar(-dePdeK * self.gamma / (1 - self.gamma))
+        return np.asscalar(-dePdeK*self.gamma/(1 - self.gamma))
 
     def computeQFunction(self, x, u, K, Sigma, n_random_xn=100):
         """
@@ -268,9 +274,11 @@ class LQ(gym.Env):
             the controller action
             n_random_xn: the number of samples to draw in order to average over
             the next state
+
         Returns:
             Qfun (float): The Q-value in the given pair (x,u) under the given
             controller
+
         """
         if isinstance(x, Number):
             x = np.array([x])
@@ -290,18 +298,19 @@ class LQ(gym.Env):
             nextstate = np.dot(self.A, x) + np.dot(self.B,
                                                    u + action_noise) + noise
             Qfun -= np.dot(x.T, np.dot(self.Q, x)) + \
-                    np.dot(u.T, np.dot(self.R, u)) + \
-                    self.gamma * np.dot(nextstate.T, np.dot(P, nextstate)) + \
-                    (self.gamma / (1 - self.gamma)) * \
-                    np.trace(np.dot(Sigma,
-                                    self.R + self.gamma *
-                                    np.dot(self.B.T, np.dot(P, self.B))))
+                np.dot(u.T, np.dot(self.R, u)) + \
+                self.gamma * np.dot(nextstate.T, np.dot(P, nextstate)) + \
+                (self.gamma / (1 - self.gamma)) * \
+                np.trace(np.dot(Sigma,
+                                self.R + self.gamma *
+                                np.dot(self.B.T, np.dot(P, self.B))))
         Qfun = np.asscalar(Qfun) / n_random_xn
         return Qfun
 
 
 if __name__ == '__main__':
+
     env = LQ()
     theta_star = env.computeOptimalK()
     print('theta^* = ', theta_star)
-    print('J^* = ', env.computeJ(theta_star, env.sigma_controller))
+    print('J^* = ', env.computeJ(theta_star,env.sigma_controller))

@@ -33,7 +33,8 @@ def set_from_flat(params, values):
     values: a flat array or tensor
     """
     with torch.no_grad():
-        values = torch.tensor(values)
+        if not torch.is_tensor(values):
+            values = torch.tensor(values)
         k = 0
         for p in params:
             shape = tuple(list(p.shape))
@@ -41,7 +42,7 @@ def set_from_flat(params, values):
             val = values[k : k + offset]
             val = val.view(shape)
             with torch.no_grad():
-                p.copy_(torch.tensor(val))
+                p.copy_(val)
             k = k + offset
             
 class FlatModule(nn.Module):
@@ -97,6 +98,8 @@ def tensormat(a, b):
     return torch.einsum('ijk,ij->ijk', (a,b))
 
 def complete_out(x, dim):
+    if not torch.is_tensor(x):
+        x = torch.tensor(x)
     while x.dim() < dim:
         x = x.unsqueeze(0)
     return x
@@ -104,6 +107,14 @@ def complete_out(x, dim):
 def complete_in(x, dim):
     while x.dim() < dim:
         x = x.unsqueeze(-1)
+    return x
+
+def atanh(x):
+    return 0.5 * (torch.log(1 + x) - torch.log(1 - x))
+
+def maybe_tensor(x):
+    if not torch.is_tensor(x):
+        x = torch.tensor(x)
     return x
 
 """Testing"""
@@ -114,5 +125,6 @@ if __name__ == '__main__':
     y = F(x)
     print(y)
     print(jacobian(F,y))
+    print(atanh(torch.tanh(torch.tensor([0.5, -0.5]))))
     #y.backward(torch.ones(3))
     #print(x.grad)

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jul 19 13:39:53 2019
+
 @author: matteo
 """
 
@@ -10,7 +11,6 @@ from gym import spaces
 import numpy as np
 import math
 import time
-
 
 class mass(LQ):
     def __init__(self):
@@ -25,26 +25,26 @@ class mass(LQ):
         self.tau = 0.1
         self.mass = 0.1
         self.attr = 0.
-
+        
         self.A = np.array([[1., self.tau],
                            [0., 1.]])
-
-        self.B = np.array([[0.],
-                           [self.tau / self.mass]])
-
+        
+        self.B = np.array([[0.         ],
+                           [self.tau/self.mass]])
+        
         self.Q = np.diag([0.8, 0.1])
-        self.R = 0.1 * np.eye(1)
+        self.R = 0.1 * np.eye(1) 
 
-        # Gym attributes
+        #Gym attributes
         self.viewer = None
         self.action_space = spaces.Box(low=-self.max_action,
-                                       high=self.max_action,
+                                       high=self.max_action, 
                                        dtype=np.float32)
-        self.observation_space = spaces.Box(low=-self.max_pos,
+        self.observation_space = spaces.Box(low=-self.max_pos, 
                                             high=self.max_pos,
                                             dtype=np.float32)
-
-        # Initialize state
+        
+        #Initialize state
         self.seed()
         self.reset()
 
@@ -52,13 +52,13 @@ class mass(LQ):
         self.timestep = 0
         if state is None:
             self.state = np.array(self.np_random.uniform(low=-self.max_pos,
-                                                         high=self.max_pos))
+                                                          high=self.max_pos))
         else:
             self.state = np.array(state)
-        # self.state[1] = 0.
+        self.state[1] = 0.
 
         return self.get_state()
-
+    
     def render(self, mode='human', close=False):
         if close:
             if self.viewer is not None:
@@ -70,7 +70,7 @@ class mass(LQ):
         world_width = math.ceil((self.max_pos[0] * 2) * 1.5)
         xscale = screen_width / world_width
         ballradius = 3
-
+        
         world_height = math.ceil((self.max_pos[0] * 2) * 1.5)
         screen_height = math.ceil(xscale * world_height)
         yscale = screen_height / world_height
@@ -104,10 +104,8 @@ class mass(LQ):
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
-
 if __name__ == '__main__':
     env = mass()
     theta_star = env.computeOptimalK()
     print('theta^* = ', theta_star)
-    print('J^* = ', env.computeJ(theta_star, env.sigma_controller))
-
+    print('J^* = ', env.computeJ(theta_star,env.sigma_controller))

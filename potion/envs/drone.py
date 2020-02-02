@@ -12,30 +12,30 @@ import numpy as np
 import math
 import time
 
-class DoubleIntegrator(LQ):
+class Drone(LQ):
     def __init__(self):
-        self.ds = 2
+        self.ds = 3
         self.da = 1
         self.horizon = 20
         self.gamma = 0.95
         self.sigma_controller = 0.1 * np.ones(self.da)
-        self.max_pos = np.array([1., 2.])
-        self.max_action = 1.0 * np.ones(self.da)
+        self.max_pos = np.array([1., 2., 1.])
+        self.max_action = 2.0 * np.ones(self.da)
         self.sigma_noise = 0 * np.eye(self.ds)
         self.tau = 0.1
         self.mass = 0.1
-        self.position_cost = 0.8
-        self.speed_cost = 0.1
-        self.force_cost = 0.1
+        self.grav = 9.8
         
-        self.A = np.array([[1., self.tau],
-                           [0., 1.]])
+        self.A = np.array([[1., self.tau, 0.                   ],
+                           [0., 1.,       -self.tau * self.grav],
+                           [0., 0.,       1.                   ]])
         
         self.B = np.array([[0.         ],
-                           [self.tau/self.mass]])
+                           [self.tau/self.mass],
+                           [0.                 ]])
         
-        self.Q = np.diag([self.position_cost, self.speed_cost])
-        self.R = self.force_cost * np.eye(1) 
+        self.Q = np.diag([0.8, 0.1, 0.])
+        self.R = 0.1 * np.eye(1) 
 
         #Gym attributes
         self.viewer = None
@@ -57,7 +57,8 @@ class DoubleIntegrator(LQ):
                                                           high=self.max_pos))
         else:
             self.state = np.array(state)
-        self.state[1] = self.np_random.normal(0., 0.1)
+        self.state[1] = 0.
+        self.state[-1] = 1.
 
         return self.get_state()
     
@@ -98,18 +99,16 @@ class DoubleIntegrator(LQ):
             zero_line.set_color(0.5, 0.5, 0.5)
             self.viewer.add_geom(zero_line)
 
-        x = self.state[0]
-        y = 0.
+        y = self.state[0]
+        x = 0.
         ballx = x * xscale + screen_width / 2.0
         bally = y * yscale + screen_height / 2.0
         self.masstrans.set_translation(ballx, bally)
-        
-        time.sleep(self.tau)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 if __name__ == '__main__':
-    env = DoubleIntegrator()
+    env = Drone()
     theta_star = env.computeOptimalK()
     print('theta^* = ', theta_star)
     print('J^* = ', env.computeJ(theta_star,env.sigma_controller))

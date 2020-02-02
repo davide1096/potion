@@ -10,32 +10,34 @@ from potion.envs.lq import LQ
 from gym import spaces
 import numpy as np
 import math
-import time
 
-class DoubleIntegrator(LQ):
+class DroneCrash(LQ):
     def __init__(self):
-        self.ds = 2
+        self.ds = 3
         self.da = 1
-        self.horizon = 20
-        self.gamma = 0.95
-        self.sigma_controller = 0.1 * np.ones(self.da)
-        self.max_pos = np.array([1., 2.])
-        self.max_action = 1.0 * np.ones(self.da)
+        self.horizon = 100
+        self.gamma = 0.9
+        self.sigma_controller = 1. * np.ones(self.da)
+        self.max_pos = np.array([4., 15., 1.])
+        self.max_action = 20.0 * np.ones(self.da)
         self.sigma_noise = 0 * np.eye(self.ds)
         self.tau = 0.1
-        self.mass = 0.1
-        self.position_cost = 0.8
-        self.speed_cost = 0.1
-        self.force_cost = 0.1
+        self.mass = 1.
+        self.g = -9.8
+        self.pos_c = 0.9
+        self.vel_c = 0.
+        self.force_c = 0.1
         
-        self.A = np.array([[1., self.tau],
-                           [0., 1.]])
+        self.A = np.array([[1., self.tau,   0.               ],
+                           [0., 1.,         self.tau * self.g],
+                           [0., 0.,         1.               ]])
         
         self.B = np.array([[0.         ],
-                           [self.tau/self.mass]])
+                           [1/self.mass],
+                           [0.         ]])
         
-        self.Q = np.diag([self.position_cost, self.speed_cost])
-        self.R = self.force_cost * np.eye(1) 
+        self.Q = np.diag([self.pos_c, self.vel_c, 0.])
+        self.R = self.force_c * np.eye(1) 
 
         #Gym attributes
         self.viewer = None
@@ -54,12 +56,31 @@ class DoubleIntegrator(LQ):
         self.timestep = 0
         if state is None:
             self.state = np.array(self.np_random.uniform(low=-self.max_pos,
-                                                          high=self.max_pos))
+                                                          high=-0.25*self.max_pos))
         else:
             self.state = np.array(state)
-        self.state[1] = self.np_random.normal(0., 0.1)
+        self.state[1] = 0.
+        self.state[-1] = 1.
 
         return self.get_state()
+    
+    def step(self, action, render=False):
+        u = np.clip(np.ravel(np.atleast_1d(action)), -self.max_action, self.max_action)
+        noise = np.dot(self.sigma_noise, self.np_random.randn(self.ds))
+        xn = np.clip(np.dot(self.A, self.state.T) + np.dot(self.B, u) + noise, -self.max_pos, self.max_pos)
+        cost = np.dot(self.state,
+                      np.dot(self.Q, self.state)) + \
+            np.dot(u, np.dot(self.R, u))
+
+        self.state = xn.ravel()
+        self.timestep += 1
+        
+        done = self.timestep >= self.horizon
+        if self.state[0] > 0:
+            done = True
+            cost = np.array(100)
+        
+        return self.get_state(), -np.asscalar(cost), done, {}
     
     def render(self, mode='human', close=False):
         if close:
@@ -98,18 +119,15 @@ class DoubleIntegrator(LQ):
             zero_line.set_color(0.5, 0.5, 0.5)
             self.viewer.add_geom(zero_line)
 
-        x = self.state[0]
-        y = 0.
-        ballx = x * xscale + screen_width / 2.0
+        y = self.state[0]
+        ballx = screen_width / 2.0
         bally = y * yscale + screen_height / 2.0
         self.masstrans.set_translation(ballx, bally)
-        
-        time.sleep(self.tau)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 if __name__ == '__main__':
-    env = DoubleIntegrator()
+    env = Drone()
     theta_star = env.computeOptimalK()
     print('theta^* = ', theta_star)
-    print('J^* = ', env.computeJ(theta_star,env.sigma_controller))
+    #print('J^* = ', env.computeJ(theta_star,env.sigma_controller))

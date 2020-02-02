@@ -20,7 +20,7 @@ def feature_function(s):
 def main(seed=None, alpha=0.05, logsigma=-2.):
 
     gamma = 0.99
-    env = gym.make('MiniGolf-v0')
+    env = gym.make('ComplexMiniGolf-v0')
     env.sigma_noise = 0
     env.gamma = gamma
 

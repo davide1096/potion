@@ -17,8 +17,8 @@ ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 ds0 = 1
 
 N_ITERATION = 1000
-N_EPISODES = 250
-N_STEPS = 20
+N_EPISODES = 1
+N_STEPS = 2000
 
 
 def deterministic_action(det_par, state):
@@ -35,16 +35,23 @@ def compute_state_bounds(samples):
     return min_values, max_values
 
 
+def manage_observation_state(obs):
+    obs = np.array([o for o, i in zip(obs, ACCEPTED_STATES) if i])
+    # to simulate a damage in compass
+    obs[2], obs[3] = helper.bias_compass_observation(obs[2], obs[3])
+    return obs
+
+
 def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
     samples_list = []
     for _ in range(n_episodes):
         obs = env.reset()
-        obs = np.array([o for o, i in zip(obs, ACCEPTED_STATES) if i])
+        obs = manage_observation_state(obs)
         single_sample = []
         for _ in range(n_steps):
             action = deterministic_action(det_par, obs)
             new_obs, r, _, _ = env.step(action)
-            new_obs = np.array([o for o, i in zip(new_obs, ACCEPTED_STATES) if i])
+            new_obs = manage_observation_state(new_obs)
             single_sample.append([obs, action, r, new_obs])
             obs = new_obs
         samples_list.append(single_sample)
@@ -79,11 +86,13 @@ def main(seed=42):
     N_MCRST_DYN = np.full((state_dim, ), 5)
 
     # INIT_DETERMINISTIC_PARAM = np.array([np.full((state_dim, ), 0.1), np.full((state_dim, ), 0.2)])
-    p = np.array([0.07115151733160019, 0.020830286666750908, 4.0109477043151855, 0.08522021025419235,
-                  0.009776106104254723, 0.05765130743384361, -0.0168423131108284, -0.30196452140808105,
-                  0.0338495634496212, -0.020620619878172874, 0.4266248345375061, -0.06521940976381302,
-                  -10.604312896728516, 1.2437024116516113, -0.03707394748926163, -0.3024933636188507,
-                  0.013475009240210056, -0.42220932245254517])
+
+    # policy learnt with pgpe.
+    p = np.array([0.10787985473871231, 0.02179303579032421, 4.300711154937744, 0.10839951038360596,
+                  0.017089104279875755, 0.1119314506649971, 0.018646063283085823, -0.17877089977264404,
+                  -0.03759196400642395, -0.004248579498380423, 0.48613205552101135, 0.10498402267694473,
+                  -12.068914413452148, 1.0702580213546753, -0.04661020636558533, -0.22232159972190857,
+                  0.0361342579126358, -0.39843615889549255])
 
     INIT_DETERMINISTIC_PARAM = p.reshape((action_dim, state_dim))
     det_param = INIT_DETERMINISTIC_PARAM

@@ -6,7 +6,8 @@ def create_env(seed=42):
     config_dict = {# 'observation_flatten': False,
                    'robot_base': 'xmls/point.xml',
                    'observe_goal_comp': True,
-                   '_seed': seed
+                   '_seed': seed,
+                   'num_steps': 2000
     }
     env = Engine(config=config_dict)
     return env

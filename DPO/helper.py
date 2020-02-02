@@ -286,3 +286,45 @@ def sq_distance(arr1, arr2):
     for d1, d2 in zip(arr1, arr2):
         d += (d1 - d2) ** 2
     return d
+
+
+def get_angle(x, y):
+    alpha_rad = np.arctan(y/x)
+    alpha = 57.3 * alpha_rad
+    if alpha > 0 and x < 0:  # correction arctan
+        alpha += 180
+    if alpha < 0 and x < 0:  # correction arctan
+        alpha += 180
+    if alpha < 0:  # correction neg alpha
+        alpha += 360
+    return alpha
+
+def offset_prop(angle, offset):
+    if angle < 180:
+        angle -= angle / offset
+    elif angle > 180:
+        angle += (angle - 360) * (-1) / offset
+    return angle
+
+def offset_sum(angle, offset):
+    if 0 < angle < 90 or 180 < angle < 270:
+        angle += offset
+    elif 90 < angle < 180 or 270 < angle < 360:
+        angle -= offset
+    return angle
+
+def offset_sum2(angle, offset):
+    angle += offset
+    if angle > 360:
+        angle -= 360
+    return angle
+
+def get_sin_cos(angle):
+    angle = angle / 57.3
+    return math.sin(angle), math.cos(angle)
+
+def bias_compass_observation(x, y):
+    alpha = get_angle(x, y)
+    alpha = offset_sum2(alpha, 20)
+    sin_alpha, cos_alpha = get_sin_cos(alpha)
+    return cos_alpha, sin_alpha

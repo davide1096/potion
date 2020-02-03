@@ -20,10 +20,10 @@ class LipschitzDeltaS(LipschitzAbstraction):
 
     # ds0 is True when the hypothesis of deltaS = 0 is valid.
     # It means that taking the same action in different states will produce the same delta s (deltas = s' - s).
-    def calculate_single_atf(self, mcrst, act, ds0, std=0):
+    def calculate_single_atf(self, mcrst, act, ds0, ldeltas=0):
 
         if ds0:
-            self.LIPSCHITZ_CONST_S = 0
+            self.LIPSCHITZ_CONST_S = ldeltas
 
         cont = self.container[mcrst]
         new_state_bounds = []
@@ -74,7 +74,7 @@ class LipschitzDeltaS(LipschitzAbstraction):
         #         true_value.append(self.a * cont[action]['state'] + self.b * act)
         #     bvis.plot_bounds(new_state_bounds, "max action", true_value)
         # ---------------
-        if ds0:
+        if ds0 and ldeltas == 0:
             return sample_dist.abstract_tf(self.intervals, new_state_bounds, self.sink)
         else:
             return bounded_atf.abstract_tf(self.intervals, new_state_bounds, self.sink)

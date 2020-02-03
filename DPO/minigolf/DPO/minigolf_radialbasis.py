@@ -26,7 +26,7 @@ N_ITERATION = 300
 N_EPISODES = 500
 N_STEPS = 20
 
-N_MCRST_DYN = 12
+N_MCRST_DYN = 16
 MIN_SPACE_VAL = 0
 MAX_SPACE_VAL = 20
 # INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16], [16, 20]]
@@ -35,6 +35,9 @@ MAX_SPACE_VAL = 20
 CENTERS = [4, 8, 12, 16]
 STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
+
+# Lipschitz constant on delta s
+LDELTAS = 0.01
 
 
 def deterministic_action(state, rbf):
@@ -126,11 +129,12 @@ def main(seed=None, alpha=0.05, lam=0.0005):
         if i == 0:
             abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS) if ds0 else LipschitzDeltaS(GAMMA, SINK, INTERVALS, 1.3, 0.9)
             # abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, 5.5)
-            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, -100) if ds0 else IVI(GAMMA, SINK, True, INTERVALS)
+            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, -100) if ds0 and LDELTAS == 0 else \
+                IVI(GAMMA, SINK, True, INTERVALS)
             # abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, 0)
 
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
-        abstraction.compute_abstract_tf(ds0, ENV_NOISE)
+        abstraction.compute_abstract_tf(ds0, LDELTAS)
 
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
 

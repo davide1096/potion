@@ -12,8 +12,8 @@ stats = {}
 avg = {}
 std = {}
 
-alpha = 0.05
-lam = 0.005  # for complex minigolf, otherwise 0.0005
+alpha = 0.01
+lam = 0.001  # for complex minigolf, otherwise 0.0005
 logsig = -2.
 
 for i in range(1, N_ITERATIONS + 1):

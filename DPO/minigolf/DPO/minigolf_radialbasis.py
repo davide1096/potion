@@ -22,7 +22,7 @@ GAMMA = 0.99
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
-N_ITERATION = 300
+N_ITERATION = 700
 N_EPISODES = 500
 N_STEPS = 20
 
@@ -37,7 +37,7 @@ STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
 
 # Lipschitz constant on delta s
-LDELTAS = 0.01
+LDELTAS = 0.25
 
 
 def deterministic_action(state, rbf):

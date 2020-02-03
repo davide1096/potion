@@ -303,7 +303,7 @@ class ComplexMiniGolf(gym.Env):
         self.putter_length = 1.0 # [0.7:1.0]
         #self.friction = 0.131 # [0.065:0.196]
         self.friction_low = 0.131
-        self.friction_high =  0.16 #0.190
+        self.friction_high =  0.19 #0.190
         self.hole_size = 0.10 # [0.10:0.15]
         self.sigma_noise = 0.3
         self.ball_radius = 0.02135

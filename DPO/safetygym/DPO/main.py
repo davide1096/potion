@@ -17,7 +17,7 @@ ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 ds0 = 1
 
 N_ITERATION = 1000
-N_EPISODES = 1
+N_EPISODES = 2
 N_STEPS = 2000
 
 
@@ -84,6 +84,7 @@ def main(seed=42):
     state_dim = 9
     action_dim = 2
     N_MCRST_DYN = np.full((state_dim, ), 5)
+    # N_MCRST_DYN = np.array([5, 5, 4, 4, 5, 2, 2, 3, 3])
 
     # INIT_DETERMINISTIC_PARAM = np.array([np.full((state_dim, ), 0.1), np.full((state_dim, ), 0.2)])
 
@@ -120,8 +121,14 @@ def main(seed=42):
 
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
-        print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
-        print("Updated estimated performance measure: {}".format(estj))
+        pol = "["
+        for d_r in det_param:
+            for d in d_r:
+                pol = pol+'{},'.format(d)
+        pol = pol + ']'
+
+        print("{} - Updated deterministic policy parameter: {}".format(i, pol))
+        print("Updated estimated performance measure: {}\n".format(estj))
 
 main(0)
 

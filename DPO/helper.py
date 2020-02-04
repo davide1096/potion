@@ -287,7 +287,7 @@ def sq_distance(arr1, arr2):
         d += (d1 - d2) ** 2
     return d
 
-
+# given cos and sin return the angle in degrees
 def get_angle(x, y):
     alpha_rad = np.arctan(y/x)
     alpha = 57.3 * alpha_rad

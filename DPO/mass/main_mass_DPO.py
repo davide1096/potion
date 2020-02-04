@@ -42,7 +42,7 @@ ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
 # UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 1  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = np.array([9, 9]) if STOCH else np.array([9, 9])
+N_MCRST_DYN = np.array([21, 21]) if STOCH else np.array([9, 9])
 MIN_SPACE_VAL = np.array([-1, -1])
 MAX_SPACE_VAL = np.array([1, 1])
 MAX_ACTION_VAL = 1
@@ -88,7 +88,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv, IN
     return fictitious_samples
 
 
-def main(seed=None, alpha=0.025, lam=0.0005):
+def main(seed=None, alpha=0.025, lam=0.0001):
 
     help = Helper(seed)
 
@@ -198,3 +198,6 @@ def main(seed=None, alpha=0.025, lam=0.0005):
     # visualizer.save_image()
     return stats, tot_env_j, tot_est_j
 
+
+if __name__ == "__main__":
+    main(0)

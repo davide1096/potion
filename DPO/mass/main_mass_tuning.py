@@ -5,7 +5,7 @@ from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import csv
 import os
 
-ALGORITHM = "DPO"
+ALGORITHM = "REINFORCE"
 
 N_ITERATIONS = 3
 
@@ -26,10 +26,8 @@ for alpha in ALPHA:
         tot_env_j = 0
         tot_est_j = 0
         for i in range(1, N_ITERATIONS + 1):
-            try:
-                data, envj, estj = main_dpo.main(i, alpha, lam) if ALGORITHM == "DPO" else main_rei.main(i, alpha, lam)
-            except:
-                continue
+            data, envj, estj = main_dpo.main(i, alpha, lam) if ALGORITHM == "DPO" else main_rei.main(i, alpha, lam)
+
             tot_env_j += envj
             tot_est_j += estj
             if i == 1:

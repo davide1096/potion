@@ -13,6 +13,7 @@ import logging
 # import DPO.visualizer.helper_visualizer as helper_vis
 import os
 import csv
+import sys
 
 problem = 'mass'
 SINK = False
@@ -42,7 +43,7 @@ ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
 # UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
 STOCH_L_MULTIPLIER = 1  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = np.array([21, 21]) if STOCH else np.array([9, 9])
+N_MCRST_DYN = np.array([13, 13]) if STOCH else np.array([9, 9])
 MIN_SPACE_VAL = np.array([-1, -1])
 MAX_SPACE_VAL = np.array([1, 1])
 MAX_ACTION_VAL = 1
@@ -200,4 +201,4 @@ def main(seed=None, alpha=0.025, lam=0.0001):
 
 
 if __name__ == "__main__":
-    main(0)
+    main(int(sys.argv[1]))

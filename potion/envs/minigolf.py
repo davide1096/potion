@@ -350,9 +350,6 @@ class ComplexMiniGolf(gym.Env):
 
         friction = self.computeFriction(self.state)
 
-        v_min = np.sqrt(10 / 7 * friction * 9.81 * self.state)
-        v_max = np.sqrt((2*self.hole_size - self.ball_radius)**2*(9.81/(2*self.ball_radius)) + v_min**2)
-
         deceleration = 5 / 7 * friction * 9.81
 
         t = u / deceleration

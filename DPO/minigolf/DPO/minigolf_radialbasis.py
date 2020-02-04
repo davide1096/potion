@@ -26,7 +26,7 @@ N_ITERATION = 700
 N_EPISODES = 500
 N_STEPS = 20
 
-N_MCRST_DYN = 16
+N_MCRST_DYN = 12
 MIN_SPACE_VAL = 0
 MAX_SPACE_VAL = 20
 # INTERVALS = [[0, 0.5], [0.5, 1], [1, 2], [2, 3], [3, 4.5], [4.5, 6], [6, 8], [8, 10], [10, 13], [13, 16], [16, 20]]

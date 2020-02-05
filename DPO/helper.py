@@ -323,8 +323,8 @@ def get_sin_cos(angle):
     angle = angle / 57.3
     return math.sin(angle), math.cos(angle)
 
-def bias_compass_observation(x, y):
+def bias_compass_observation(x, y, offset):
     alpha = get_angle(x, y)
-    alpha = offset_sum2(alpha, 20)
+    alpha = offset_sum2(alpha, offset)
     sin_alpha, cos_alpha = get_sin_cos(alpha)
     return cos_alpha, sin_alpha

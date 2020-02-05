@@ -7,6 +7,7 @@ from DPO.algorithm.updater_deterministic.updater import Updater
 import DPO.safetygym.DPO.base_env as base_env
 import DPO.helper as helper
 from DPO.helper import Helper
+import sys
 
 problem = 'safety'
 SINK = False
@@ -16,9 +17,11 @@ ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
-N_ITERATION = 1000
-N_EPISODES = 2
+N_ITERATION = 500
+N_EPISODES = 1
 N_STEPS = 2000
+
+offset = 20
 
 
 def deterministic_action(det_par, state):
@@ -37,6 +40,7 @@ def compute_state_bounds(samples):
 
 def manage_observation_state(obs):
     obs = np.array([o for o, i in zip(obs, ACCEPTED_STATES) if i])
+    obs[2], obs[3] = helper.bias_compass_observation(obs[2], obs[3], offset)
     return obs
 
 
@@ -71,7 +75,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     return fictitious_samples
 
 
-def main(seed=42):
+def main(seed=42, lam=0.01):
 
     help = Helper(seed)
     GAMMA = 1
@@ -115,7 +119,7 @@ def main(seed=42):
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, samples, det_param, INTERVALS)
-        det_param = det_upd.gradient_update(det_param, fictitious_samples)
+        det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
 
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
@@ -128,4 +132,6 @@ def main(seed=42):
         print("{} - Updated deterministic policy parameter: {}".format(i, pol))
         print("Updated estimated performance measure: {}\n".format(estj))
 
-main(0)
+
+if __name__ == "__main__":
+    main(int(sys.argv[1]))

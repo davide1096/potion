@@ -37,8 +37,6 @@ def compute_state_bounds(samples):
 
 def manage_observation_state(obs):
     obs = np.array([o for o, i in zip(obs, ACCEPTED_STATES) if i])
-    # to simulate a damage in compass
-    obs[2], obs[3] = helper.bias_compass_observation(obs[2], obs[3])
     return obs
 
 
@@ -131,5 +129,3 @@ def main(seed=42):
         print("Updated estimated performance measure: {}\n".format(estj))
 
 main(0)
-
-

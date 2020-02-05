@@ -5,7 +5,7 @@ import numpy as np
 LR_DET_POLICY = 0.005  # 0.05 - 0.01 - 0.005
 # N_ITERATIONS_BATCH_GRAD = 200
 # BATCH_SIZE = 50
-LAMBDA = 0  # 0.01 for the compass damage
+LAMBDA = 0.001  # 0.0001
 
 
 class Updater(object):

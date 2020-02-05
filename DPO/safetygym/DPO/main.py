@@ -8,6 +8,8 @@ import DPO.safetygym.DPO.base_env as base_env
 import DPO.helper as helper
 from DPO.helper import Helper
 import sys
+import csv
+import os
 
 problem = 'safety'
 SINK = False
@@ -100,6 +102,12 @@ def main(seed=42, lam=0.01):
     INIT_DETERMINISTIC_PARAM = p.reshape((action_dim, state_dim))
     det_param = INIT_DETERMINISTIC_PARAM
 
+    filename = "../../csv/safetygym/LAM={}/data{}.csv".format(lam, help.getSeed())
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    data_file = open(filename, mode='w')
+    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    file_writer.writerow(['j'])
+
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
         samples = helper.flat_listoflists(determin_samples)
@@ -122,6 +130,8 @@ def main(seed=42, lam=0.01):
         det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
 
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
+
+        file_writer.writerow([estj])
 
         pol = "["
         for d_r in det_param:

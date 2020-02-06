@@ -107,7 +107,7 @@ def main(seed=None, alpha=0.025, lam=0.0001):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    file_writer.writerow(['param0', 'param1', 'env j', 'est j'])
+    file_writer.writerow(['param0', 'param1', 'est j'])
 
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
     print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
@@ -193,7 +193,7 @@ def main(seed=None, alpha=0.025, lam=0.0001):
         # stats['abstractJ'].append(absJ)
         # ------------
 
-        file_writer.writerow([det_param[0][0], det_param[0][1], j, estj])
+        file_writer.writerow([det_param[0][0], det_param[0][1], estj])
 
     data_file.close()
     # visualizer.save_image()

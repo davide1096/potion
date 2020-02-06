@@ -151,7 +151,7 @@ def main(seed=None, alpha=0.025, lam=0.0001):
     # stats['j'].append(initJ)
     # ------------
 
-    tot_env_j = 0
+    # tot_env_j = 0
     tot_est_j = 0
 
     for i in range(0, N_ITERATION):
@@ -174,13 +174,13 @@ def main(seed=None, alpha=0.025, lam=0.0001):
         det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
         # helper_vis.plot_abstract_policy(INTERVALS, abs_opt_pol, old_par, det_param, opt_par, i % 3)
 
-        j = env.computeJ(det_param, 0)
+        # j = env.computeJ(det_param, 0)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
-        tot_env_j += j
+        # tot_env_j += j
         tot_est_j += estj
 
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
-        print("Updated performance measure: {}".format(j))
+        # print("Updated performance measure: {}".format(j))
         print("Updated estimated performance measure: {}".format(estj))
         # print("Updated estimated abstract performance measure: {}\n".format(absJ))
         # TODO fix the plot of J
@@ -188,7 +188,7 @@ def main(seed=None, alpha=0.025, lam=0.0001):
 
         # PLOTTER INFO
         stats['param'].append(det_param)
-        stats['j'].append(j)
+        # stats['j'].append(j)
         stats['estj'].append(estj)
         # stats['abstractJ'].append(absJ)
         # ------------
@@ -197,7 +197,7 @@ def main(seed=None, alpha=0.025, lam=0.0001):
 
     data_file.close()
     # visualizer.save_image()
-    return stats, tot_env_j, tot_est_j
+    return stats, 0, tot_est_j
 
 
 if __name__ == "__main__":

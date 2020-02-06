@@ -64,7 +64,7 @@ def main(seed=None, alpha=0.05, logsigma=-2.):
               stepper = stepper,
               batchsize = batchsize,
               disc = gamma,
-              iterations = 300,
+              iterations = 700,
               seed = seed,
               logger = logger,
               save_params = 5, #Policy parameters will be saved on disk each 5 iterations

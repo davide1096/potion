@@ -5,15 +5,15 @@ from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import os
 import csv
 
-algorithm = "DPO"  # use "DPO" or "REINFORCE" to change algorithm
+algorithm = "REINFORCE"  # use "DPO" or "REINFORCE" to change algorithm
 N_ITERATIONS = 10
 
 stats = {}
 avg = {}
 std = {}
 
-alpha = 0.01
-lam = 0.001  # for complex minigolf, otherwise 0.0005
+alpha = 0.05
+lam = 0.0005  # for complex minigolf, otherwise 0.0005
 logsig = -2.
 
 for i in range(1, N_ITERATIONS + 1):
@@ -48,7 +48,7 @@ std['j'] = np.std(stats['j'], axis=0)
 std['fail'] = np.std(stats['fail'], axis=0)
 
 
-filename_csv = "../csv/minigolf/DPO/ALPHA={}/LAM={}/stats.csv".format(alpha, lam) if algorithm == "DPO" else \
+filename_csv = "../csv/minigolf/friction1.9/DPO/ALPHA={}/LAM={}/stats.csv".format(alpha, lam) if algorithm == "DPO" else \
     "../csv/minigolf/REINFORCE/ALPHA={}/LOGSTD={}/stats.csv".format(alpha, logsig)
 os.makedirs(os.path.dirname(filename_csv), exist_ok=True)
 data_file = open(filename_csv, mode='w')

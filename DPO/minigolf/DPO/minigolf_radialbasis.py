@@ -12,6 +12,7 @@ from DPO.minigolf.DPO.RBFNet import RBFNet
 import csv
 import os
 import errno
+import sys
 
 
 problem = 'minigolf'
@@ -82,7 +83,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, INTERVALS):
     return fictitious_samples
 
 
-def main(seed=None, alpha=0.05, lam=0.0005):
+def main(seed=None, alpha=0.001, lam=0.0005):
 
     help = Helper(seed)
 
@@ -180,3 +181,7 @@ def main(seed=None, alpha=0.05, lam=0.0005):
 
     visualizer.save_image()
     return stats, cumulative_j
+
+
+if __name__ == "__main__":
+    main(int(sys.argv[1]))

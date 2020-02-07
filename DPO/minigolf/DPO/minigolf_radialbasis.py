@@ -37,7 +37,7 @@ STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
 
 # Lipschitz constant on delta s
-LDELTAS = 0.25
+LDELTAS = 0.3
 
 
 def deterministic_action(state, rbf):

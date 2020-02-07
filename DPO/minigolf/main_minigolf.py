@@ -5,14 +5,14 @@ from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import os
 import csv
 
-algorithm = "REINFORCE"  # use "DPO" or "REINFORCE" to change algorithm
+algorithm = "DPO"  # use "DPO" or "REINFORCE" to change algorithm
 N_ITERATIONS = 10
 
 stats = {}
 avg = {}
 std = {}
 
-alpha = 0.05
+alpha = 0.001
 lam = 0.0005  # for complex minigolf, otherwise 0.0005
 logsig = -2.
 

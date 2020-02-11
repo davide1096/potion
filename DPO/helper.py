@@ -261,4 +261,3 @@ def get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):
         intervals.append([counter, maxs])
         mcrst.append(intervals)
     return mcrst
-

@@ -162,10 +162,20 @@ def main(seed=None, alpha=0.025, lam=0.0001):
         abstraction.compute_abstract_tf(ds0, MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL, ENV_NOISE)
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
 
-        # ---- performance abstract policy ---
-        # first_states_ep = [d[0][0] for d in determin_samples]
-        # absJ = estimate_performance_abstract_policy(env, N_EPISODES, N_STEPS, abs_opt_pol, first_states_ep,
-        #                                             dyn_intervals)
+        # ---- APPENDIX E ---
+        if i == 0 or i == 5 or i == 10 or i == 15 or i == 20:
+            filename2 = "../csv/mass/DPO/ALPHA={}/LAM={}/it={}/appE_{}.csv".format(alpha, lam, i, help.getSeed())
+            os.makedirs(os.path.dirname(filename2), exist_ok=True)
+            data_file2 = open(filename2, mode='w')
+            file_writer2 = csv.writer(data_file2, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_writer2.writerow(['i', 'j', 'min_a', 'max_a', 'min_chosen_a', 'max_chosen_a'])
+
+            for ii in range(len(abstraction.get_container())):
+                actions = abstraction.get_container()[ii].keys()
+                mcrst = helper.get_mcrst_from_index(ii, INTERVALS)
+                file_writer2.writerow([mcrst[0], mcrst[1], min(actions), max(actions),
+                                       min(abs_opt_pol[ii]), max(abs_opt_pol[ii])])
+            data_file2.close()
         # ------------------------------------
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals,
@@ -200,5 +210,6 @@ def main(seed=None, alpha=0.025, lam=0.0001):
     return stats, 0, tot_est_j
 
 
-if __name__ == "__main__":
-    main(int(sys.argv[1]))
+# if __name__ == "__main__":
+#     main(int(sys.argv[1]))
+main(0)

@@ -328,3 +328,15 @@ def bias_compass_observation(x, y, offset):
     alpha = offset_sum2(alpha, offset)
     sin_alpha, cos_alpha = get_sin_cos(alpha)
     return cos_alpha, sin_alpha
+
+
+def appendix_mcrst_population(samples, mask, intervals):
+    intervals = np.array([i for i, m in zip(intervals, mask) if m])
+    shape = np.array([len(i) for i in intervals])
+    cont = np.zeros(tuple(shape))
+    for s in samples:
+        s = s[0]
+        s = np.array([s_ for s_, m in zip(s, mask) if m])
+        mcrst = get_mcrst(s, intervals, False)
+        cont[tuple(mcrst)] += 1
+    return cont

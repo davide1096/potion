@@ -19,9 +19,9 @@ ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
-N_ITERATION = 500
-N_EPISODES = 1
-N_STEPS = 2000
+N_ITERATION = 100
+N_EPISODES = 10
+N_STEPS = 200
 
 offset = 20
 
@@ -77,7 +77,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     return fictitious_samples
 
 
-def main(seed=42, lam=0.01):
+def main(seed=42, lam=0.05):
 
     help = Helper(seed)
     GAMMA = 1
@@ -108,6 +108,12 @@ def main(seed=42, lam=0.01):
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     file_writer.writerow(['j'])
 
+    filename2 = "../../csv/safetygym/LAM={}/appB{}.csv".format(lam, help.getSeed())
+    os.makedirs(os.path.dirname(filename2), exist_ok=True)
+    data_file2 = open(filename2, mode='w')
+    file_writer2 = csv.writer(data_file2, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    file_writer2.writerow(['mcrst0', 'mcrst1', 'it0', 'it100'])
+
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
         samples = helper.flat_listoflists(determin_samples)
@@ -122,9 +128,23 @@ def main(seed=42, lam=0.01):
             abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
             det_upd = Updater(help.getSeed())
 
+            # ---- compute info for appendix E (mcrst population) ----
+            mask = [0, 0, 1, 1, 0, 0, 0, 0, 0]
+            res_0 = helper.appendix_mcrst_population(samples, mask, INTERVALS)
+            # --------------------------------------------------------
+
         abstraction.divide_samples(samples, problem, help.getSeed())
         abstraction.compute_abstract_tf()
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
+
+        # ---- compute info for appendix E (mcrst population) ----
+        if i == 99:
+            res_100 = helper.appendix_mcrst_population(samples, mask, INTERVALS)
+            for j in range(len(res_0)):
+                for k in range(len(res_0[j])):
+                    file_writer2.writerow([j, k, res_0[j][k], res_100[j][k]])
+            data_file2.close()
+        # --------------------------------------------------------
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, samples, det_param, INTERVALS)
         det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
@@ -145,5 +165,6 @@ def main(seed=42, lam=0.01):
     data_file.close()
 
     
-if __name__ == "__main__":
-    main(int(sys.argv[1]))
+# if __name__ == "__main__":
+#     main(int(sys.argv[1]))
+main(0)

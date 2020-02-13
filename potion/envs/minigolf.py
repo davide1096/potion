@@ -9,12 +9,11 @@ from scipy.stats import norm
 
 """
 Minigolf task.
-
 References
 ----------
   - Penner, A. R. "The physics of putting." Canadian Journal of Physics 80.2 (2002): 83-96.
-
 """
+
 
 class MiniGolf(gym.Env):
     metadata = {
@@ -30,20 +29,20 @@ class MiniGolf(gym.Env):
         self.max_pos = 20.0
         self.min_action = 1e-5
         self.max_action = 10.0
-        self.putter_length = 1.0 # [0.7:1.0]
-        self.friction = 0.131 # [0.065:0.196]
-        self.hole_size = 0.10 # [0.10:0.15]
+        self.putter_length = 1.0  # [0.7:1.0]
+        self.friction = 0.131  # [0.065:0.196]
+        self.hole_size = 0.10  # [0.10:0.15]
         self.sigma_noise = 0.3
         self.ball_radius = 0.02135
         self.min_variance = 1e-2  # Minimum variance for computing the densities
 
         # gym attributes
         self.viewer = None
-        low = np.array([1., self.min_pos, 0., self.min_pos**3, 0.])
-        high = np.array([1., self.max_pos, self.max_pos**2, self.max_pos**3, self.max_pos**4])
+        low = np.array([self.min_pos])
+        high = np.array([self.max_pos])
         self.action_space = spaces.Box(low=self.min_action,
                                        high=self.max_action,
-                                       shape=(1,),dtype=float)
+                                       shape=(1,), dtype=float)
         self.observation_space = spaces.Box(low=low, high=high, dtype=float)
 
         # initialize state
@@ -65,29 +64,38 @@ class MiniGolf(gym.Env):
         u = action * self.putter_length * (1 + noise)
 
         v_min = np.sqrt(10 / 7 * self.friction * 9.81 * self.state)
-        v_max = np.sqrt((2*self.hole_size - self.ball_radius)**2*(9.81/(2*self.ball_radius)) + v_min**2)
+        v_max = np.sqrt((2 * self.hole_size - self.ball_radius) ** 2 * (9.81 / (2 * self.ball_radius)) + v_min ** 2)
 
         deceleration = 5 / 7 * self.friction * 9.81
 
         t = u / deceleration
         xn = self.state - u * t + 0.5 * deceleration * t ** 2
 
+        # reward = 0
+        # done = True
+        # if u < v_min:
+        #     reward = -1
+        #     done = False
+        # elif u > v_max:
+        #     reward = -100
+
         reward = 0
         done = True
-        if u < v_min:
+        if self.state > 0:
             reward = -1
             done = False
-        elif u > v_max:
+        elif self.state < -4:
             reward = -100
 
         self.state = xn
 
-        return self.get_state(), float(reward), done, {'state':self.get_state(), 'action':action}
+        return self.get_state(), float(reward), done, {'state': self.get_state(), 'action': action}
 
-    #Custom param for transfer
+    # Custom param for transfer
 
     def getEnvParam(self):
-        return np.asarray([np.ravel(self.putter_length), np.ravel(self.friction), np.ravel(self.hole_size), np.ravel(self.sigma_noise**2)])
+        return np.asarray([np.ravel(self.putter_length), np.ravel(self.friction), np.ravel(self.hole_size),
+                           np.ravel(self.sigma_noise ** 2)])
 
     def reset(self, state=None):
         if state is None:
@@ -99,7 +107,7 @@ class MiniGolf(gym.Env):
         return self.get_state()
 
     def get_state(self):
-        return np.array([1., self.state, self.state**2, self.state**3, self.state**4])
+        return np.array(self.state)
 
     def get_true_state(self):
         """For testing purposes"""
@@ -107,11 +115,11 @@ class MiniGolf(gym.Env):
 
     def clip_state(self, state):
         return state
-        #return np.clip(state, self.min_pos, self.max_pos)
+        # return np.clip(state, self.min_pos, self.max_pos)
 
     def clip_action(self, action):
         return action
-        #return np.clip(action, self.min_action, self.max_action)
+        # return np.clip(action, self.min_action, self.max_action)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -131,13 +139,12 @@ class MiniGolf(gym.Env):
         deceleration = 5 / 7 * friction * 9.81
 
         u = np.sqrt(2 * deceleration * (state - next_state))
-        noise = (u / (action*putter_length) - 1) / sigma_noise
+        noise = (u / (action * putter_length) - 1) / sigma_noise
 
         return norm.pdf(noise)
 
     def density_old(self, env_parameters, state, action, next_state):
         """
-
         :param env_parameters: list of env_params
         :param state: NxTx1
         :param action: NxT
@@ -156,7 +163,7 @@ class MiniGolf(gym.Env):
             deceleration = 5 / 7 * env_parameters[i, 1] * 9.81
             u = np.sqrt(2 * deceleration * diff[:, :, :, i])
             noise = (u / (action[:, :, np.newaxis, i] * env_parameters[i, 0]) - 1) / env_parameters[i, -1]
-            pdf[:, :, :, i] = norm.pdf(noise) * (1-mask[:, :, :, i])  # set to zero impossible transitions
+            pdf[:, :, :, i] = norm.pdf(noise) * (1 - mask[:, :, :, i])  # set to zero impossible transitions
 
         return pdf[:, :, 0, :]
 
@@ -178,7 +185,7 @@ class MiniGolf(gym.Env):
         deceleration = 5 / 7 * self.friction * 9.81
         u = np.sqrt(2 * deceleration * diff)
         noise = (u / (action[:, :, np.newaxis] * self.putter_length) - 1) / self.sigma_noise
-        pdf = norm.pdf(noise) * (1-mask)  # set to zero impossible transitions
+        pdf = norm.pdf(noise) * (1 - mask)  # set to zero impossible transitions
 
         return pdf[:, :, 0]
 
@@ -188,7 +195,7 @@ class MiniGolf(gym.Env):
         u = np.sqrt(2 * deceleration * (state - next_state))
 
         v_min = np.sqrt(10 / 7 * self.friction * 9.81 * state)
-        v_max = np.sqrt((2*self.hole_size - self.ball_radius)**2*(9.81/(2*self.ball_radius)) + v_min**2)
+        v_max = np.sqrt((2 * self.hole_size - self.ball_radius) ** 2 * (9.81 / (2 * self.ball_radius)) + v_min ** 2)
 
         reward = 0
         done = True
@@ -223,7 +230,7 @@ class MiniGolf(gym.Env):
         action = np.clip(action, self.min_action, self.max_action / 2)[:, :, np.newaxis]
         u = action * self.putter_length
         deceleration = 5 / 7 * self.friction * 9.81
-        return state - 0.5 * u**2 * (1 + self.sigma_noise**2) / deceleration
+        return state - 0.5 * u ** 2 * (1 + self.sigma_noise ** 2) / deceleration
 
     def variance(self, action):
         """
@@ -234,8 +241,8 @@ class MiniGolf(gym.Env):
 
         deceleration = 5 / 7 * self.friction * 9.81
         action = np.clip(action, self.min_action, self.max_action / 2)
-        k = action**2 * self.putter_length**2 / (2 * deceleration)
-        return 2 * k**2 * self.sigma_noise**2 * (self.sigma_noise**2 + 2) + self.min_variance
+        k = action ** 2 * self.putter_length ** 2 / (2 * deceleration)
+        return 2 * k ** 2 * self.sigma_noise ** 2 * (self.sigma_noise ** 2 + 2) + self.min_variance
 
     def densityCurrent(self, state, action, next_state):
         """
@@ -253,7 +260,6 @@ class MiniGolf(gym.Env):
 
     def density(self, env_parameters, state, action, next_state):
         """
-
         :param env_parameters: list of env_params
         :param state: NxTx1
         :param action: NxT
@@ -272,11 +278,13 @@ class MiniGolf(gym.Env):
             # Compute mean next-state
             mean_ns = state[:, :, :, i] - k[:, :, np.newaxis, i] * (1 + env_parameters[i, -1])
             # Compute variance next-state
-            var_ns = 2 * k[:, :, np.newaxis, i]**2 * env_parameters[i, -1] * (env_parameters[i, -1] + 2) + self.min_variance
+            var_ns = 2 * k[:, :, np.newaxis, i] ** 2 * env_parameters[i, -1] * (
+                        env_parameters[i, -1] + 2) + self.min_variance
 
             pdf[:, :, :, i] = norm.pdf((next_state[:, :, :, i] - mean_ns) / np.sqrt(var_ns))
 
         return pdf[:, :, 0, :]
+
 
 class ComplexMiniGolf(gym.Env):
     metadata = {
@@ -292,21 +300,19 @@ class ComplexMiniGolf(gym.Env):
         self.max_pos = 20.0
         self.min_action = 1e-5
         self.max_action = 10.0
-        self.putter_length = 1.0 # [0.7:1.0]
-        #self.friction = 0.131 # [0.065:0.196]
+        self.putter_length = 1.0  # [0.7:1.0]
+        # self.friction = 0.131 # [0.065:0.196]
         self.friction_low = 0.131
-        self.friction_high =  0.19 #0.190
-        self.hole_size = 0.10 # [0.10:0.15]
+        self.friction_high = 0.19  # 0.190
+        self.hole_size = 0.10  # [0.10:0.15]
         self.sigma_noise = 0.3
         self.ball_radius = 0.02135
         self.min_variance = 1e-2  # Minimum variance for computing the densities
 
         # gym attributes
         self.viewer = None
-        ###!
         low = np.array([self.min_pos])
         high = np.array([self.max_pos])
-        ###
         self.action_space = spaces.Box(low=self.min_action,
                                        high=self.max_action,
                                        shape=(1,))
@@ -323,13 +329,16 @@ class ComplexMiniGolf(gym.Env):
         self.sigma_noise = m.sqrt(env_param[-1])
 
     def computeFriction(self, state):
-        if state < (self.max_pos - self.min_pos) / 3:
-            friction = self.friction_low
-        elif state < (self.max_pos - self.min_pos) * 2 / 3:
-            friction = self.friction_low
-        else:
-            friction = self.friction_high
-        return friction
+        # if state < (self.max_pos - self.min_pos) / 3:
+        #     friction = self.friction_low
+        # elif state < (self.max_pos - self.min_pos) * 2 / 3:
+        #     friction = self.friction_low
+        # else:
+        #     friction = self.friction_high
+        # return friction
+        delta_f = self.friction_high - self.friction_low
+        delta_p = self.max_pos - self.min_pos
+        return self.friction_low + (delta_f / delta_p) * state
 
     def step(self, action, render=False):
         action = np.clip(action, self.min_action, self.max_action / 2)
@@ -341,34 +350,41 @@ class ComplexMiniGolf(gym.Env):
 
         friction = self.computeFriction(self.state)
 
-        v_min = np.sqrt(10 / 7 * friction * 9.81 * self.state)
-        v_max = np.sqrt((2*self.hole_size - self.ball_radius)**2*(9.81/(2*self.ball_radius)) + v_min**2)
-
         deceleration = 5 / 7 * friction * 9.81
 
         t = u / deceleration
         xn = self.state - u * t + 0.5 * deceleration * t ** 2
 
+        # reward = 0
+        # done = True
+        # if u < v_min:
+        #     reward = -1
+        #     done = False
+        # elif u > v_max:
+        #     reward = -100
+
         reward = 0
         done = True
-        if u < v_min:
+        if self.state > 0:
             reward = -1
             done = False
-        elif u > v_max:
+        elif self.state < -4:
             reward = -100
+
         state = self.state
         self.state = xn
 
         # TODO the last three values should not be used
-        return self.get_state(), float(reward), done, {"state":state, "next_state":self.state, "action":action}
+        return self.get_state(), float(reward), done, {"state": state, "next_state": self.state, "action": action}
 
-    #Custom param for transfer
+    # Custom param for transfer
 
     def getEnvParam(self):
-        return np.asarray([np.ravel(self.putter_length), np.ravel(self.friction), np.ravel(self.hole_size), np.ravel(self.sigma_noise**2)])
+        return np.asarray([np.ravel(self.putter_length), np.ravel(self.friction), np.ravel(self.hole_size),
+                           np.ravel(self.sigma_noise ** 2)])
 
     def reset(self, state=None):
-        #TODO change reset
+        # TODO change reset
         if state is None:
             self.state = np.array([self.np_random.uniform(low=self.min_pos,
                                                           high=self.max_pos)])
@@ -378,9 +394,7 @@ class ComplexMiniGolf(gym.Env):
         return self.get_state()
 
     def get_state(self):
-        ###!
-        return np.array([1., self.state, self.state**2, self.state**3, self.state**4])
-        ###
+        return np.array(self.state)
 
     def get_true_state(self):
         """For testing purposes"""
@@ -388,25 +402,25 @@ class ComplexMiniGolf(gym.Env):
 
     def clip_state(self, state):
         return state
-        #return np.clip(state, self.min_pos, self.max_pos)
+        # return np.clip(state, self.min_pos, self.max_pos)
 
     def clip_action(self, action):
         return action
-        #return np.clip(action, self.min_action, self.max_action)
+        # return np.clip(action, self.min_action, self.max_action)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
- 
+
     def reward(self, state, action, next_state):
-        #FIXME: two problems. (1,probably fixed) When the next_state is less than state. (2) reward of -100 is never returned
+        # FIXME: two problems. (1,probably fixed) When the next_state is less than state. (2) reward of -100 is never returned
         friction = self.computeFriction(state)
         deceleration = 5 / 7 * friction * 9.81
 
         u = np.sqrt(2 * deceleration * max((state - next_state), 0))
 
         v_min = np.sqrt(10 / 7 * friction * 9.81 * state)
-        v_max = np.sqrt((2*self.hole_size - self.ball_radius)**2*(9.81/(2*self.ball_radius)) + v_min**2)
+        v_max = np.sqrt((2 * self.hole_size - self.ball_radius) ** 2 * (9.81 / (2 * self.ball_radius)) + v_min ** 2)
 
         reward = 0
         done = True

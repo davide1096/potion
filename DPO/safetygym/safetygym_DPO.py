@@ -129,3 +129,4 @@ def main(seed=42, lam=0.05):
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
         print("Updated estimated performance measure: {}\n".format(estj))
 
+main()

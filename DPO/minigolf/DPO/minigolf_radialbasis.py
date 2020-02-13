@@ -23,7 +23,7 @@ GAMMA = 0.99
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
-N_ITERATION = 700
+N_ITERATION = 200
 N_EPISODES = 500
 N_STEPS = 20
 
@@ -38,7 +38,7 @@ STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
 
 # Lipschitz constant on delta s
-LDELTAS = 0.3
+LDELTAS = 0
 
 
 def deterministic_action(state, rbf):
@@ -168,6 +168,21 @@ def main(seed=None, alpha=0.001, lam=0.0005):
         w = rbf.w
         visualizer.show_values(w, estj, cumulative_fail)
         file_writer.writerow([w[0], w[1], w[2], w[3], cumulative_fail, estj])
+
+        # --- APPENDIX E ---
+        if i==0 or i==49 or i==99 or i==149 or i==199:
+            filename2 = "../csv/minigolf/appendix/ALPHA={}/LAM={}/it{}/data{}.csv".format(alpha, lam, i, help.getSeed())
+            os.makedirs(os.path.dirname(filename2), exist_ok=True)
+            data_file2 = open(filename2, mode='w')
+            file_writer2 = csv.writer(data_file2, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_writer2.writerow(['mcrst', 'min_a', 'max_a', 'min_opt_a', 'max_opt_a', 'w1', 'w2', 'w3', 'w4'])
+            for j in range(1, len(abstraction.get_container())-1):
+                actions = abstraction.get_container()[j].keys()
+                w = rbf.w
+                file_writer2.writerow([j, min(actions), max(actions), min(abs_opt_pol[j]), max(abs_opt_pol[j]),
+                                       w[0], w[1], w[2], w[3]])
+            data_file2.close()
+        # ------------------
 
         # PLOTTER INFO
         # if i % 10 == 0:

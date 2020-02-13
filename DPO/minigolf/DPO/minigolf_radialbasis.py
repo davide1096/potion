@@ -23,7 +23,7 @@ GAMMA = 0.99
 # Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
 ds0 = 1
 
-N_ITERATION = 200
+N_ITERATION = 300
 N_EPISODES = 500
 N_STEPS = 20
 
@@ -170,7 +170,7 @@ def main(seed=None, alpha=0.001, lam=0.0005):
         file_writer.writerow([w[0], w[1], w[2], w[3], cumulative_fail, estj])
 
         # --- APPENDIX E ---
-        if i==0 or i==49 or i==99 or i==149 or i==199:
+        if i==0 or i==49 or i==99 or i==149 or i==199 or i==249 or i==299:
             filename2 = "../csv/minigolf/appendix/ALPHA={}/LAM={}/it{}/data{}.csv".format(alpha, lam, i, help.getSeed())
             os.makedirs(os.path.dirname(filename2), exist_ok=True)
             data_file2 = open(filename2, mode='w')

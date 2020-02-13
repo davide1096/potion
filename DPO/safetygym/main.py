@@ -1,4 +1,4 @@
-import DPO.safetygym.DPO.main as main
+import DPO.safetygym.main_DPO as main
 
 N_ITERATIONS = 10
 

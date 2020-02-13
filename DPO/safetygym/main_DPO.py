@@ -1,13 +1,10 @@
-import gym
-import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_deterministic.updater import Updater
-import DPO.safetygym.DPO.base_env as base_env
+import DPO.safetygym.base_env as base_env
 import DPO.helper as helper
 from DPO.helper import Helper
-import sys
 import csv
 import os
 
@@ -22,6 +19,9 @@ ds0 = 1
 N_ITERATION = 100
 N_EPISODES = 10
 N_STEPS = 200
+state_dim = 9
+action_dim = 2
+N_MCRST_DYN = np.full((state_dim, ), 5)
 
 offset = 20
 
@@ -31,9 +31,10 @@ def deterministic_action(det_par, state):
 
 
 def compute_state_bounds(samples):
-    samples = helper.flat_listoflists(samples)
+    # initialize min and max values with the first sample.
     min_values = np.minimum(samples[0][0], samples[0][3])
     max_values = np.maximum(samples[0][0], samples[0][3])
+    # evaluate min max throughout all the samples.
     for sam in samples[1:]:
         min_values = np.minimum(min_values, sam[3])
         max_values = np.maximum(max_values, sam[3])
@@ -41,7 +42,9 @@ def compute_state_bounds(samples):
 
 
 def manage_observation_state(obs):
+    # obs space reduced to the meaningful dimensions.
     obs = np.array([o for o, i in zip(obs, ACCEPTED_STATES) if i])
+    # simulated error introduced in the compass observations.
     obs[2], obs[3] = helper.bias_compass_observation(obs[2], obs[3], offset)
     return obs
 
@@ -65,13 +68,14 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
 def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     fictitious_samples = []
     for s in det_samples:
+        # action that would be prescribed by the deterministic policy (not updated).
         prev_action = deterministic_action(param, s[0])
         mcrst_provv = helper.get_mcrst(s[0], interv, SINK)
         index_mcrst = helper.get_index_from_mcrst(mcrst_provv, interv)
         if index_mcrst in abs_opt_policy.keys():
-            if helper.array_in(prev_action, abs_opt_policy[index_mcrst]):
+            if helper.array_in(prev_action, abs_opt_policy[index_mcrst]):  # prev_action is optimal.
                 fictitious_samples.append([s[0], prev_action])
-            else:
+            else:  # we select the closest action to prev_action among the optimal ones.
                 index = np.argmin([helper.sq_distance(act, prev_action) for act in abs_opt_policy[index_mcrst]])
                 fictitious_samples.append([s[0], abs_opt_policy[index_mcrst][index]])
     return fictitious_samples
@@ -81,24 +85,12 @@ def main(seed=42, lam=0.05):
 
     help = Helper(seed)
     GAMMA = 1
-
-    # load and configure the environment.
-    env = base_env.create_env(seed)
-
-    state_dim = 9
-    action_dim = 2
-    N_MCRST_DYN = np.full((state_dim, ), 5)
-    # N_MCRST_DYN = np.array([5, 5, 4, 4, 5, 2, 2, 3, 3])
-
-    # INIT_DETERMINISTIC_PARAM = np.array([np.full((state_dim, ), 0.1), np.full((state_dim, ), 0.2)])
-
-    # policy learnt with pgpe.
+    env = base_env.create_env(seed)  # load and configure the environment.
     p = np.array([0.10787985473871231, 0.02179303579032421, 4.300711154937744, 0.10839951038360596,
                   0.017089104279875755, 0.1119314506649971, 0.018646063283085823, -0.17877089977264404,
                   -0.03759196400642395, -0.004248579498380423, 0.48613205552101135, 0.10498402267694473,
                   -12.068914413452148, 1.0702580213546753, -0.04661020636558533, -0.22232159972190857,
-                  0.0361342579126358, -0.39843615889549255])
-
+                  0.0361342579126358, -0.39843615889549255])  # policy learnt with pgpe.
     INIT_DETERMINISTIC_PARAM = p.reshape((action_dim, state_dim))
     det_param = INIT_DETERMINISTIC_PARAM
 
@@ -108,72 +100,32 @@ def main(seed=42, lam=0.05):
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     file_writer.writerow(['j'])
 
-    filename2 = "../../csv/safetygym/LAM={}/appE{}.csv".format(lam, help.getSeed())
-    os.makedirs(os.path.dirname(filename2), exist_ok=True)
-    data_file2 = open(filename2, mode='w')
-    file_writer2 = csv.writer(data_file2, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    file_writer2.writerow(['mcrst0', 'mcrst1', 'it0', 'it2', 'it5', 'it8', 'it99'])
-
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
-        samples = helper.flat_listoflists(determin_samples)
+        flat_samples = helper.flat_listoflists(determin_samples)
 
-        # instantiate the components of the algorithm.
         if i == 0:
-            MIN_SPACE_VAL, MAX_SPACE_VAL = compute_state_bounds(determin_samples)
+            # build the discretization.
+            MIN_SPACE_VAL, MAX_SPACE_VAL = compute_state_bounds(flat_samples)
             INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
-            print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
-
+            print("Seed: {} - INTERVALS: {}\n{}\n".format(seed, N_MCRST_DYN, INTERVALS))
+            # instantiate the components of the algorithm.
             abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
             abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
             det_upd = Updater(help.getSeed())
 
-            # ---- compute info for appendix E (mcrst population) ----
-            mask = [0, 0, 1, 1, 0, 0, 0, 0, 0]
-            res = np.array([helper.appendix_mcrst_population(samples, mask, INTERVALS)])
-            # --------------------------------------------------------
-
-        abstraction.divide_samples(samples, problem, help.getSeed())
+        # build the \gamma-MDP.
+        abstraction.divide_samples(flat_samples, problem, help.getSeed())
         abstraction.compute_abstract_tf()
+        # compute the value iteration.
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
-
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, samples, det_param, INTERVALS)
+        # project back the policy.
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, flat_samples, det_param, INTERVALS)
         det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
 
-        # ---- compute info for appendix E (mcrst population) ----
-        if i == 2 or i == 5 or i == 8 or i == 99:
-            res_new = np.array([helper.appendix_mcrst_population(samples, mask, INTERVALS)])
-            res = np.append(res, res_new, axis=0)
-
-            filename3 = "../../csv/safetygym/LAM={}/data{}_poliy_it{}.csv".format(lam, help.getSeed(), i)
-            os.makedirs(os.path.dirname(filename3), exist_ok=True)
-            data_file3 = open(filename3, mode='w')
-            file_writer3 = csv.writer(data_file3, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            file_writer3.writerow(det_param)
-            data_file3.close()
-
-        # --------------------------------------------------------
-
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
-
         file_writer.writerow([estj])
 
-        pol = "["
-        for d_r in det_param:
-            for d in d_r:
-                pol = pol+'{},'.format(d)
-        pol = pol + ']'
-
-        print("{} - Updated deterministic policy parameter: {}".format(i, pol))
+        print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
         print("Updated estimated performance measure: {}\n".format(estj))
 
-    for j in range(5):
-        for k in range(5):
-            file_writer2.writerow([j, k, res[0][j][k], res[1][j][k], res[2][j][k], res[3][j][k], res[4][j][k]])
-    data_file2.close()
-    data_file.close()
-
-    
-# if __name__ == "__main__":
-#     main(int(sys.argv[1]))
-# main(0)

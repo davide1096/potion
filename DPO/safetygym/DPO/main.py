@@ -108,11 +108,11 @@ def main(seed=42, lam=0.05):
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     file_writer.writerow(['j'])
 
-    filename2 = "../../csv/safetygym/LAM={}/appB{}.csv".format(lam, help.getSeed())
+    filename2 = "../../csv/safetygym/LAM={}/appE{}.csv".format(lam, help.getSeed())
     os.makedirs(os.path.dirname(filename2), exist_ok=True)
     data_file2 = open(filename2, mode='w')
     file_writer2 = csv.writer(data_file2, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    file_writer2.writerow(['mcrst0', 'mcrst1', 'it0', 'it100'])
+    file_writer2.writerow(['mcrst0', 'mcrst1', 'it0', 'it2', 'it5', 'it8', 'it99'])
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
@@ -130,24 +130,29 @@ def main(seed=42, lam=0.05):
 
             # ---- compute info for appendix E (mcrst population) ----
             mask = [0, 0, 1, 1, 0, 0, 0, 0, 0]
-            res_0 = helper.appendix_mcrst_population(samples, mask, INTERVALS)
+            res = np.array([helper.appendix_mcrst_population(samples, mask, INTERVALS)])
             # --------------------------------------------------------
 
         abstraction.divide_samples(samples, problem, help.getSeed())
         abstraction.compute_abstract_tf()
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
 
-        # ---- compute info for appendix E (mcrst population) ----
-        if i == 99:
-            res_100 = helper.appendix_mcrst_population(samples, mask, INTERVALS)
-            for j in range(len(res_0)):
-                for k in range(len(res_0[j])):
-                    file_writer2.writerow([j, k, res_0[j][k], res_100[j][k]])
-            data_file2.close()
-        # --------------------------------------------------------
-
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, samples, det_param, INTERVALS)
         det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
+
+        # ---- compute info for appendix E (mcrst population) ----
+        if i == 2 or i == 5 or i == 8 or i == 99:
+            res_new = np.array([helper.appendix_mcrst_population(samples, mask, INTERVALS)])
+            res = np.append(res, res_new, axis=0)
+
+            filename3 = "../../csv/safetygym/LAM={}/data{}_poliy_it{}.csv".format(lam, help.getSeed(), i)
+            os.makedirs(os.path.dirname(filename3), exist_ok=True)
+            data_file3 = open(filename3, mode='w')
+            file_writer3 = csv.writer(data_file3, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_writer3.writerow(det_param)
+            data_file3.close()
+
+        # --------------------------------------------------------
 
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
@@ -162,9 +167,13 @@ def main(seed=42, lam=0.05):
         print("{} - Updated deterministic policy parameter: {}".format(i, pol))
         print("Updated estimated performance measure: {}\n".format(estj))
 
+    for j in range(5):
+        for k in range(5):
+            file_writer2.writerow([j, k, res[0][j][k], res[1][j][k], res[2][j][k], res[3][j][k], res[4][j][k]])
+    data_file2.close()
     data_file.close()
 
     
 # if __name__ == "__main__":
 #     main(int(sys.argv[1]))
-main(0)
+# main(0)

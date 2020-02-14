@@ -131,4 +131,4 @@ def main(seed=None, alpha=0.001, lam=0.0005):
         w = rbf.w
         file_writer.writerow([w[0], w[1], w[2], w[3], cumulative_fail, estj])
 
-main()
+main(0)

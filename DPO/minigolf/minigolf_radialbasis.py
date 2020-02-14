@@ -89,7 +89,7 @@ def main(seed=None, alpha=0.001, lam=0.0005):
     cumulative_j = 0
     rbf = RBFNet(CENTERS, STD_DEV, INIT_W, help.getSeed(), alpha, lam)
 
-    filename = "../csv/minigolf/friction1.9/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
+    filename = "../csv/minigolf/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)

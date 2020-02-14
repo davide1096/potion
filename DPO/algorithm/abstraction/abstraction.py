@@ -44,10 +44,17 @@ class Abstraction(object):
             if len(self.container[i].items()) > helper.MAX_SAMPLES_IN_MCRST:
                 self.container[i] = help.big_mcrst_correction(self.container[i])
 
-        for i in self.container.keys():
-            abs_rew = reward_helper[i]['val'] / reward_helper[i]['den']
-            for _, v in self.container[i].items():
-                v['abs_reward'] = abs_rew
+        if problem == "safety":
+            for i in self.container.keys():
+                abs_rew = reward_helper[i]['val'] / reward_helper[i]['den']
+                for _, v in self.container[i].items():
+                    v['abs_reward'] = abs_rew
+        elif problem == "minigolf":
+            for i in self.container.keys()[1:]:
+                for _, v in self.container[i].items():
+                    v['abs_reward'] = -1
+            for _, v in self.container[0].items():
+                v['abs_reward'] = 0
 
     def compute_abstract_tf(self):
         pass

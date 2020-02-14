@@ -9,8 +9,6 @@ from DPO.algorithm.updater_deterministic.updater import Updater
 from DPO.visualizer.mass_visualizer import MassVisualizer
 import DPO.helper as helper
 from DPO.helper import Helper
-import logging
-# import DPO.visualizer.helper_visualizer as helper_vis
 import os
 import csv
 import sys
@@ -22,8 +20,6 @@ INIT_DETERMINISTIC_PARAM = np.array([-0.3, -0.3])
 # optimal param values: [-1.376, -0.822]
 TAO = 0.1
 MASS = 0.1
-# A = np.array([[1., 0.3], [0.5, 1.]])
-# B = np.array([[0.5], [TAO / MASS]])
 A = np.array([[1., 1.], [0., 1.]])
 B = np.array([[0.], [1.]])
 Q = np.diag([1., 0.])
@@ -41,12 +37,13 @@ N_STEPS = 20
 STOCH = 1
 ENV_NOISE = (0.1 if STOCH else 0) * np.eye(INIT_DETERMINISTIC_PARAM.size)
 # UPD_LAM = 0.001 if STOCH else 0.0005  # Regularization parameter in the policy re-projection.
-STOCH_L_MULTIPLIER = 1  # Increase the L constant in stochastic environments.
 
-N_MCRST_DYN = np.array([3, 3]) if STOCH else np.array([9, 9])
+N_MCRST_DYN = np.array([9, 9]) if STOCH else np.array([9, 9])
 MIN_SPACE_VAL = np.array([-1, -1])
 MAX_SPACE_VAL = np.array([1, 1])
 MAX_ACTION_VAL = 1
+
+STOCH_L_MULTIPLIER = 10
 
 
 def deterministic_action(det_par, state):
@@ -103,7 +100,7 @@ def main(seed=None, alpha=0.025, lam=0.0001):
     env.gamma = GAMMA
     env.seed(help.getSeed())
 
-    filename = "../csv/mass/DPO/ALPHA={}/LAM={}/3x3/data{}.csv".format(alpha, lam, help.getSeed())
+    filename = "../csv/mass/DPO/ALPHA={}/LAM={}/9x9/data{}.csv".format(alpha, lam, help.getSeed())
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -139,8 +136,6 @@ def main(seed=None, alpha=0.025, lam=0.0001):
     title = "mass"
     key = "mass{}.jpg".format(help.getSeed())
     initJ = env.computeJ(det_param, 0)
-    # visualizer = MassVisualizer(title, key, det_param, opt_par4vis, initJ, optJ4vis)
-    # visualizer.clean_panels()
 
     # PLOTTER INFO
     stats = {}
@@ -161,22 +156,6 @@ def main(seed=None, alpha=0.025, lam=0.0001):
         abstraction.divide_samples(determin_samples, problem, help.getSeed(), intervals=dyn_intervals)
         abstraction.compute_abstract_tf(ds0, MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL, ENV_NOISE)
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), intervals=dyn_intervals)
-
-        # ---- APPENDIX E ---
-        if i == 0 or i == 5 or i == 10 or i == 15 or i == 20:
-            filename2 = "../csv/mass/DPO/ALPHA={}/LAM={}/it={}/appE_{}.csv".format(alpha, lam, i, help.getSeed())
-            os.makedirs(os.path.dirname(filename2), exist_ok=True)
-            data_file2 = open(filename2, mode='w')
-            file_writer2 = csv.writer(data_file2, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            file_writer2.writerow(['i', 'j', 'min_a', 'max_a', 'min_chosen_a', 'max_chosen_a'])
-
-            for ii in range(len(abstraction.get_container())):
-                actions = abstraction.get_container()[ii].keys()
-                mcrst = helper.get_mcrst_from_index(ii, INTERVALS)
-                file_writer2.writerow([mcrst[0], mcrst[1], min(actions), max(actions),
-                                       min(abs_opt_pol[ii]), max(abs_opt_pol[ii])])
-            data_file2.close()
-        # ------------------------------------
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, dyn_intervals,
                                                            INTERVALS)
@@ -210,6 +189,5 @@ def main(seed=None, alpha=0.025, lam=0.0001):
     return stats, 0, tot_est_j
 
 
-# if __name__ == "__main__":
-#     main(int(sys.argv[1]))
-main(0)
+if __name__ == "__main__":
+    main(int(sys.argv[1]))

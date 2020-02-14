@@ -52,9 +52,7 @@ class Abstraction(object):
         elif problem == "minigolf":
             for i in self.container.keys()[1:]:
                 for _, v in self.container[i].items():
-                    v['abs_reward'] = -1
-            for _, v in self.container[0].items():
-                v['abs_reward'] = 0
+                    v['abs_reward'] = 0 if i==0 else -1
 
     def compute_abstract_tf(self):
         pass

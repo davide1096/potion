@@ -198,5 +198,7 @@ def main(seed=None, alpha=0.001, lam=0.0005):
     return stats, cumulative_j
 
 
-if __name__ == "__main__":
-    main(int(sys.argv[1]))
+# if __name__ == "__main__":
+#     main(int(sys.argv[1]))
+main(0)
+

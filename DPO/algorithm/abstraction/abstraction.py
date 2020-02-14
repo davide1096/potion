@@ -50,7 +50,7 @@ class Abstraction(object):
                 for _, v in self.container[i].items():
                     v['abs_reward'] = abs_rew
         elif problem == "minigolf":
-            for i in self.container.keys()[1:]:
+            for i in self.container.keys():
                 for _, v in self.container[i].items():
                     v['abs_reward'] = 0 if i==0 else -1
 

@@ -17,13 +17,14 @@ class AbsUpdater(object):
         self.best_policy = {}
         self.sink_val = sink_val
 
-    def solve_mdp(self, container):
+    def solve_mdp(self, container, reset=True):
 
-        self.v_function = {}
-        self.best_policy = {}
-        for k in container.keys():
-            self.v_function[k] = 0
-            self.best_policy[k] = []
+        if reset or len(self.v_function) == 0:
+            self.v_function = {}
+            self.best_policy = {}
+            for k in container.keys():
+                self.v_function[k] = 0
+                self.best_policy[k] = []
 
         new_vf = self.single_step_update(container)
         n_iterations = 0

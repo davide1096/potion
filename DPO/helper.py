@@ -31,6 +31,9 @@ class Helper(object):
 
 def get_mcrst(state, intervals, sink):
 
+    if not hasattr(state, "__len__"):
+        state = [state]
+
     mcrst = []
     for dim in range(len(intervals)):
         dim_int = intervals[dim]
@@ -282,10 +285,13 @@ def array_in(arr, arr_list):
 
 
 def sq_distance(arr1, arr2):
-    d = 0
-    for d1, d2 in zip(arr1, arr2):
-        d += (d1 - d2) ** 2
-    return d
+    if not hasattr(arr1, "__len__"):
+        return abs(arr1-arr2)
+    else:
+        d = 0
+        for d1, d2 in zip(arr1, arr2):
+            d += (d1 - d2) ** 2
+        return d
 
 # given cos and sin return the angle in degrees
 def get_angle(x, y):

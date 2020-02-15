@@ -41,7 +41,6 @@ class RBFNet(object):
         y = [xy[1] for xy in Xy]
 
         for x, y_ in zip(X, y):
-            x = x[0]
             # forward pass
             a = np.array([self.rbf(x, c, s) for c, s, in zip(self.centers, self.stds)])
             F = a.T.dot(new_w)

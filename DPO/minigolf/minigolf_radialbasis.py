@@ -52,7 +52,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, rbf):
             state = env.get_state()
             action = deterministic_action(state, rbf)
             new_state, r, done, _ = env.step(action)
-            single_sample.append([state, action, r, new_state])
+            single_sample.append([state[0], action[0], r, new_state[0]])
             k += 1
         samples_list.append(single_sample)
     return samples_list
@@ -108,7 +108,7 @@ def main(seed=None, alpha=0.001, lam=0.0005):
 
         abstraction.divide_samples(flat_samples, problem, help.getSeed())
         abstraction.compute_abstract_tf()
-        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
+        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), reset=False)
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf, INTERVALS)
         fictitious_samples = helper.flat_listoflists(fictitious_samples)
@@ -123,7 +123,6 @@ def main(seed=None, alpha=0.001, lam=0.0005):
         print("W: {}".format(rbf.w))
         print("Updated estimated performance measure: {}".format(estj))
         zeros, hundred, failing_states = helper.minigolf_reward_counter(determin_samples)
-        print("Number of zeroes: {} - Number of big penalties: {}".format(zeros, hundred))
         print("Failing states: {}".format(failing_states))
         cumulative_fail += hundred
         print("Cumulative fails: {}\n".format(cumulative_fail))

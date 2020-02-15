@@ -18,6 +18,9 @@ class LipschitzDeltaS(LipschitzAbstraction):
     # It means that taking the same action in different states will produce the same delta s (deltas = s' - s).
     def calculate_single_atf(self, k1, k2):
 
+        # k1 index of the mcrst
+        # k2 index of the action
+
         cont = self.container[k1]
         new_states = []
         delta_s = cont[k2]['new_state'] - cont[k2]['state']

@@ -60,11 +60,6 @@ class AbsUpdater(object):
                 if 'abs_tf' in v2:
                     abs_tf = v2['abs_tf']
 
-                    # result = np.where(abs_tf.reshape((-1)) > 0)
-                    # for r in result[0]:
-                    #     if len(container[r].items()) == 0:
-                    #         print("here")
-                    # x is the sum of the v_functions of new_mcrst, weighted according to the abs_tf.
                     x = 0
                     
                     # k3 --> mcrst index

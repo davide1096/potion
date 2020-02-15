@@ -1,6 +1,6 @@
 import DPO.safetygym.safetygym_DPO as safe_main
 import DPO.minigolf.minigolf_radialbasis as mini_main
-# import DPO.mass.main_mass as mass_main
+import DPO.mass.mass_DPO as mass_main
 import sys
 
 
@@ -8,8 +8,7 @@ def main(task, seed, runs):
     if task == "mini":
         main = mini_main
     elif task == "mass":
-        # main = mass_main
-        pass
+        main = mass_main
     elif task == "safe":
         main = safe_main
     for i in range(seed, seed+runs):

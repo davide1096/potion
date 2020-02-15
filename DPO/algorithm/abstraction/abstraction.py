@@ -30,13 +30,14 @@ class Abstraction(object):
             # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
             mcrst = helper.get_mcrst(s[0], self.intervals, self.sink)
             mcrst_index = helper.get_index_from_mcrst(mcrst, self.intervals)
-            if mcrst_index not in self.container.keys():
-                self.container[mcrst_index] = {}
-                reward_helper[mcrst_index] = {'val': 0, 'den': 0}
-            key = len(self.container[mcrst_index].items())
-            self.container[mcrst_index][key] = {'state': s[0], 'action': s[1], 'new_state': s[3]}
-            reward_helper[mcrst_index]['val'] += s[2]
-            reward_helper[mcrst_index]['den'] += 1
+            if mcrst_index != 'sink':
+                if mcrst_index not in self.container.keys():
+                    self.container[mcrst_index] = {}
+                    reward_helper[mcrst_index] = {'val': 0, 'den': 0}
+                key = len(self.container[mcrst_index].items())
+                self.container[mcrst_index][key] = {'state': s[0], 'action': s[1], 'new_state': s[3]}
+                reward_helper[mcrst_index]['val'] += s[2]
+                reward_helper[mcrst_index]['den'] += 1
 
         # to avoid a slow computation.
         help = Helper(seed)

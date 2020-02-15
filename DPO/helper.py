@@ -65,6 +65,8 @@ def get_mcrst(state, intervals, sink):
 def get_index_from_mcrst(multi_mcrst, intervals):
     mcrst = 0
     for i in range(len(multi_mcrst)):
+        if multi_mcrst[i] == -1 or multi_mcrst[i] == len(intervals[i]):
+            return 'sink'
         mcrst += multi_mcrst[len(multi_mcrst) - i - 1] * product_prev_sizes(i, intervals)
     return mcrst
 

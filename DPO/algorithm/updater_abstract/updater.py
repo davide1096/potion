@@ -69,7 +69,9 @@ class AbsUpdater(object):
                     
                     # k3 --> mcrst index
                     for k3, v3 in abs_tf.items():
-                        if k3 in self.v_function.keys():
+                        if k3 == 'sink':
+                            x += v3 * self.sink_val
+                        elif k3 in self.v_function.keys():
                             x += v3 * self.v_function[k3]
                         else:
                             x += v3 * min(self.v_function.values())

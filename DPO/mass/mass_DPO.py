@@ -1,7 +1,6 @@
 import gym
 import potion.envs
 import numpy as np
-from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from DPO.algorithm.abstraction.maxlikelihood_abstraction_parallel import MaxLikelihoodAbstraction
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_deterministic.updater import Updater
@@ -19,10 +18,6 @@ B = np.array([[0.], [1.]])
 Q = np.diag([1., 0.])
 R = 0.1 * np.eye(1)
 GAMMA = 0.95
-
-# ds0 = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
-# Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
-ds0 = 0
 
 N_ITERATION = 120
 N_EPISODES = 500
@@ -105,21 +100,20 @@ def main(seed=None, alpha=0.025, lam=0.0001):
     abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, lip_a_tf * STOCH_L_MULTIPLIER, env.Q, env.R)
 
     abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
-    det_upd = Updater(help.getSeed(), alpha, lam)
-    tot_est_j = 0
+    det_upd = Updater(help.getSeed())
 
     for i in range(0, N_ITERATION):
-        determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
 
-        abstraction.divide_samples(determin_samples, problem, help.getSeed())
-        abstraction.compute_abstract_tf(ds0, MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL, ENV_NOISE)
-        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
+        determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
+        flat_samples = helper.flat_listoflists(determin_samples)
+
+        abstraction.divide_samples(flat_samples, problem, help.getSeed())
+        abstraction.compute_abstract_tf(MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL, ENV_NOISE)
+        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), reset=False)
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, INTERVALS)
-        det_param = det_upd.batch_gradient_update(det_param, fictitious_samples)
-
+        det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
-        tot_est_j += estj
 
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
         print("Updated estimated performance measure: {}".format(estj))

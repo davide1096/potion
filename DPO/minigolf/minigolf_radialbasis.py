@@ -14,9 +14,6 @@ problem = 'minigolf'
 SINK = True
 ENV_NOISE = 0
 GAMMA = 0.99
-# ds0 = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
-# Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
-ds0 = 1
 
 N_ITERATION = 500
 N_EPISODES = 500
@@ -86,7 +83,6 @@ def main(seed=None, alpha=0.001, lam=0.0005):
     env.gamma = GAMMA
     env.seed(help.getSeed())
     cumulative_fail = 0
-    cumulative_j = 0
     rbf = RBFNet(CENTERS, STD_DEV, INIT_W, help.getSeed(), alpha, lam)
 
     filename = "../csv/minigolf/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
@@ -94,11 +90,12 @@ def main(seed=None, alpha=0.001, lam=0.0005):
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
+    INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
+    INTERVALS[0] = [[-4, 0]] + INTERVALS[0]  # add the first macrostate representing the goal.
+
     for i in range(N_ITERATION):
 
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, rbf)
-        INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
-        INTERVALS[0] = [[-4, 0]] + INTERVALS[0]  # add the first macrostate representing the goal.
         flat_samples = helper.flat_listoflists(determin_samples)
 
         if i == 0:
@@ -115,10 +112,8 @@ def main(seed=None, alpha=0.001, lam=0.0005):
         X = [f[0] for f in fictitious_samples]
         y = [f[1] for f in fictitious_samples]
         rbf.fit(X, y)
-
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
-        cumulative_j += estj
         print("Iteration n.{}".format(i))
         print("W: {}".format(rbf.w))
         print("Updated estimated performance measure: {}".format(estj))

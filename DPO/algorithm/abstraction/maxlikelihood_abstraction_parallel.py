@@ -10,7 +10,7 @@ import os
 class MaxLikelihoodAbstraction(Abstraction):
 
     def __init__(self, gamma, sink, intervals, L, Q=None, R=None):
-        super().__init__(gamma, sink, intervals, Q, R)
+        super().__init__(gamma, sink, intervals)
         self.i = None
         self.L = L
         self.arriving_mcrst_helper = {}
@@ -129,7 +129,7 @@ class MaxLikelihoodAbstraction(Abstraction):
         else:
             return (mcrst, None)
 
-    def compute_abstract_tf(self, optA, mins=-1, maxs=1, maxa=1, std=0):
+    def compute_abstract_tf(self, mins=-1, maxs=1, maxa=1, std=0):
         self.i = len(self.container)  # it represents the # of columns of every matrix.
         self.create_arriving_mcrst_helper()  # it allows to consider fictitious samples.
 

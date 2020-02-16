@@ -12,10 +12,6 @@ problem = 'safety'
 SINK = False
 ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 
-# ds0 = when we consider the problem lipschitz 0 wrt deltas hypothesis (bounded by a distance among states).
-# Set ds0 = 0 to use the standard algorithm that computes bounds related to both space and action distances.
-ds0 = 1
-
 N_ITERATION = 100
 N_EPISODES = 10
 N_STEPS = 200

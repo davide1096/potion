@@ -77,7 +77,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     return fictitious_samples
 
 
-def main(seed=42, lam=0.05):
+def main(seed=42, alpha=0.005, lam=0.05):
 
     help = Helper(seed)
     GAMMA = 1
@@ -117,7 +117,7 @@ def main(seed=42, lam=0.05):
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
         # project back the policy.
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, flat_samples, det_param, INTERVALS)
-        det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
+        det_param = det_upd.gradient_update(det_param, fictitious_samples, alpha, lam)
 
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
         file_writer.writerow([estj])

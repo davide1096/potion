@@ -5,12 +5,15 @@ from DPO.helper import Helper
 
 class Abstraction(object):
 
-    def __init__(self, gamma, sink, intervals=None):
+    def __init__(self, gamma, sink, intervals=None, Q=None, R=None, max_a=None):
         super().__init__()
         self.intervals = intervals
         self.container = {}
         self.gamma = gamma
         self.sink = sink
+        self.Q = Q
+        self.R = R
+        self.max_a = max_a
 
     def get_container(self):
         return self.container
@@ -54,8 +57,39 @@ class Abstraction(object):
             for i in self.container.keys():
                 for _, v in self.container[i].items():
                     v['abs_reward'] = 0 if i==0 else -1
+        elif problem == "mass":
+            for i in self.container.keys():
+                for _, v in self.container[i].items():
+                    v['abs_reward'] = helper.calc_abs_reward_lqg(self.container[i], v['action'], self.Q, self.R,
+                                                                 self.max_a)
 
     def compute_abstract_tf(self):
         pass
 
+    def to_old_representation(self):
+        container = []
+        for i in range(max(self.container.keys())+1):
+            container.append({})
+        for i in range(max(self.container.keys())+1):
+            if i in self.container.keys():
+                for id_act, v in self.container[i].items():
+                    v['id_action'] = id_act
+                    container[i][v['action']] = v
+        self.container = container
+
+    def to_new_representation(self):
+        container = {}
+        for i in range(len(self.container)):
+            if len(self.container[i]) > 0:
+                container[i] = {}
+                for k, v in self.container[i].items():
+                    tf = v['abs_tf']
+                    new_tf = {}
+                    for i_row, val_row in enumerate(tf):
+                        for i_col, val_col in enumerate(tf[i_row]):
+                            if val_col > 0:
+                                new_tf[helper.get_index_from_mcrst([i_row, i_col], self.intervals)] = val_col
+                    v['abs_tf'] = new_tf
+                    container[i][v['id_action']] = v
+        self.container = container
 

@@ -9,8 +9,8 @@ import os
 
 class MaxLikelihoodAbstraction(Abstraction):
 
-    def __init__(self, gamma, sink, intervals, L, Q=None, R=None):
-        super().__init__(gamma, sink, intervals)
+    def __init__(self, gamma, sink, intervals, L, Q=None, R=None, max_a=None):
+        super().__init__(gamma, sink, intervals, Q, R, max_a)
         self.i = None
         self.L = L
         self.arriving_mcrst_helper = {}
@@ -50,7 +50,7 @@ class MaxLikelihoodAbstraction(Abstraction):
                 delta_s = sample['new_state'] - sample['state']
                 self.arriving_mcrst_helper[act] = {}  # every action is a key.
                 ns = helper.get_mcrst(sample['new_state'], self.intervals, self.sink)
-                ns_index = helper.get_multidim_mcrst(ns, self.intervals)
+                ns_index = helper.get_index_from_mcrst(ns, self.intervals)
                 self.arriving_mcrst_helper[act][ns_index] = 1  # every index of an arriving mcrst is a key.
 
                 # Apply the delta s of the sample to every other state in the macrostate.
@@ -58,7 +58,7 @@ class MaxLikelihoodAbstraction(Abstraction):
                     if act != act2:  # evaluation of act in all the other samples in the mcrst.
                         new_state = cont[act2]['state'] + delta_s
                         new_state_mcrst = helper.get_mcrst(new_state, self.intervals, self.sink)
-                        index = helper.get_multidim_mcrst(new_state_mcrst, self.intervals)
+                        index = helper.get_index_from_mcrst(new_state_mcrst, self.intervals)
 
                         if index in self.arriving_mcrst_helper[act].keys():
                             self.arriving_mcrst_helper[act][index] += 1
@@ -78,14 +78,6 @@ class MaxLikelihoodAbstraction(Abstraction):
         # Sum of rows must be equal to 1.
         for k in range(len(actions)):
             constraints.append(cp.sum(theta[k]) == 1)
-
-        # Lipschitz hypothesis between actions.
-        # for i in range(len(actions) - 1):
-        #     for k2 in arriving_mcrst:
-        #         constraints.append(theta[i][k2] - theta[i+1][k2] <= self.L *
-        #                            abs(ordered_actions[i] - ordered_actions[i+1]))
-        #         constraints.append(theta[i][k2] - theta[i+1][k2] >= - self.L *
-        #                            abs(ordered_actions[i] - ordered_actions[i+1]))
         lip_cons = helper_maxlikelihood.compute_lipschitz_constraints(self.intervals, ordered_actions, arriving_mcrst,
                                                                       theta, self.L)
         constraints = constraints + lip_cons

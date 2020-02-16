@@ -58,7 +58,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, INTERVALS)
         for s in sam:
             prev_action = deterministic_action(param, s[0])
             mcrst_provv = helper.get_mcrst(s[0], INTERVALS, SINK)
-            mcrst = helper.get_multidim_mcrst(mcrst_provv, INTERVALS)
+            mcrst = helper.get_index_from_mcrst(mcrst_provv, INTERVALS)
             if abs_opt_policy[mcrst] is not None:
                 if prev_action in abs_opt_policy[mcrst]:
                     single_sample.append([s[0], prev_action])
@@ -97,7 +97,8 @@ def main(seed=None, alpha=0.025, lam=0.0001):
 
     # instantiate the components of the algorithm.
     lip_a_tf = B
-    abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, lip_a_tf * STOCH_L_MULTIPLIER, env.Q, env.R)
+    abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, lip_a_tf * STOCH_L_MULTIPLIER, env.Q, env.R,
+                                           MAX_ACTION_VAL)
 
     abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
     det_upd = Updater(help.getSeed())
@@ -108,11 +109,14 @@ def main(seed=None, alpha=0.025, lam=0.0001):
         flat_samples = helper.flat_listoflists(determin_samples)
 
         abstraction.divide_samples(flat_samples, problem, help.getSeed())
+        abstraction.to_old_representation()
         abstraction.compute_abstract_tf(MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL, ENV_NOISE)
+        abstraction.to_new_representation()
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), reset=False)
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, INTERVALS)
-        det_param = det_upd.gradient_update(det_param, fictitious_samples, lam)
+        fictitious_samples = helper.flat_listoflists(fictitious_samples)
+        det_param = det_upd.gradient_update(det_param, fictitious_samples, alpha, lam)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))

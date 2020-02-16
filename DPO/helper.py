@@ -123,14 +123,10 @@ def flat_listoflists(list):
 def calc_abs_reward_lqg(cont, action, Q, R, maxa_env):
     rew = 0
     action = np.clip(action, -maxa_env, maxa_env)
-    for act in cont.keys():
-        rew += np.dot(cont[act]['state'], np.dot(Q, cont[act]['state'])) + np.dot(action, np.dot(R, action))
+    for id in cont.keys():
+        rew += np.dot(cont[id]['state'], np.dot(Q, cont[id]['state'])) + np.dot(action, np.dot(R, action))
     rew = rew.item()
     return - rew / len(cont.items())
-
-
-# def calc_abs_reward_cartpole(cont, action):
-#     return 1 if -0.2093 <= cont[action]['state'] <= 0.2093 else 0
 
 
 def calc_abs_reward_minigolf(cont, action):

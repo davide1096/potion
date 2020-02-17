@@ -91,14 +91,6 @@ def get_mcrst_from_index(index, intervals):
 
 # -----------------------------------------------------------------------------------------
 
-
-def count_actions(container):
-    n_actions = 0
-    for i in range(0, len(container)):
-        n_actions += len(list(container[i].keys()))
-    return n_actions
-
-
 def normalize_array(array):
     den = np.sum(array)
     return array/den
@@ -129,22 +121,6 @@ def calc_abs_reward_lqg(cont, action, Q, R, maxa_env):
     return - rew / len(cont.items())
 
 
-def calc_abs_reward_minigolf(cont, action):
-    action = np.clip(action, 0, 5)
-    rew = 0
-    for act in cont.keys():
-        if action < np.sqrt(1.836 * cont[act]['state'][0]):
-            rew += -1
-        elif action > np.sqrt(7.33 + 1.836 * cont[act]['state'][0]):
-            rew += -100
-        else:
-            rew += 0
-    return rew / len(cont.items())
-
-
-# .................................................
-
-
 def estimate_J_from_samples(samples, gamma):
     acc = 0
     for sam in samples:
@@ -173,89 +149,6 @@ def minigolf_reward_counter(samples):
 
     # print("Max action: {}".format(max_action))
     return zeros, hundred, failing_states
-
-
-def interval_intersection(bounds):
-    mins = [b[0] for b in bounds]
-    maxs = [b[1] for b in bounds]
-    max_mins = mins[0]
-    min_maxs = maxs[0]
-    for m in mins:
-        max_mins = np.maximum(max_mins, m)  # I obtain the max value of mins for each dimension
-    for m in maxs:
-        min_maxs = np.minimum(min_maxs, m)  # I obtain the min value of maxs for each dimension
-    if np.all(np.minimum(max_mins, min_maxs) == max_mins):
-        return max_mins, min_maxs
-    else:
-        # return None, None  # void intersection
-        clip_s = manage_clip_error(bounds)
-        return clip_s, clip_s
-
-
-def build_mcrst_from_samples(samples, n_mcrst, min_val, max_val):
-    samples_base = flat_listoflists(samples)
-    samples_base = [s[0] for s in samples_base]
-    INTERVALS = []
-
-    for i in range(len(n_mcrst)):
-        samples = sorted([s[i] for s in samples_base])
-        mcrst_size = math.floor(len(samples) / n_mcrst[i])
-        dim_int = []
-
-        while len(samples) >= 2 * mcrst_size:
-            if len(dim_int) == 0:
-                dim_int.append([min_val[i], samples[mcrst_size - 1]])
-            else:
-                dim_int.append([dim_int[-1][1], samples[mcrst_size - 1]])
-            samples = samples[mcrst_size:]
-        if len(samples) > 0:
-            if len(dim_int) == 0:
-                dim_int.append([min_val[i], max_val[i]])
-            else:
-                dim_int.append([dim_int[-1][1], max_val[i]])
-        INTERVALS.append(dim_int)
-
-    return INTERVALS
-
-
-# Used to calculate new state with a Lipschitz hypothesis on delta s.
-# It works only with the bounds obtained with the double integrator.
-def manage_clip_error(bounds):
-    if ishorizontal(bounds[0]):
-        news = [bounds[1][0][0], bounds[0][0][1]]
-    elif ishorizontal(bounds[1]):
-        news = [bounds[0][0][0], bounds[1][0][1]]
-    elif isvertical(bounds[0]):
-        news = [bounds[0][0][0], bounds[1][0][1]]
-    elif isvertical(bounds[1]):
-        news = [bounds[1][0][0], bounds[0][0][1]]
-    else:
-        news = bounds[0][0]
-    return np.array(news)
-
-    # b = flat_listoflists(bounds)
-    # coord = b[0].reshape((-1, 1))
-    # for c in b[1:]:
-    #     coord = np.append(coord, c.reshape((-1, 1)), axis=1)
-    # sol = [mode(c)[0][0] for c in coord]
-    # return np.array(sol), np.array(sol)
-
-
-def ishorizontal(bound):
-    return (bound[0][0] != bound[1][0]) and (bound[0][1] == bound[1][1])
-
-
-def isvertical(bound):
-    return (bound[0][0] == bound[1][0]) and (bound[0][1] != bound[1][1])
-
-
-def ispoint(bound):
-    return (bound[0][0] == bound[1][0]) and (bound[0][1] == bound[1][1])
-
-# test
-# interv = [[[], []], [[], [], []], [[], [], [], []]]
-# mul_mcrst = [1, 1, 3]
-# print(get_multidim_mcrst(mul_mcrst, interv))
 
 
 def get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):
@@ -303,20 +196,6 @@ def get_angle(x, y):
         alpha += 360
     return alpha
 
-def offset_prop(angle, offset):
-    if angle < 180:
-        angle -= angle / offset
-    elif angle > 180:
-        angle += (angle - 360) * (-1) / offset
-    return angle
-
-def offset_sum(angle, offset):
-    if 0 < angle < 90 or 180 < angle < 270:
-        angle += offset
-    elif 90 < angle < 180 or 270 < angle < 360:
-        angle -= offset
-    return angle
-
 def offset_sum2(angle, offset):
     angle += offset
     if angle > 360:
@@ -332,15 +211,3 @@ def bias_compass_observation(x, y, offset):
     alpha = offset_sum2(alpha, offset)
     sin_alpha, cos_alpha = get_sin_cos(alpha)
     return cos_alpha, sin_alpha
-
-
-def appendix_mcrst_population(samples, mask, intervals):
-    intervals = np.array([i for i, m in zip(intervals, mask) if m])
-    shape = np.array([len(i) for i in intervals])
-    cont = np.zeros(tuple(shape))
-    for s in samples:
-        s = s[0]
-        s = np.array([s_ for s_, m in zip(s, mask) if m])
-        mcrst = get_mcrst(s, intervals, False)
-        cont[tuple(mcrst)] += 1
-    return cont

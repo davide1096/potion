@@ -3,6 +3,7 @@ import potion.envs
 import numpy as np
 from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
+from DPO.algorithm.updater_abstract.bounded_mdp.IVI import IVI
 import DPO.helper as helper
 from DPO.helper import Helper
 from DPO.minigolf.RBFNet import RBFNet
@@ -29,7 +30,7 @@ STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
 
 # Lipschitz constant on delta s.
-LDELTAS = 0
+LDELTAS = 0.3
 
 
 def deterministic_action(state, rbf):
@@ -101,11 +102,21 @@ def main(seed=None, alpha=0.001, lam=0.0005):
         if i == 0:
             # instantiate the components of the algorithm.
             abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
-            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, -100)
+            abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, -100) if LDELTAS == 0 else \
+                IVI(GAMMA, SINK, True, INTERVALS, -100)
 
         abstraction.divide_samples(flat_samples, problem, help.getSeed())
-        abstraction.compute_abstract_tf()
-        abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), reset=False)
+        abstraction.compute_abstract_tf(LDELTAS)
+        if LDELTAS == 0:
+            abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), reset=False)
+        else:
+            abstraction.to_old_representation()
+            abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
+            abstraction.to_new_representation(change_tf=False)
+            abs_opt_pol_dict = {}
+            for j, aop in enumerate(abs_opt_pol):
+                abs_opt_pol_dict[j] = aop
+            abs_opt_pol = abs_opt_pol_dict
 
         fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf, INTERVALS)
         fictitious_samples = helper.flat_listoflists(fictitious_samples)

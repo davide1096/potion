@@ -77,19 +77,20 @@ class Abstraction(object):
                     container[i][v['action']] = v
         self.container = container
 
-    def to_new_representation(self):
+    def to_new_representation(self, change_tf=True):
         container = {}
         for i in range(len(self.container)):
             if len(self.container[i]) > 0:
                 container[i] = {}
                 for k, v in self.container[i].items():
-                    tf = v['abs_tf']
-                    new_tf = {}
-                    for i_row, val_row in enumerate(tf):
-                        for i_col, val_col in enumerate(tf[i_row]):
-                            if val_col > 0:
-                                new_tf[helper.get_index_from_mcrst([i_row, i_col], self.intervals)] = val_col
-                    v['abs_tf'] = new_tf
+                    if change_tf:
+                        tf = v['abs_tf']
+                        new_tf = {}
+                        for i_row, val_row in enumerate(tf):
+                            for i_col, val_col in enumerate(tf[i_row]):
+                                if val_col > 0:
+                                    new_tf[helper.get_index_from_mcrst([i_row, i_col], self.intervals)] = val_col
+                        v['abs_tf'] = new_tf
                     container[i][v['id_action']] = v
         self.container = container
 

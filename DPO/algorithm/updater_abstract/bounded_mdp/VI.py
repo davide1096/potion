@@ -7,7 +7,7 @@ def update(bounded_v, ordered_v, action, cont, gamma):
     bound_tf = cont[action]['abs_tf']
     split = np.split(bound_tf, 2, axis=0)
 
-    new_tf = split[0][0]
+    new_tf = split[0][0].copy()
     remaining = 1 - np.sum(new_tf)
 
     for el in ordered_v:

@@ -33,6 +33,9 @@ class IVI(object):
             for i in range(num):
                 self.best_policy.append([])
 
+            self.v_function_lb[-1] = self.sink_val
+            self.v_function_ub[-1] = self.sink_val
+
     def solve_mdp(self, container, intervals=None):
 
         if intervals is not None:
@@ -71,8 +74,8 @@ class IVI(object):
     # in empty macrostate it prevents no update on value function.
     # The update is pessimistic: the lowest vf seen.
     def v_function_correction(self, container):
-        min_vf_lb = np.min(self.v_function_lb)
-        min_vf_ub = np.min(self.v_function_ub)
+        min_vf_lb = np.min(self.v_function_lb[:-1])  # not consider the sink value
+        min_vf_ub = np.min(self.v_function_ub[:-1])
         for i, cont in enumerate(container):
             if len(cont.keys()) == 0:  # empty macrostate
                 mcrst = helper.get_mcrst_from_index(i, self.intervals)
@@ -99,6 +102,9 @@ class IVI(object):
             mcrst = helper.get_mcrst_from_index(i, self.intervals)
             lb.append([self.v_function_lb[tuple(mcrst)], mcrst])
             ub.append([self.v_function_ub[tuple(mcrst)], mcrst])
+        if self.sink:
+            lb.append([self.sink_val, 'sink'])
+            ub.append([self.sink_val, 'sink'])
 
         # lb is sorted in increasing order, ub is sorted in decreasing order.
         lb = sorted(lb)

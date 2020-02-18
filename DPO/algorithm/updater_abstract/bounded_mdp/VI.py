@@ -14,6 +14,9 @@ def update(bounded_v, ordered_v, action, cont, gamma):
         if remaining == 0:
             break
 
+        if el == 'sink':
+            el = [-1]
+
         # I get the upper bound of the tf probability related to a state ordered among the REINFORCE ones.
         ub = split[1][0][tuple(el)]
         diff = ub - new_tf[tuple(el)]

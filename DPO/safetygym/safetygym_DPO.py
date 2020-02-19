@@ -1,5 +1,5 @@
 import numpy as np
-from DPO.algorithm.abstraction.compute_atf.lipschitz_deltas import LipschitzDeltaS
+from DPO.algorithm.abstraction.lipschitz_deltas import LipschitzDeltaS
 from DPO.algorithm.updater_abstract.updater import AbsUpdater
 from DPO.algorithm.updater_deterministic.updater import Updater
 import DPO.safetygym.base_env as base_env

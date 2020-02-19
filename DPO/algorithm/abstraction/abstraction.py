@@ -1,5 +1,4 @@
 import DPO.helper as helper
-import numpy as np
 from DPO.helper import Helper
 
 
@@ -23,17 +22,16 @@ class Abstraction(object):
         if intervals is not None:
             self.intervals = intervals
 
-        # container is an array of dictionaries.
-        # Every dict has the actions as key and another dict as value.
-        # The second dict has 'state', 'new_state', 'abs_reward', 'abs_tf' as keys.
+        # container is a dict whose key is the macrostate index.
+        # For each macrostate a dict contains the samples and the key is an ID.
+        # Each sample is a dict having 'state', 'new_state', 'abs_reward', 'abs_tf' as keys.
         self.container = {}
         reward_helper = {}
 
         for s in samples:
-            # every s is an array with this shape: ['state', 'action', 'reward', 'new_state']
             mcrst = helper.get_mcrst(s[0], self.intervals, self.sink)
             mcrst_index = helper.get_index_from_mcrst(mcrst, self.intervals)
-            if mcrst_index != 'sink':
+            if mcrst_index != 'sink':  # samples included in the sink are not stored.
                 if mcrst_index not in self.container.keys():
                     self.container[mcrst_index] = {}
                     reward_helper[mcrst_index] = {'val': 0, 'den': 0}
@@ -48,6 +46,7 @@ class Abstraction(object):
             if len(self.container[i].items()) > helper.MAX_SAMPLES_IN_MCRST:
                 self.container[i] = help.big_mcrst_correction(self.container[i])
 
+        # compute the abstract reward.
         if problem == "safety":
             for i in self.container.keys():
                 abs_rew = reward_helper[i]['val'] / reward_helper[i]['den']
@@ -56,7 +55,7 @@ class Abstraction(object):
         elif problem == "minigolf":
             for i in self.container.keys():
                 for _, v in self.container[i].items():
-                    v['abs_reward'] = 0 if i==0 else -1
+                    v['abs_reward'] = 0 if i == 0 else -1
         elif problem == "mass":
             for i in self.container.keys():
                 for _, v in self.container[i].items():
@@ -65,6 +64,9 @@ class Abstraction(object):
 
     def compute_abstract_tf(self):
         pass
+
+    # the next two functions adapt the representation of the samples.
+    # (bounded-MDP and max-likelihood implementation require a different representation).
 
     def to_old_representation(self):
         container = []

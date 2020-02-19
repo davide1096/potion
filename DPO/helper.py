@@ -133,22 +133,13 @@ def estimate_J_from_samples(samples, gamma):
 
 
 def minigolf_reward_counter(samples):
-    zeros = 0
     hundred = 0
-    # max_action = 0
     failing_states = []
-    for sam in samples:
-        for s in sam:
-            # if s[1] > max_action:
-            #     max_action = s[1]
-            if s[2] == 0:
-                zeros += 1
-            if s[2] == -100:
-                hundred += 1
-                failing_states.append(s[0])
-
-    # print("Max action: {}".format(max_action))
-    return zeros, hundred, failing_states
+    for s in samples:
+        if s[2] == -100:
+            hundred += 1
+            failing_states.append(s[0])
+    return hundred, failing_states
 
 
 def get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN):
@@ -175,7 +166,7 @@ def array_in(arr, arr_list):
     return False
 
 
-def sq_distance(arr1, arr2):
+def arr_distance(arr1, arr2):
     if not hasattr(arr1, "__len__"):
         return abs(arr1-arr2)
     else:

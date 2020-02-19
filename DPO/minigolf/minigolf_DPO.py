@@ -11,11 +11,11 @@ import csv
 import os
 
 
+# task parameters.
 problem = 'minigolf'
 SINK = True
 ENV_NOISE = 0
 GAMMA = 0.99
-
 MIN_SPACE_VAL = [0]
 MAX_SPACE_VAL = [20]
 
@@ -24,12 +24,9 @@ CENTERS = [4, 8, 12, 16]
 STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
 
-# Lipschitz constant on delta s.
-LDELTAS = 0
-
 
 def deterministic_action(state, rbf):
-    if np.all(state[0] < 0):
+    if np.all(state[0] < 0):  # there is no meaning in prescribing an action for a state < 0.
         return np.array([0])
     return rbf.predict(state)[0]
 
@@ -53,21 +50,19 @@ def sampling_from_det_pol(env, n_episodes, n_steps, rbf):
 
 def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, INTERVALS):
     fictitious_samples = []
-    for sam in det_samples:
-        single_sample = []
-        for s in sam:
-            if s[0] > 0:  # exclude s<0 from fictitious samples
-                prev_action = deterministic_action(np.reshape(s[0], (1, 1)), rbf)
-                prev_action = prev_action[0]
-                mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
-                index_mcrst = helper.get_index_from_mcrst(mcrst, INTERVALS)
-                if index_mcrst in abs_opt_policy.keys():
-                    if helper.array_in(prev_action, abs_opt_policy[index_mcrst]):  # prev_action is optimal.
-                        single_sample.append([s[0], prev_action])
-                    else:  # we select the closest action to prev_action among the optimal ones.
-                        index = np.argmin([helper.sq_distance(act, prev_action) for act in abs_opt_policy[index_mcrst]])
-                        single_sample.append([s[0], abs_opt_policy[index_mcrst][index]])
-        fictitious_samples.append(single_sample)
+    for s in det_samples:
+        if s[0] > 0:  # exclude s<0 from fictitious samples. They are only collected to detect the end of an episode.
+            # prev_action is the action that would be prescribed by the (not yet updated) deterministic policy.
+            prev_action = deterministic_action(np.reshape(s[0], (1, 1)), rbf)
+            prev_action = prev_action[0]
+            mcrst = helper.get_mcrst(s[0], INTERVALS, SINK)
+            index_mcrst = helper.get_index_from_mcrst(mcrst, INTERVALS)
+            if index_mcrst in abs_opt_policy.keys():
+                if helper.array_in(prev_action, abs_opt_policy[index_mcrst]):  # prev_action is optimal.
+                    fictitious_samples.append([s[0], prev_action])
+                else:  # we select the closest action to prev_action among the optimal ones.
+                    index = np.argmin([helper.arr_distance(act, prev_action) for act in abs_opt_policy[index_mcrst]])
+                    fictitious_samples.append([s[0], abs_opt_policy[index_mcrst][index]])
     return fictitious_samples
 
 
@@ -78,25 +73,26 @@ def main(seed, args):
     N_ITERATION = 700 if args['niter'] is None else args['niter']
     N_EPISODES = 500 if args['batch'] is None else args['batch']
     N_STEPS = 20 if args['nsteps'] is None else args['nsteps']
+    LDELTAS = 0 if args['Lds'] is None else args['Lds']
 
     help = Helper(seed)
     env = gym.make('ComplexMiniGolf-v0')  # load and configure the environment.
     env.sigma_noise = ENV_NOISE
     env.gamma = GAMMA
     env.seed(help.getSeed())
-    cumulative_fail = 0
+    total_failures = 0
     rbf = RBFNet(CENTERS, STD_DEV, INIT_W, help.getSeed(), alpha, lam)
 
     filename = "../csv/minigolf/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     data_file = open(filename, mode='w')
     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    file_writer.writerow(['w1', 'w2', 'w3', 'w4', 'tot_failures', 'estj'])
 
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
-    INTERVALS[0] = [[-4, 0]] + INTERVALS[0]  # add the first macrostate representing the goal.
-
     print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
     print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
+    INTERVALS[0] = [[-4, 0]] + INTERVALS[0]  # add the first macrostate representing the goal.
 
     for i in range(N_ITERATION):
 
@@ -109,11 +105,14 @@ def main(seed, args):
             abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS, -100) if LDELTAS == 0 else \
                 IVI(GAMMA, SINK, True, INTERVALS, -100)
 
+        # build the \gamma-MDP.
         abstraction.divide_samples(flat_samples, problem, help.getSeed())
         abstraction.compute_abstract_tf(LDELTAS)
-        if LDELTAS == 0:
+        # compute the value iteration.
+        if LDELTAS == 0:  # standard VI if LDELTAS=0, otherwise we need the bounded-MDP.
             abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), reset=False)
         else:
+            # some operations are required in order to adapt the representation of \delta-MDP for the bounded-MDP code.
             abstraction.to_old_representation()
             abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container())
             abstraction.to_new_representation(change_tf=False)
@@ -122,22 +121,22 @@ def main(seed, args):
                 abs_opt_pol_dict[j] = aop
             abs_opt_pol = abs_opt_pol_dict
 
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, rbf, INTERVALS)
-        fictitious_samples = helper.flat_listoflists(fictitious_samples)
-        X = [f[0] for f in fictitious_samples]
-        y = [f[1] for f in fictitious_samples]
-        rbf.fit(X, y)
+        # project back the policy.
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, flat_samples, rbf, INTERVALS)
+        rbf.fit(fictitious_samples)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
-        print("Iteration n.{}".format(i))
-        print("W: {}".format(rbf.w))
-        print("Updated estimated performance measure: {}".format(estj))
-        zeros, hundred, failing_states = helper.minigolf_reward_counter(determin_samples)
+        # show the results of the iteration.
+        print("Seed {} - Iteration N.{}".format(seed, i))
+        print("RBF weights: {}".format(rbf.w))
+        print("Estimated performance measure: {}".format(estj))
+        hundred, failing_states = helper.minigolf_reward_counter(flat_samples)
         print("Failing states: {}".format(failing_states))
-        cumulative_fail += hundred
-        print("Cumulative fails: {}\n".format(cumulative_fail))
+        total_failures += hundred
+        print("Cumulative fails: {}\n".format(total_failures))
 
         w = rbf.w
-        file_writer.writerow([w[0], w[1], w[2], w[3], cumulative_fail, estj])
+        file_writer.writerow([w[0], w[1], w[2], w[3], total_failures, estj])
 
-# main(0)
+    data_file.close()
+

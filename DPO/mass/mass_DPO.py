@@ -47,19 +47,17 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
 
 def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, INTERVALS):
     fictitious_samples = []
-    for sam in det_samples:
-        single_sample = []
-        for s in sam:
-            prev_action = deterministic_action(param, s[0])
-            mcrst_provv = helper.get_mcrst(s[0], INTERVALS, SINK)
-            mcrst = helper.get_index_from_mcrst(mcrst_provv, INTERVALS)
-            if abs_opt_policy[mcrst] is not None:
-                if prev_action in abs_opt_policy[mcrst]:
-                    single_sample.append([s[0], prev_action])
-                else:
-                    index = np.argmin([abs(act - prev_action) for act in abs_opt_policy[mcrst]])
-                    single_sample.append([s[0], abs_opt_policy[mcrst][index]])
-        fictitious_samples.append(single_sample)
+    for s in det_samples:
+        # prev_action is the action that would be prescribed by the (not yet updated) deterministic policy.
+        prev_action = deterministic_action(param, s[0])
+        mcrst_provv = helper.get_mcrst(s[0], INTERVALS, SINK)
+        mcrst = helper.get_index_from_mcrst(mcrst_provv, INTERVALS)
+        if abs_opt_policy[mcrst] is not None:
+            if prev_action in abs_opt_policy[mcrst]:  # prev_action is optimal.
+                fictitious_samples.append([s[0], prev_action])
+            else:  # we select the closest action to prev_action among the optimal ones.
+                index = np.argmin([abs(act - prev_action) for act in abs_opt_policy[mcrst]])
+                fictitious_samples.append([s[0], abs_opt_policy[mcrst][index]])
     return fictitious_samples
 
 
@@ -119,14 +117,12 @@ def main(seed, args):
         det_param = det_upd.gradient_update(det_param, fictitious_samples, alpha, lam)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
-        print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
-        print("Updated estimated performance measure: {}".format(estj))
+        # show the results of the iteration.
+        print("Seed {} - Iteration N.{}".format(seed, i))
+        print("Policy parameters: {}".format(det_param))
+        print("Estimated performance measure: {}\n".format(estj))
 
         file_writer.writerow([det_param[0][0], det_param[0][1], estj])
 
     data_file.close()
 
-
-# if __name__ == "__main__":
-#     main(int(sys.argv[1]))
-# main(0)

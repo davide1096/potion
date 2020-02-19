@@ -1,5 +1,5 @@
 import DPO.safetygym.safetygym_DPO as safe_main
-import DPO.minigolf.minigolf_radialbasis as mini_main
+import DPO.minigolf.minigolf_DPO as mini_main
 import DPO.mass.mass_DPO as mass_main
 import multiprocessing as mp
 import argparse
@@ -36,5 +36,6 @@ if __name__ == "__main__":
     ap.add_argument("--batch", required=False, help="Size of the batch", type=int)
     ap.add_argument("--nsteps", required=False, help="Size of an episode", type=int)
     ap.add_argument("--niter", required=False, help="Iterations of the algorithm", type=int)
+    ap.add_argument("--Lds", required=False, help="Lipschitz constant to be used in the minigolf task.", type=float)
     args = vars(ap.parse_args())
     chooser(args)

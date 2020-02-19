@@ -59,7 +59,7 @@ def sampling_from_det_pol(env, n_episodes, n_steps, det_par):
 def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     fictitious_samples = []
     for s in det_samples:
-        # action that would be prescribed by the deterministic policy (not updated).
+        # prev_action is the action that would be prescribed by the (not yet updated) deterministic policy.
         prev_action = deterministic_action(param, s[0])
         mcrst_provv = helper.get_mcrst(s[0], interv, SINK)
         index_mcrst = helper.get_index_from_mcrst(mcrst_provv, interv)
@@ -67,7 +67,7 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
             if helper.array_in(prev_action, abs_opt_policy[index_mcrst]):  # prev_action is optimal.
                 fictitious_samples.append([s[0], prev_action])
             else:  # we select the closest action to prev_action among the optimal ones.
-                index = np.argmin([helper.sq_distance(act, prev_action) for act in abs_opt_policy[index_mcrst]])
+                index = np.argmin([helper.arr_distance(act, prev_action) for act in abs_opt_policy[index_mcrst]])
                 fictitious_samples.append([s[0], abs_opt_policy[index_mcrst][index]])
     return fictitious_samples
 
@@ -122,9 +122,11 @@ def main(seed, args):
         det_param = det_upd.gradient_update(det_param, fictitious_samples, alpha, lam)
 
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
+
+        # show the results of the iteration.
+        print("Seed {} - Iteration N.{}".format(seed, i))
+        print("Policy parameters: {}".format(det_param))
+        print("Estimated performance measure: {}\n".format(estj))
         file_writer.writerow([estj])
 
-        print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
-        print("Updated estimated performance measure: {}\n".format(estj))
-
-# main()
+    data_file.close()

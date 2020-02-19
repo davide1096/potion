@@ -44,7 +44,7 @@ class AbsUpdater(object):
 
         new_v_function = {}
         for k in container.keys():
-            new_v_function[k] = 0 if reset else self.v_function[k]
+            new_v_function[k] = 0 if reset or k not in self.v_function else self.v_function[k]
 
         # k1 --> mcrst index
         for k1, v1 in container.items():

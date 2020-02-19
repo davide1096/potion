@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import math
-from scipy.stats import mode
 
 MAX_SAMPLES_IN_MCRST = 60
 
@@ -10,11 +9,7 @@ class Helper(object):
 
     def __init__(self, seed=None):
         super().__init__()
-        if seed is not None:
-            self.seed = seed
-        else:
-            self.seed = 42
-
+        self.seed = seed if seed is not None else 42
         random.seed(self.seed)
 
     def big_mcrst_correction(self, cont):
@@ -43,13 +38,13 @@ def get_mcrst(state, intervals, sink):
         elif sink and state[dim] > dim_int[-1][1]:
             mcrst.append(len(dim_int))
 
-        elif state[dim] >= dim_int[-1][1]:   # above the upper bound of the state space
+        elif state[dim] >= dim_int[-1][1]:   # above the upper bound of the state space but not sink state.
             mcrst.append(len(dim_int) - 1)
-        elif state[dim] <= dim_int[0][0]:    # below the lower bound of the state space
+        elif state[dim] <= dim_int[0][0]:    # below the lower bound of the state space but not sink state.
             mcrst.append(0)
 
-        else:
-            index = 0                       # inside the state space
+        else:  # inside the state space.
+            index = 0
             for inter in dim_int:
                 if inter[0] <= state[dim] < inter[1]:
                     mcrst.append(index)
@@ -59,9 +54,7 @@ def get_mcrst(state, intervals, sink):
     return mcrst
 
 
-# --> helper function to compute the index in container related to the exact macrostate <---
-
-# it returns the index from a multidim mcrst.
+# it returns the scalar index for a multidim mcrst.
 def get_index_from_mcrst(multi_mcrst, intervals):
     mcrst = 0
     for i in range(len(multi_mcrst)):
@@ -78,7 +71,7 @@ def product_prev_sizes(i, intervals):
     return prod
 
 
-# given an index return the related macrostate expressed with a value for each dimension.
+# given an index return the macrostate represented with a value for each dimension.
 def get_mcrst_from_index(index, intervals):
     mcrst = []
     for i in range(len(intervals)):
@@ -89,7 +82,6 @@ def get_mcrst_from_index(index, intervals):
     assert(index == 0)
     return mcrst
 
-# -----------------------------------------------------------------------------------------
 
 def normalize_array(array):
     den = np.sum(array)
@@ -107,9 +99,6 @@ def normalize_dict(dic):
 
 def flat_listoflists(list):
     return [item for sublist in list for item in sublist]
-
-
-# function used in abstract reward calculation
 
 
 def calc_abs_reward_lqg(cont, action, Q, R, maxa_env):
@@ -175,6 +164,7 @@ def arr_distance(arr1, arr2):
             d += (d1 - d2) ** 2
         return d
 
+
 # given cos and sin return the angle in degrees
 def get_angle(x, y):
     alpha_rad = np.arctan(y/x)
@@ -187,15 +177,18 @@ def get_angle(x, y):
         alpha += 360
     return alpha
 
+
 def offset_sum2(angle, offset):
     angle += offset
     if angle > 360:
         angle -= 360
     return angle
 
+
 def get_sin_cos(angle):
     angle = angle / 57.3
     return math.sin(angle), math.cos(angle)
+
 
 def bias_compass_observation(x, y, offset):
     alpha = get_angle(x, y)

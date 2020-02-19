@@ -8,7 +8,6 @@ import DPO.helper as helper
 from DPO.helper import Helper
 import os
 import csv
-import sys
 
 problem = 'mass'
 SINK = False
@@ -90,14 +89,12 @@ def main(seed, args):
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
     print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
     print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
-
     det_param = INIT_DETERMINISTIC_PARAM.reshape((1, 2))
 
     # instantiate the components of the algorithm.
     lip_a_tf = B
     abstraction = MaxLikelihoodAbstraction(GAMMA, SINK, INTERVALS, lip_a_tf * STOCH_L_MULTIPLIER, env.Q, env.R,
                                            MAX_ACTION_VAL)
-
     abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
     det_upd = Updater(help.getSeed())
 
@@ -106,6 +103,7 @@ def main(seed, args):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
         flat_samples = helper.flat_listoflists(determin_samples)
 
+        # some operations are required in order to adapt the representation of \delta-MDP for the max-likelihood code.
         abstraction.divide_samples(flat_samples, problem, help.getSeed())
         abstraction.to_old_representation()
         abstraction.compute_abstract_tf(MIN_SPACE_VAL, MAX_SPACE_VAL, MAX_ACTION_VAL, ENV_NOISE)

@@ -1,5 +1,4 @@
 from safety_gym.envs.engine import Engine
-import numpy as np
 
 
 def create_env(seed=42):

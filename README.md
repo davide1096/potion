@@ -31,4 +31,5 @@ These are the optional parameter that can be specified (default values are the o
 - --batch: size of the batch, int;
 - --nsteps: size of an episode, int;
 - --niter: iterations of the algorithm, int;
-- --Lds: lipschitz constant to be used in the minigolf task, float.
+- --Lds: lipschitz constant to be used in the minigolf task, float;
+- --file: true if you want to save data on a file, bool.

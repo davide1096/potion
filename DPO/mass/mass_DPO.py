@@ -110,8 +110,7 @@ def main(seed, args):
         abstraction.to_new_representation()
         abs_opt_pol = abs_updater.solve_mdp(abstraction.get_container(), reset=False)
 
-        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, determin_samples, det_param, INTERVALS)
-        fictitious_samples = helper.flat_listoflists(fictitious_samples)
+        fictitious_samples = sampling_abstract_optimal_pol(abs_opt_pol, flat_samples, det_param, INTERVALS)
         det_param = det_upd.gradient_update(det_param, fictitious_samples, alpha, lam)
         estj = helper.estimate_J_from_samples(determin_samples, GAMMA)
 
@@ -123,4 +122,3 @@ def main(seed, args):
         file_writer.writerow([det_param[0][0], det_param[0][1], estj])
 
     data_file.close()
-

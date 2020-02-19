@@ -41,5 +41,6 @@ if __name__ == "__main__":
     ap.add_argument("--nsteps", required=False, help="Size of an episode", type=int)
     ap.add_argument("--niter", required=False, help="Iterations of the algorithm", type=int)
     ap.add_argument("--Lds", required=False, help="Lipschitz constant to be used in the minigolf task.", type=float)
+    ap.add_argument("--file", required=False, help="True if you want to save data on a file", type=bool)
     args = vars(ap.parse_args())
     chooser(args)

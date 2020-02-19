@@ -74,6 +74,7 @@ def main(seed, args):
     N_EPISODES = 500 if args['batch'] is None else args['batch']
     N_STEPS = 20 if args['nsteps'] is None else args['nsteps']
     LDELTAS = 0 if args['Lds'] is None else args['Lds']
+    file = False if args['file'] is None else args['file']
 
     help = Helper(seed)
     env = gym.make('ComplexMiniGolf-v0')  # load and configure the environment.
@@ -83,11 +84,12 @@ def main(seed, args):
     total_failures = 0
     rbf = RBFNet(CENTERS, STD_DEV, INIT_W, help.getSeed(), alpha, lam)
 
-    filename = "../csv/minigolf/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    data_file = open(filename, mode='w')
-    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    file_writer.writerow(['w1', 'w2', 'w3', 'w4', 'tot_failures', 'estj'])
+    if file:
+        filename = "../csv/minigolf/DPO/ALPHA={}/LAM={}/data{}.csv".format(alpha, lam, help.getSeed())
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        data_file = open(filename, mode='w')
+        file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        file_writer.writerow(['w1', 'w2', 'w3', 'w4', 'tot_failures', 'estj'])
 
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
     print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
@@ -136,7 +138,9 @@ def main(seed, args):
         print("Cumulative fails: {}\n".format(total_failures))
 
         w = rbf.w
-        file_writer.writerow([w[0], w[1], w[2], w[3], total_failures, estj])
+        if file:
+            file_writer.writerow([w[0], w[1], w[2], w[3], total_failures, estj])
 
-    data_file.close()
+    if file:
+        data_file.close()
 

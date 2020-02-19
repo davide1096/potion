@@ -10,7 +10,7 @@ cd potion
 pip3 install -e .
 ```
 
-How to execute the experiments: 
+How to execute the experiments (tested with the values reported in Appendix D): 
 
 ```
 cd potion

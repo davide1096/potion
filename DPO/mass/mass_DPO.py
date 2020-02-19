@@ -67,6 +67,7 @@ def main(seed, args):
     N_ITERATION = 120 if args['niter'] is None else args['niter']
     N_EPISODES = 500 if args['batch'] is None else args['batch']
     N_STEPS = 20 if args['nsteps'] is None else args['nsteps']
+    file = False if args['file'] is None else args['file']
 
     help = Helper(seed)
 
@@ -80,11 +81,12 @@ def main(seed, args):
     env.gamma = GAMMA
     env.seed(help.getSeed())
 
-    filename = "../csv/mass/DPO/ALPHA={}/LAM={}/9x9/data{}.csv".format(alpha, lam, help.getSeed())
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    data_file = open(filename, mode='w')
-    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    file_writer.writerow(['param0', 'param1', 'est j'])
+    if file:
+        filename = "../csv/mass/DPO/ALPHA={}/LAM={}/9x9/data{}.csv".format(alpha, lam, help.getSeed())
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        data_file = open(filename, mode='w')
+        file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        file_writer.writerow(['param0', 'param1', 'est j'])
 
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
     print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
@@ -119,6 +121,8 @@ def main(seed, args):
         print("Policy parameters: {}".format(det_param))
         print("Estimated performance measure: {}\n".format(estj))
 
-        file_writer.writerow([det_param[0][0], det_param[0][1], estj])
+        if file:
+            file_writer.writerow([det_param[0][0], det_param[0][1], estj])
 
-    data_file.close()
+    if file:
+        data_file.close()

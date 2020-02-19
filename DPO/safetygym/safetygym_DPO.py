@@ -79,6 +79,7 @@ def main(seed, args):
     N_ITERATION = 100 if args['niter'] is None else args['niter']
     N_EPISODES = 10 if args['batch'] is None else args['batch']
     N_STEPS = 200 if args['nsteps'] is None else args['nsteps']
+    file = False if args['file'] is None else args['file']
 
     help = Helper(seed)
     GAMMA = 1
@@ -91,11 +92,12 @@ def main(seed, args):
     INIT_DETERMINISTIC_PARAM = p.reshape((action_dim, state_dim))
     det_param = INIT_DETERMINISTIC_PARAM
 
-    filename = "../../csv/safetygym/LAM={}/data{}.csv".format(lam, help.getSeed())
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    data_file = open(filename, mode='w')
-    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    file_writer.writerow(['j'])
+    if file:
+        filename = "../csv/safetygym/LAM={}/data{}.csv".format(lam, help.getSeed())
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        data_file = open(filename, mode='w')
+        file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        file_writer.writerow(['j'])
 
     for i in range(0, N_ITERATION):
         determin_samples = sampling_from_det_pol(env, N_EPISODES, N_STEPS, det_param)
@@ -127,6 +129,8 @@ def main(seed, args):
         print("Seed {} - Iteration N.{}".format(seed, i))
         print("Policy parameters: {}".format(det_param))
         print("Estimated performance measure: {}\n".format(estj))
-        file_writer.writerow([estj])
+        if file:
+            file_writer.writerow([estj])
 
-    data_file.close()
+    if file:
+        data_file.close()

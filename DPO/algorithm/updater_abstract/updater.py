@@ -36,8 +36,9 @@ class AbsUpdater(object):
 
     def solved(self, new):
         for k in new.keys():
-            if abs(new[k] - self.v_function[k]) > EPSILON:
-                return False
+            if k in self.v_function:
+                if abs(new[k] - self.v_function[k]) > EPSILON:
+                    return False
         return True
 
     def single_step_update(self, container, reset):

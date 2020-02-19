@@ -15,9 +15,9 @@ def update(bounded_v, ordered_v, action, cont, gamma):
             break
 
         if el == 'sink':
-            el = [-1]
+            el = [-1]  # solution ad hoc for the minigolf task
 
-        # I get the upper bound of the tf probability related to a state ordered among the REINFORCE ones.
+        # I get the upper bound of the tf probability of the state of interest.
         ub = split[1][0][tuple(el)]
         diff = ub - new_tf[tuple(el)]
 

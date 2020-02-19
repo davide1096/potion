@@ -52,6 +52,9 @@ class IVI(object):
             for i in range(num):
                 self.best_policy.append([])
 
+            self.v_function_lb[-1] = self.sink_val
+            self.v_function_ub[-1] = self.sink_val
+
         n_iterations = 0
 
         while True:

@@ -6,11 +6,7 @@ class Updater(object):
 
     def __init__(self, seed=None):
         super().__init__()
-        if seed is not None:
-            self.seed = seed
-        else:
-            self.seed = 42
-
+        self.seed = seed if seed is not None else 42
         random.seed(self.seed)
 
     def gradient_update(self, det_param, samples, alpha, lam):

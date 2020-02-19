@@ -1,8 +1,9 @@
 import DPO.safetygym.safetygym_DPO as safe_main
 import DPO.minigolf.minigolf_radialbasis as mini_main
 import DPO.mass.mass_DPO as mass_main
-import sys
+import multiprocessing as mp
 import argparse
+import os
 
 
 def chooser(args):
@@ -11,13 +12,17 @@ def chooser(args):
     runs = args['nruns']
 
     if task == "mini":
-        main = mini_main
+        main_task = mini_main
     elif task == "mass":
-        main = mass_main
+        main_task = mass_main
     elif task == "safe":
-        main = safe_main
+        main_task = safe_main
+
+    pool = mp.Pool(len(os.sched_getaffinity(0)))  # uses visible cpus
     for i in range(seed, seed+runs):
-        main.main(i, args)
+        pool.apply_async(main_task.main, args=(i, args))
+    pool.close()
+    pool.join()
 
 
 if __name__ == "__main__":

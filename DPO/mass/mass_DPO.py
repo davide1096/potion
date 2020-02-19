@@ -18,14 +18,8 @@ B = np.array([[0.], [1.]])
 Q = np.diag([1., 0.])
 R = 0.1 * np.eye(1)
 GAMMA = 0.95
-
-N_ITERATION = 120
-N_EPISODES = 500
-N_STEPS = 20
-
 ENV_NOISE = 0.1 * np.eye(INIT_DETERMINISTIC_PARAM.size)
 
-N_MCRST_DYN = np.array([9, 9])
 MIN_SPACE_VAL = np.array([-1, -1])
 MAX_SPACE_VAL = np.array([1, 1])
 MAX_ACTION_VAL = 1
@@ -73,6 +67,9 @@ def main(seed, args):
     alpha = 0.025 if args['alpha'] is None else args['alpha']
     lam = 0.0001 if args['lambda'] is None else args['lambda']
     N_MCRST_DYN = np.array([9, 9]) if args['mcrst'] is None else np.array([args['mcrst'], args['mcrst']])
+    N_ITERATION = 120 if args['niter'] is None else args['niter']
+    N_EPISODES = 500 if args['batch'] is None else args['batch']
+    N_STEPS = 20 if args['nsteps'] is None else args['nsteps']
 
     help = Helper(seed)
 

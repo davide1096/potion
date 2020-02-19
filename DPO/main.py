@@ -28,5 +28,8 @@ if __name__ == "__main__":
     ap.add_argument("--alpha", required=False, help="Learning rate used in policy projection", type=float)
     ap.add_argument("--lambda", required=False, help="Regularization used in policy projection", type=float)
     ap.add_argument("--mcrst", required=False, help="Number of abstract states on each state dimension", type=int)
+    ap.add_argument("--batch", required=False, help="Size of the batch", type=int)
+    ap.add_argument("--nsteps", required=False, help="Size of an episode", type=int)
+    ap.add_argument("--niter", required=False, help="Iterations of the algorithm", type=int)
     args = vars(ap.parse_args())
     chooser(args)

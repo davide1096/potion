@@ -12,13 +12,8 @@ problem = 'safety'
 SINK = False
 ACCEPTED_STATES = [1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]
 
-N_ITERATION = 100
-N_EPISODES = 10
-N_STEPS = 200
 state_dim = 9
 action_dim = 2
-N_MCRST_DYN = np.full((state_dim, ), 5)
-
 offset = 20
 
 
@@ -81,6 +76,9 @@ def main(seed, args):
     alpha = 0.005 if args['alpha'] is None else args['alpha']
     lam = 0.05 if args['lambda'] is None else args['lambda']
     N_MCRST_DYN = np.full((state_dim, ), 5) if args['mcrst'] is None else np.full((state_dim, ), args['mcrst'])
+    N_ITERATION = 100 if args['niter'] is None else args['niter']
+    N_EPISODES = 10 if args['batch'] is None else args['batch']
+    N_STEPS = 200 if args['nsteps'] is None else args['nsteps']
 
     help = Helper(seed)
     GAMMA = 1

@@ -16,11 +16,6 @@ SINK = True
 ENV_NOISE = 0
 GAMMA = 0.99
 
-N_ITERATION = 700
-N_EPISODES = 500
-N_STEPS = 20
-
-N_MCRST_DYN = [12]
 MIN_SPACE_VAL = [0]
 MAX_SPACE_VAL = [20]
 
@@ -80,6 +75,9 @@ def main(seed, args):
     alpha = 0.001 if args['alpha'] is None else args['alpha']
     lam = 0.0005 if args['lambda'] is None else args['lambda']
     N_MCRST_DYN =[12] if args['mcrst'] is None else [args['mcrst']]
+    N_ITERATION = 700 if args['niter'] is None else args['niter']
+    N_EPISODES = 500 if args['batch'] is None else args['batch']
+    N_STEPS = 20 if args['nsteps'] is None else args['nsteps']
 
     help = Helper(seed)
     env = gym.make('ComplexMiniGolf-v0')  # load and configure the environment.

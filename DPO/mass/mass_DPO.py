@@ -69,7 +69,10 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, INTERVALS)
     return fictitious_samples
 
 
-def main(seed=None, alpha=0.025, lam=0.0001):
+def main(seed, args):
+    alpha = 0.025 if args['alpha'] is None else args['alpha']
+    lam = 0.0001 if args['lambda'] is None else args['lambda']
+    N_MCRST_DYN = np.array([9, 9]) if args['mcrst'] is None else np.array([args['mcrst'], args['mcrst']])
 
     help = Helper(seed)
 
@@ -129,4 +132,4 @@ def main(seed=None, alpha=0.025, lam=0.0001):
 
 # if __name__ == "__main__":
 #     main(int(sys.argv[1]))
-main(0)
+# main(0)

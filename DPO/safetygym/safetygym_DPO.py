@@ -77,7 +77,10 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, param, interv):
     return fictitious_samples
 
 
-def main(seed=42, alpha=0.005, lam=0.05):
+def main(seed, args):
+    alpha = 0.005 if args['alpha'] is None else args['alpha']
+    lam = 0.05 if args['lambda'] is None else args['lambda']
+    N_MCRST_DYN = np.full((state_dim, ), 5) if args['mcrst'] is None else np.full((state_dim, ), args['mcrst'])
 
     help = Helper(seed)
     GAMMA = 1
@@ -104,7 +107,8 @@ def main(seed=42, alpha=0.005, lam=0.05):
             # build the discretization.
             MIN_SPACE_VAL, MAX_SPACE_VAL = compute_state_bounds(flat_samples)
             INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
-            print("Seed: {} - INTERVALS: {}\n{}\n".format(seed, N_MCRST_DYN, INTERVALS))
+            print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
+            print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
             # instantiate the components of the algorithm.
             abstraction = LipschitzDeltaS(GAMMA, SINK, INTERVALS)
             abs_updater = AbsUpdater(GAMMA, SINK, INTERVALS)
@@ -125,4 +129,4 @@ def main(seed=42, alpha=0.005, lam=0.05):
         print("{} - Updated deterministic policy parameter: {}".format(i, det_param))
         print("Updated estimated performance measure: {}\n".format(estj))
 
-main()
+# main()

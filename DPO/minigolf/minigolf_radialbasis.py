@@ -30,7 +30,7 @@ STD_DEV = 4
 INIT_W = [1, 1, 1, 1]
 
 # Lipschitz constant on delta s.
-LDELTAS = 0.3
+LDELTAS = 0
 
 
 def deterministic_action(state, rbf):
@@ -76,7 +76,10 @@ def sampling_abstract_optimal_pol(abs_opt_policy, det_samples, rbf, INTERVALS):
     return fictitious_samples
 
 
-def main(seed=None, alpha=0.001, lam=0.0005):
+def main(seed, args):
+    alpha = 0.001 if args['alpha'] is None else args['alpha']
+    lam = 0.0005 if args['lambda'] is None else args['lambda']
+    N_MCRST_DYN =[12] if args['mcrst'] is None else [args['mcrst']]
 
     help = Helper(seed)
     env = gym.make('ComplexMiniGolf-v0')  # load and configure the environment.
@@ -93,6 +96,9 @@ def main(seed=None, alpha=0.001, lam=0.0005):
 
     INTERVALS = helper.get_constant_intervals(MIN_SPACE_VAL, MAX_SPACE_VAL, N_MCRST_DYN)
     INTERVALS[0] = [[-4, 0]] + INTERVALS[0]  # add the first macrostate representing the goal.
+
+    print("Seed: {} - Alpha: {}, Lambda: {}".format(seed, alpha, lam))
+    print("INTERVALS: {}\n{}\n".format(N_MCRST_DYN, INTERVALS))
 
     for i in range(N_ITERATION):
 
@@ -136,4 +142,4 @@ def main(seed=None, alpha=0.001, lam=0.0005):
         w = rbf.w
         file_writer.writerow([w[0], w[1], w[2], w[3], cumulative_fail, estj])
 
-main(0)
+# main(0)

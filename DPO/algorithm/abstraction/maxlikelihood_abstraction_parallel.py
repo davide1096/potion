@@ -29,14 +29,10 @@ class MaxLikelihoodAbstraction(Abstraction):
         return arriving_mcrst
 
     def fill_I(self, mcrst, ordered_actions):
-
         matrix_i = np.zeros((len(ordered_actions), self.i))
-        cont = self.container[mcrst]
-
         for i, act in enumerate(ordered_actions):
             for index_mcrst in self.arriving_mcrst_helper[act].keys():
                 matrix_i[i][index_mcrst] += self.arriving_mcrst_helper[act][index_mcrst]
-
         return matrix_i
 
     def create_arriving_mcrst_helper(self):
@@ -96,19 +92,15 @@ class MaxLikelihoodAbstraction(Abstraction):
         return np.array(new_init)
 
     def compute_parallel_solution(self, mcrst, problem):
-
-        # print("Solving the problem for the mcrst: {}".format(mcrst))
         if problem is not None:
-            # initial_solution = self.build_initial_solution(i)
-            # p.variables()[0] = initial_solution
             try:
                 problem.solve(solver=cp.ECOS, max_iters=200)
             except cp.SolverError:
                 problem.solve(solver=cp.SCS, max_iters=200)
             theta = problem.variables()[0].value
-            return (mcrst, theta)
+            return mcrst, theta
         else:
-            return (mcrst, None)
+            return mcrst, None
 
     def collect_result(self, result):
         self.results.append(result)
@@ -117,9 +109,8 @@ class MaxLikelihoodAbstraction(Abstraction):
         if len(self.container[mcrst]) > 0:  # I consider not empty macrostate.
             problem = self.construct_problem(mcrst)
             return self.compute_parallel_solution(mcrst, problem)
-
         else:
-            return (mcrst, None)
+            return mcrst, None
 
     def compute_abstract_tf(self, mins=-1, maxs=1, maxa=1, std=0):
         self.i = len(self.container)  # it represents the # of columns of every matrix.

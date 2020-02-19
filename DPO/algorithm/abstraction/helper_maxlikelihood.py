@@ -1,10 +1,8 @@
 import DPO.helper as helper
-import numpy as np
 
 
 def compute_lipschitz_constraints(intervals, ordered_actions, arriving_mcrst, theta, L):
 
-    # Lipschitz hypothesis between actions in the same macrostate.
     constraints = []
 
     for d in range(len(intervals)):  # d represents the dimension.

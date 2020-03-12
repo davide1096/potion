@@ -5,7 +5,7 @@ from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import csv
 import os
 
-ALGORITHM = "REINFORCE"
+ALGORITHM = "DPO"
 
 N_ITERATIONS = 3
 

@@ -177,7 +177,7 @@ def main(seed=None, alpha=0.025, lam=0.0001):
 
         # PLOTTER INFO
         stats['param'].append(det_param)
-        # stats['j'].append(j)
+        stats['j'].append(0)
         stats['estj'].append(estj)
         # stats['abstractJ'].append(absJ)
         # ------------

@@ -2,7 +2,7 @@ import DPO.helper as helper
 import numpy as np
 from DPO.helper import Helper
 
-
+# TEST
 class Abstraction(object):
 
     def __init__(self, gamma, sink, intervals=None):

@@ -1,255 +1,77 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-REINFORCE family of algorithms (actor-only policy gradient)
-@author: Matteo Papini
-"""
-
-from potion.simulation.trajectory_generators import generate_batch
-from potion.common.misc_utils import performance, avg_horizon, mean_sum_info
-from potion.estimation.gradients import gpomdp_estimator, reinforce_estimator
-from potion.common.logger import Logger
-from potion.common.misc_utils import clip, seed_all_agent
-from potion.meta.steppers import ConstantStepper
+import gym
+import potion.envs
 import torch
-import time
+from DPO.minigolf.REINFORCE.radial_basis_policy import RadialBasisPolicy
+from DPO.minigolf.REINFORCE.reinforce2 import reinforce2
+from potion.meta.steppers import ConstantStepper
+from potion.common.logger import Logger
 import numpy as np
-from DPO.visualizer.minigolf_visualizer import MGVisualizer
-import csv
-import os
 
-def reinforce2(alpha, logsig, env, policy, horizon, *,
-              batchsize=100,
-              iterations=1000,
-              disc=0.99,
-              stepper=ConstantStepper(1e-2),
-              action_filter=None,
-              estimator='gpomdp',
-              baseline='avg',
-              logger=Logger(name='gpomdp'),
-              shallow=False,
-              seed=None,
-              test_batchsize=False,
-              info_key='danger',
-              save_params=100,
-              log_params=False,
-              log_grad=False,
-              parallel=False,
-              render=False,
-              verbose=1):
-    """
-    REINFORCE/G(PO)MDP algorithmn
 
-    env: environment
-    policy: the one to improve
-    horizon: maximum task horizon
-    batchsize: number of trajectories used to estimate policy gradient
-    iterations: number of policy updates
-    disc: discount factor
-    stepper: step size criterion. A constant step size is used by default
-    action_filter: function to apply to the agent's action before feeding it to
-        the environment, not considered in gradient estimation. By default,
-        the action is clipped to satisfy evironmental boundaries
-    estimator: either 'reinforce' or 'gpomdp' (default). The latter typically
-        suffers from less variance
-    baseline: control variate to be used in the gradient estimator. Either
-        'avg' (average reward, default), 'peters' (variance-minimizing) or
-        'zero' (no baseline)
-    logger: for human-readable logs (standard output, csv, tensorboard...)
-    shallow: whether to employ pre-computed score functions (only available for
-        shallow policies)
-    seed: random seed (None for random behavior)
-    test_batchsize: number of test trajectories used to evaluate the
-        corresponding deterministic policy at each iteration. If 0 or False, no
-        test is performed
-    save_params: how often (every x iterations) to save the policy
-        parameters to disk. Final parameters are always saved for
-        x>0. If False, they are never saved.
-    log_params: whether to include policy parameters in the human-readable logs
-    log_grad: whether to include gradients in the human-readable logs
-    parallel: number of parallel jobs for simulation. If 0 or False,
-        sequential simulation is performed.
-    render: how often (every x iterations) to render the agent's behavior
-        on a sample trajectory. If False, no rendering happens
-    verbose: level of verbosity (0: only logs; 1: normal; 2: maximum)
-    """
+def feature_function(s):
+    sigma = 4
+    centers = [4, 8, 12, 16]
+    res = [np.exp(-1 / (2 * sigma ** 2) * (s - c) ** 2) for c in centers]
+    cat_dim = len(s.shape)
+    res = torch.cat(res, cat_dim - 1)
+    return res
 
-    # Defaults
-    if action_filter is None:
-        action_filter = clip(env)
 
-    # Seed agent
-    if seed is not None:
-        seed_all_agent(seed)
+def main(seed=None, alpha=0.05, logsigma=-2.):
 
-    # Prepare logger
-    algo_info = {'Algorithm': 'REINFORCE',
-                 'Estimator': estimator,
-                 'Baseline': baseline,
-                 'Env': str(env),
-                 'Horizon': horizon,
-                 'BatchSize': batchsize,
-                 'Disc': disc,
-                 'StepSizeCriterion': str(stepper),
-                 'Seed': seed,
-                 }
-    logger.write_info({**algo_info, **policy.info()})
-    log_keys = ['Perf',
-                'UPerf',
-                'AvgHorizon',
-                'StepSize',
-                'GradNorm',
-                'Time',
-                'StepSize',
-                'Exploration',
-                'Info']
-    if log_params:
-        log_keys += ['param%d' % i for i in range(policy.num_params())]
-    if log_grad:
-        log_keys += ['grad%d' % i for i in range(policy.num_params())]
-    if test_batchsize:
-        log_keys += ['TestPerf', 'TestPerf', 'TestInfo']
-    log_row = dict.fromkeys(log_keys)
-    logger.open(log_row.keys())
+    gamma = 0.99
+    env = gym.make('ComplexMiniGolf-v0')
+    env.sigma_noise = 0
+    env.gamma = gamma
 
-    # init image & csv
-    filename = "../csv/minigolf/REINFORCE/ALPHA={}/LOGSTD={}/data{}.csv".format(alpha, logsig, seed)
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    data_file = open(filename, mode='w')
-    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    state_dim = sum(env.observation_space.shape)  # dimensionality of the state space
+    action_dim = sum(env.action_space.shape)  # dimensionality of the action space
+    print(state_dim, action_dim)
+    horizon = 20  # maximum length of a trajectory
 
-    visualizer = MGVisualizer("MG visualizer", "/minigolf/REINFORCE/ALPHA={}/LOGSTD={}/test{}.png".format(alpha, logsig,
-                                                                                                          seed))
-    visualizer.clean_panels()
+    mu_init = torch.tensor([1., 1., 1., 1.])
+    log_std_init = torch.tensor([logsigma])
 
-    # PLOTTER INFO
-    stats = {}
-    stats['w1'] = []
-    stats['w2'] = []
-    stats['w3'] = []
-    stats['w4'] = []
-    stats['j'] = []
-    stats['fail'] = []
-    # ------------
+    policy = RadialBasisPolicy(state_dim, #input size
+                                   action_dim, #output size
+                                   mu_init=mu_init, #initial mean parameters
+                                   feature_fun=feature_function,
+                                   logstd_init=log_std_init,
+                                   learn_std=True
+                              )
 
-    # Learning loop
-    it = 0
-    cumulative_fail = 0
-    cumulative_j = 0
-    while it < iterations:
-        # Begin iteration
-        start = time.time()
-        if verbose:
-            print('\nIteration ', it)
-        params = policy.get_flat()
-        if verbose > 1:
-            print('Parameters:', params)
+    stepper = ConstantStepper(alpha)
 
-        # Test the corresponding deterministic policy
-        if test_batchsize:
-            test_batch = generate_batch(env, policy, horizon, test_batchsize,
-                                        action_filter=action_filter,
-                                        seed=seed,
-                                        njobs=parallel,
-                                        deterministic=True,
-                                        key=info_key)
-            log_row['TestPerf'] = performance(test_batch, disc)
-            log_row['TestInfo'] = mean_sum_info(test_batch).item()
-            log_row['UTestPerf'] = performance(test_batch, 1)
+    batchsize = 500
+    log_dir = '../../../logs'
+    log_name = 'REINFORCE'
+    logger = Logger(directory=log_dir, name=log_name)
 
-        # Render the agent's behavior
-        if render and it % render == 0:
-            generate_batch(env, policy, horizon,
-                           episodes=1,
-                           action_filter=action_filter,
-                           render=True,
-                           key=info_key)
+    if seed is None:
+        seed = 42
 
-        # Collect trajectories
-        batch = generate_batch(env, policy, horizon, batchsize,
-                               action_filter=action_filter,
-                               seed=seed,
-                               n_jobs=parallel,
-                               key=info_key)
+    env.seed(seed)
 
-        # ------------------- count fails -------------------
-        rewards = [b[2] for b in batch]
-        failures = [np.count_nonzero(r==-100) for r in rewards]
-        cumulative_fail += sum(failures)
-        # ---------------------------------------------------
+    init_par = [log_std_init, mu_init]
+    init_ten = torch.cat(init_par, 0)
 
-        perf = performance(batch, disc)
-        cumulative_j += perf
-        log_row['Perf'] = perf
-        log_row['Info'] = mean_sum_info(batch).item()
-        log_row['UPerf'] = performance(batch, disc=1.)
-        log_row['AvgHorizon'] = avg_horizon(batch)
-        log_row['Exploration'] = policy.exploration().item()
-        log_row['IterationFails'] = sum(failures)
-        log_row['CumulativeFails'] = cumulative_fail
+    # Reset the policy (in case is run multiple times)
+    policy.set_from_flat(init_ten)
 
-        # Estimate policy gradient
-        if estimator == 'gpomdp':
-            grad = gpomdp_estimator(batch, disc, policy,
-                                    baselinekind=baseline,
-                                    shallow=shallow)
-        elif estimator == 'reinforce':
-            grad = reinforce_estimator(batch, disc, policy,
-                                       baselinekind=baseline,
-                                       shallow=shallow)
-        else:
-            raise ValueError('Invalid policy gradient estimator')
-        if verbose > 1:
-            print('Gradients: ', grad)
-        log_row['GradNorm'] = torch.norm(grad).item()
+    stats, performance = reinforce2(alpha, logsigma, env = env,
+              policy = policy,
+              horizon = horizon,
+              stepper = stepper,
+              batchsize = batchsize,
+              disc = gamma,
+              iterations = 700,
+              seed = seed,
+              logger = logger,
+              save_params = 5, #Policy parameters will be saved on disk each 5 iterations
+              shallow = True, #Use optimized code for shallow policies
+              estimator = 'gpomdp', #Use the G(PO)MDP refined estimator
+              baseline = 'peters' #Use Peter's variance-minimizing baseline
+             )
 
-        # Select meta-parameters
-        stepsize = stepper.next(grad)
-        log_row['StepSize'] = torch.norm(torch.tensor(stepsize)).item()
-
-        # Update policy parameters
-        new_params = params + stepsize * grad
-        policy.set_from_flat(new_params)
-
-        # Log
-        log_row['Time'] = time.time() - start
-        if log_params:
-            for i in range(policy.num_params()):
-                log_row['param%d' % i] = params[i].item()
-        if log_grad:
-            for i in range(policy.num_params()):
-                log_row['grad%d' % i] = grad[i].item()
-        logger.write_row(log_row, it)
-
-        # Save parameters
-        if save_params and it % save_params == 0:
-            logger.save_params(params, it)
-
-        print(new_params)
-        params = new_params.numpy()[1:]  # updated w
-
-        # update csv & image
-        visualizer.show_values(params, perf, cumulative_fail)
-        file_writer.writerow([params[0], params[1], params[2], params[3], cumulative_fail, perf])
-
-        # PLOTTER INFO
-        # if it % 10 == 0:
-        stats['w1'].append(params[0])
-        stats['w2'].append(params[1])
-        stats['w3'].append(params[2])
-        stats['w4'].append(params[3])
-        stats['j'].append(perf)
-        stats['fail'].append(cumulative_fail)
-        # ------------
-
-        # Next iteration
-        it += 1
-
-    # Save final parameters
-    if save_params:
-        logger.save_params(params, it)
-
-    visualizer.save_image()
-    # Cleanup
-    logger.close()
-    return stats, cumulative_j
+    policy.get_flat()
+    return stats, performance

@@ -2,7 +2,7 @@ import DPO.helper as helper
 import numpy as np
 from DPO.helper import Helper
 
-# TEST
+
 class Abstraction(object):
 
     def __init__(self, gamma, sink, intervals=None):
@@ -55,6 +55,6 @@ class Abstraction(object):
             for act in cont.keys():
                 cont[act]['abs_reward'] = reward_func(cont, act)
 
-    def compute_abstract_tf(self):
+    def compute_abstract_tf(self, optA, est_ds, ldeltas=0, models=None):
         pass
 

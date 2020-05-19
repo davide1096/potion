@@ -5,6 +5,7 @@ import math
 
 MAX_SAMPLES_IN_MCRST = 60
 
+
 class Helper(object):
 
     def __init__(self, seed=None):

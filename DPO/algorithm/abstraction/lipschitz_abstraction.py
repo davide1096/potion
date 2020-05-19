@@ -7,11 +7,14 @@ class LipschitzAbstraction(Abstraction):
     def __init__(self, gamma, sink, intervals=None):
         super().__init__(gamma, sink, intervals)
 
-    def compute_abstract_tf(self, optA, ldeltas=0):
+    def compute_abstract_tf(self, optA, est_ds, ldeltas=0, models=None):
         range_max = len(self.container) if not self.sink else len(self.container) - 1
         for i in range(0, range_max):
+            if est_ds:
+                model = None if i==0 else models[i-1]
             for act in self.container[i].keys():
-                self.container[i][act]['abs_tf'] = self.calculate_single_atf(i, act, optA, ldeltas)
+                self.container[i][act]['abs_tf'] = self.calculate_single_atf(i, act, optA, est_ds, ldeltas,
+                                                                             model if est_ds else None)
 
         if self.sink:
             # sink_tf is the tf array associated to actions in sink state
@@ -24,5 +27,5 @@ class LipschitzAbstraction(Abstraction):
             for act in self.container[-1].keys():
                 self.container[-1][act]['abs_tf'] = sink_tf
 
-    def calculate_single_atf(self, cont, act, optA):
+    def calculate_single_atf(self, mcrst, act, ds0, est_ds, ldeltas=0, model=None):
         pass

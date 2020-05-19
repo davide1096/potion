@@ -1,12 +1,15 @@
+import sys
+sys.path.append("/Users/davide/Desktop/Uni/Thesis/Code/davide1096:potion/potion")
+
 import DPO.minigolf.DPO.minigolf_radialbasis as mini_main_dpo
-import DPO.minigolf.REINFORCE.REINFORCE2 as mini_main_rei
+# import DPO.minigolf.REINFORCE.REINFORCE2 as mini_main_rei
 import numpy as np
 from DPO.visualizer.minigolf_visualizer import MGVisualizer
 import os
 import csv
 
 algorithm = "DPO"  # use "DPO" or "REINFORCE" to change algorithm
-N_ITERATIONS = 10
+N_ITERATIONS = 10 #10
 
 stats = {}
 avg = {}
